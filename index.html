@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Launch Pad R1</title>
+    <style>
+        :root {
+            --bg-color: #0d0d0d;
+            --font-color: #e0e0e0;
+            --primary-color: #ff7043; /* Rabbit R1 Orange */
+            --border-color: #2a2a2a;
+            --item-bg: #1c1c1c;
+            --icon-color: #7a7a7a; /* Slightly darker inactive color */
+            --font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--font-color);
+            font-size: 15px; /* Base font size for smaller display */
+            margin: 0;
+            padding: var(--rabbit-safe-area-inset-top, 20px) 10px 10px;
+            border: 3px solid var(--primary-color);
+            border-radius: 20px; /* Rounded corners like the device */
+            height: calc(100vh - 6px); /* Adjust height for border */
+            box-sizing: border-box;
+        }
+        .main-view {
+            width: 100%;
+            max-width: 480px;
+            min-width: 240px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            text-shadow: 0 0 8px rgba(255, 112, 67, 0.4);
+        }
+        header img {
+            max-width: 100%;
+            height: 65px;
+            object-fit: contain;
+        }
+        .search-section {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--item-bg);
+            color: var(--font-color);
+            font-size: 1em;
+        }
+        button {
+            padding: 8px 12px;
+            border: none;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        button:hover {
+            filter: brightness(1.15);
+        }
+        #linksList {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .link-item {
+            background-color: var(--item-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: nowrap;
+        }
+        .link-favicon {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            background-color: #333;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+        .link-info {
+            flex-grow: 1;
+            overflow: hidden; 
+        }
+        .link-description {
+            font-weight: bold;
+            font-size: 1em;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .link-url {
+            font-size: 0.9em;
+            color: var(--icon-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+        .link-actions {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .link-actions span {
+            cursor: pointer;
+            font-size: 1.1em;
+            color: var(--icon-color);
+        }
+        .link-actions span:hover { color: var(--primary-color); }
+        .link-actions svg {
+            width: 20px;
+            height: 20px;
+            display: block;
+        }
+        .add-btn-container { text-align: center; margin-top: 15px; }
+        .category-header {
+            font-size: 1em;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-top: 15px;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        #linksList > h3:first-of-type {
+            margin-top: 0;
+        }
+        .link-info input, .link-info select {
+            width: 98%;
+            margin-top: 5px;
+            padding: 6px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--item-bg);
+            color: var(--font-color);
+            font-size: 0.95em;
+        }
+        .link-info > *:first-child {
+            margin-top: 0;
+        }
+        .view-controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .view-btn {
+            cursor: pointer;
+        }
+        .view-btn svg {
+            display: block;
+            width: 24px;
+            height: 24px;
+            fill: var(--icon-color);
+        }
+        .view-btn.active svg {
+            fill: var(--primary-color);
+        }
+        /* Group View Styles */
+        .category-header.collapsible {
+            cursor: pointer;
+            position: relative;
+            padding-right: 20px; /* Space for arrow */
+        }
+        .category-header.collapsible::after {
+            content: '▶';
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%) rotate(0deg);
+            font-size: 0.8em;
+            transition: transform 0.2s ease;
+        }
+        .category-header.collapsible.expanded::after {
+            transform: translateY(-50%) rotate(90deg);
+        }
+        .links-container {
+            display: none;
+            padding-top: 5px;
+        }
+        .links-container.expanded {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="mainView" class="main-view">
+        <header><img src="launchpad-logo.png" alt="Launch Pad R1 Logo"></header>
+        <div class="search-section">
+            <input type="text" id="searchInput" placeholder="Search DuckDuckGo...">
+            <button id="searchBtn">Search</button>
+        </div>
+        <div class="view-controls">
+            <span id="viewListBtn" class="view-btn" title="List View">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 4H21V6H3V4ZM3 11H21V13H3V11ZM3 18H21V20H3V18Z" /></svg>
+            </span>
+            <span id="viewGroupBtn" class="view-btn" title="Group View">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 13h8v-8h-8v8z"/></svg>
+            </span>
+        </div>
+        <ul id="linksList"></ul>
+        <div class="add-btn-container">
+            <button id="addBtn">+ Add</button>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const linksList = document.getElementById('linksList');
+        const addBtn = document.getElementById('addBtn');
+        const viewListBtn = document.getElementById('viewListBtn');
+        const viewGroupBtn = document.getElementById('viewGroupBtn');
+
+        const GENERIC_FAVICON_SRC = 'data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23888\'%3e%3cpath d=\'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z\'/%3e%3c/svg%3e';
+
+        /**
+         * Launches a URL on the Rabbit r1 device, with a voice confirmation.
+         * Includes a fallback for browser-based testing.
+         * @param {string} url The URL to launch.
+         * @param {string} name A descriptive name for the URL being launched.
+         */
+        async function launchUrlOnRabbit(url, name) {
+            try {
+                if (window.rabbit && window.rabbit.core) {
+                    await window.rabbit.core.say({ text: `Launching ${name}` });
+                    await window.rabbit.core.launchUrl({ url: url });
+                } else {
+                    console.log(`[Browser Mode] Launching: ${name} at ${url}`);
+                    window.location.href = url;
+                }
+            } catch (error) {
+                console.error("Error launching URL on Rabbit:", error);
+                alert("Failed to launch URL.");
+            }
+        }
+
+        // Categories are sorted alphabetically, with 'Other' at the end for better usability.
+        const categories = ['Education', 'Entertainment', 'Finance', 'Music', 'News', 'Shopping', 'Social', 'Sports', 'Tools', 'Travel', 'Other'];
+
+        let links = JSON.parse(localStorage.getItem('launchPadR1Links')) || [
+            { description: 'Youtube', url: 'https://m.youtube.com', category: 'Entertainment' },
+            { description: 'Copilot', url: 'https://copilot.microsoft.com/', category: 'Tools' },
+            { description: 'Radio.net', url: 'https://www.radio.net/', category: 'Music' }
+        ];
+
+        let currentView = localStorage.getItem('launchPadR1View') || 'list';
+
+        // Simple migration for old data without categories
+        links.forEach(link => {
+            if (!link.category) {
+                link.category = 'Other';
+            }
+        });
+
+        function renderLinks() {
+            // Set active icon
+            viewListBtn.classList.toggle('active', currentView === 'list');
+            viewGroupBtn.classList.toggle('active', currentView === 'group');
+
+            linksList.innerHTML = '';
+            if (links.length === 0) {
+                 linksList.innerHTML = '<p style="text-align:center; color: #6c757d;">No links saved. Click "+ Add" to start.</p>';
+                 return;
+            }
+
+            const groupedLinks = links.reduce((acc, link) => {
+                const category = link.category || 'Other';
+                if (!acc[category]) {
+                    acc[category] = [];
+                }
+                acc[category].push(link);
+                return acc;
+            }, {});
+
+            // Sort links within each category alphabetically by description
+            for (const category in groupedLinks) {
+                groupedLinks[category].sort((a, b) => a.description.localeCompare(b.description));
+            }
+
+            const sortedCategories = Object.keys(groupedLinks).sort((a, b) => {
+                if (a === 'Other') return 1;
+                if (b === 'Other') return -1;
+                return a.localeCompare(b);
+            });
+
+            if (currentView === 'list') {
+                sortedCategories.forEach(category => {
+                    const categoryHeader = document.createElement('h3');
+                    categoryHeader.className = 'category-header';
+                    categoryHeader.textContent = category;
+                    linksList.appendChild(categoryHeader);
+
+                    groupedLinks[category].forEach(link => renderLinkItem(link, linksList));
+                });
+            } else { // Group View
+                sortedCategories.forEach(category => {
+                    const categoryHeader = document.createElement('h3');
+                    categoryHeader.className = 'category-header collapsible';
+                    categoryHeader.textContent = category;
+                    linksList.appendChild(categoryHeader);
+
+                    const linksContainer = document.createElement('div');
+                    linksContainer.className = 'links-container';
+                    groupedLinks[category].forEach(link => renderLinkItem(link, linksContainer));
+                    linksList.appendChild(linksContainer);
+                });
+            }
+        }
+
+        function renderLinkItem(link, parentElement) {
+            const index = links.indexOf(link);
+            const li = document.createElement('li');
+            li.className = 'link-item';
+            li.dataset.index = index;
+            li.innerHTML = `
+                <img src="https://www.google.com/s2/favicons?sz=64&domain_url=${link.url}" class="link-favicon" alt="Favicon" onerror="this.onerror=null; this.src='${GENERIC_FAVICON_SRC}'; this.style.padding='3px';">
+                <div class="link-info">
+                    <div class="link-description">${link.description}</div>
+                </div>
+                <div class="link-actions">
+                    <span class="edit-btn" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.7279 9.57627L14.3137 8.16206L5.82842 16.6473V18H7.18263L15.7279 9.57627ZM17.1421 8.16206L18.5563 6.74785L17.1421 5.33363L15.7279 6.74785L17.1421 8.16206ZM7.24264 20H3V15.7574L14.435 4.32233C14.8256 3.93181 15.4587 3.93181 15.8492 4.32233L19.6777 8.15076C20.0682 8.54128 20.0682 9.17445 19.6777 9.56497L8.24264 21H7.24264V20Z"></path></svg></span>
+                    <span class="delete-btn" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17 6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6ZM18 8H6V20H18V8ZM9 11H11V17H9V11ZM13 11H15V17H13V11ZM9 4V6H15V4H9Z"></path></svg></span>
+                </div>
+            `;
+            parentElement.appendChild(li);
+        }
+
+        function setView(view) {
+            currentView = view;
+            localStorage.setItem('launchPadR1View', view);
+            renderLinks();
+        }
+        
+        function saveLinks() {
+            localStorage.setItem('launchPadR1Links', JSON.stringify(links));
+        }
+
+        linksList.addEventListener('click', (e) => {
+            const target = e.target;
+
+            // Handle category collapse/expand in 'group' view
+            if (currentView === 'group' && target.classList.contains('category-header')) {
+                const linksContainer = target.nextElementSibling;
+                if (linksContainer && linksContainer.classList.contains('links-container')) {
+                    linksContainer.classList.toggle('expanded');
+                    target.classList.toggle('expanded');
+                }
+                return;
+            }
+
+            const li = target.closest('.link-item');
+            if (!li) return;
+            
+            const index = parseInt(li.dataset.index);
+
+            // *** NEW LAUNCH BEHAVIOR ***
+            if (target.closest('.link-info') || target.classList.contains('link-favicon')) {
+                // If the item is in edit mode (has an edit input), do not launch.
+                if (li.querySelector('.edit-description')) {
+                    return;
+                }
+                const link = links[index];
+                launchUrlOnRabbit(link.url, link.description);
+            }
+            
+            else if (target.classList.contains('delete-btn')) {
+                if (confirm(`Are you sure you want to delete "${links[index].description}"?`)) {
+                    links.splice(index, 1);
+                    saveLinks();
+                    renderLinks();
+                }
+            }
+            
+            else if (target.classList.contains('edit-btn')) {
+                editLink(li, index);
+            }
+        });
+        
+        function editLink(li, index) {
+            const link = links[index];
+            const categoryOptions = categories.map(cat => 
+                `<option value="${cat}" ${link.category === cat ? 'selected' : ''}>${cat}</option>`
+            ).join('');
+            li.innerHTML = `
+                <div class="link-info">
+                    <input type="text" class="edit-description" value="${link.description}" placeholder="Description">
+                    <input type="text" class="edit-url" value="${link.url}" placeholder="URL">
+                    <select class="edit-category">${categoryOptions}</select>
+                </div>
+                <div class="link-actions">
+                    <button class="save-btn">Save</button>
+                </div>
+            `;
+            li.querySelector('.save-btn').addEventListener('click', () => {
+                const newDescription = li.querySelector('.edit-description').value.trim();
+                const newUrl = li.querySelector('.edit-url').value.trim();
+                const newCategory = li.querySelector('.edit-category').value;
+                if (newDescription && newUrl) {
+                    links[index] = {
+                        description: newDescription,
+                        url: newUrl,
+                        category: newCategory
+                    };
+                    saveLinks();
+                    renderLinks();
+                } else {
+                    alert('Description and URL cannot be empty.');
+                }
+            });
+        }
+
+        addBtn.addEventListener('click', () => {
+            const li = document.createElement('li');
+            li.className = 'link-item';
+            const categoryOptions = categories.map(cat => 
+                `<option value="${cat}" ${cat === 'Other' ? 'selected' : ''}>${cat}</option>`
+            ).join('');
+            li.innerHTML = `
+                <div class="link-info">
+                    <input type="text" class="new-description" placeholder="Description">
+                    <input type="text" class="new-url" placeholder="URL">
+                    <select class="new-category">${categoryOptions}</select>
+                </div>
+                <div class="link-actions">
+                    <button class="save-new-btn">Save</button>
+                </div>
+            `;
+            linksList.appendChild(li);
+            li.querySelector('.save-new-btn').addEventListener('click', () => {
+                const description = li.querySelector('.new-description').value.trim();
+                const url = li.querySelector('.new-url').value.trim();
+                const category = li.querySelector('.new-category').value;
+                if(description && url) {
+                    links.push({ description, url, category });
+                    saveLinks();
+                    renderLinks();
+                } else {
+                    alert('Please fill in both fields.');
+                }
+            });
+        });
+
+        function performSearch() {
+            const query = searchInput.value.trim();
+            if (query) {
+                const searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
+                launchUrlOnRabbit(searchUrl, `search for ${query}`);
+                searchInput.value = '';
+            }
+        }
+        searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        viewListBtn.addEventListener('click', () => setView('list'));
+        viewGroupBtn.addEventListener('click', () => setView('group'));
+
+        renderLinks();
+    });
+    </script>
+</body>
+</html>
