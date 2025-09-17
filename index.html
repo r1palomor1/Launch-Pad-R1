@@ -732,7 +732,7 @@
          * Populates the shake-to-launch dropdown with the current list of links.
          */
         function setupShakeLinkSetting() {
-            const currentShakeIndex = shakeLinkSelect.value || shakeLinkIndex; // Get current value
+            // `shakeLinkIndex` holds the value from localStorage. This is our source of truth.
             shakeLinkSelect.innerHTML = '<option value="-1">Disabled</option>'; // Reset with disabled option
 
             // Populate dropdown with all links
@@ -743,18 +743,17 @@
                 shakeLinkSelect.appendChild(option);
             });
 
-            // If the previously selected link still exists, re-select it.
-            if (currentShakeIndex >= 0 && currentShakeIndex < links.length) {
-                shakeLinkSelect.value = currentShakeIndex;
+            // If the saved index is still valid for the current links array, select it.
+            if (shakeLinkIndex >= 0 && shakeLinkIndex < links.length) {
+                shakeLinkSelect.value = shakeLinkIndex;
             } else {
-                shakeLinkSelect.value = '-1'; // Default to disabled
-            }
-            
-            const newIndex = parseInt(shakeLinkSelect.value, 10);
-            // Sync state variable and localStorage if it was corrected
-            if (shakeLinkIndex !== newIndex) {
-                shakeLinkIndex = newIndex;
-                localStorage.setItem('launchPadR1ShakeLinkIndex', shakeLinkIndex);
+                // If the index is invalid (e.g., link was deleted), reset to 'Disabled'
+                // and update the state variable and localStorage to reflect this correction.
+                if (shakeLinkIndex !== -1) {
+                    shakeLinkIndex = -1;
+                    localStorage.setItem('launchPadR1ShakeLinkIndex', '-1');
+                }
+                shakeLinkSelect.value = '-1';
             }
         }
 
