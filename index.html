@@ -83,18 +83,6 @@
             color: var(--font-color);
             filter: none; /* Override the default button hover */
         }
-        button.icon-only {
-            padding: 6px;
-        }
-        button.secondary svg {
-            width: 18px;
-            height: 18px;
-            display: block;
-            fill: var(--icon-color);
-        }
-        button.secondary:hover svg {
-            fill: var(--font-color);
-        }
         #linksList {
             list-style-type: none;
             padding: 0;
@@ -180,16 +168,6 @@
         }
         .link-info > *:first-child {
             margin-top: 0;
-        }
-        .input-with-action {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-            margin-top: 5px;
-        }
-        .input-with-action input {
-            flex-grow: 1;
-            margin-top: 0; /* Override the default margin for inputs inside this container */
         }
         .actions-bar {
             display: flex;
@@ -407,7 +385,6 @@
                     <div class="link-description">${link.description}</div>
                     <div class="link-actions">
                         <span class="edit-btn" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.7279 9.57627L14.3137 8.16206L5.82842 16.6473V18H7.18263L15.7279 9.57627ZM17.1421 8.16206L18.5563 6.74785L17.1421 5.33363L15.7279 6.74785L17.1421 8.16206ZM7.24264 20H3V15.7574L14.435 4.32233C14.8256 3.93181 15.4587 3.93181 15.8492 4.32233L19.6777 8.15076C20.0682 8.54128 20.0682 9.17445 19.6777 9.56497L8.24264 21H7.24264V20Z"></path></svg></span>
-                        <span class="copy-btn" title="Copy URL"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg></span>
                         <span class="delete-btn" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17 6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6ZM18 8H6V20H18V8ZM9 11H11V17H9V11ZM13 11H15V17H13V11ZM9 4V6H15V4H9Z"></path></svg></span>
                     </div>
                 </div>
@@ -466,22 +443,6 @@
             else if (target.closest('.edit-btn')) {
                 editLink(li, index);
             }
-            else if (target.closest('.copy-btn')) {
-                const link = links[index];
-                triggerHaptic();
-                if (window.rabbit && window.rabbit.core) {
-                    try {
-                        await window.rabbit.core.setClipboard({ text: link.url });
-                        await window.rabbit.core.say({ text: 'URL copied' });
-                    } catch (err) {
-                        console.error('Rabbit setClipboard failed:', err);
-                        await window.rabbit.core.say({ text: 'Copy failed' });
-                    }
-                } else {
-                    try { await navigator.clipboard.writeText(link.url); alert('URL copied to clipboard!'); }
-                    catch (err) { alert('Copy failed in browser.'); }
-                }
-            }
             // *** LAUNCH BEHAVIOR ***
             // This is the fallback action if no specific button was clicked.
             else if (target.closest('.link-info') || target.classList.contains('link-favicon')) {
@@ -515,12 +476,7 @@
             return `
                 <div class="link-info">
                     <input type="text" class="${isEditing ? 'edit' : 'new'}-description" value="${description}" placeholder="Description">
-                    <div class="input-with-action">
-                        <input type="text" class="${isEditing ? 'edit' : 'new'}-url" value="${url}" placeholder="URL">
-                        ${!isEditing ? `<button type="button" class="paste-btn secondary icon-only" title="Paste from Clipboard">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 2h-4.18C14.4.84 13.3 0 12 0S9.6.84 9.18 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v2h10V4h2v16z"></path></svg>
-                        </button>` : ''}
-                    </div>
+                    <input type="text" class="${isEditing ? 'edit' : 'new'}-url" value="${url}" placeholder="URL">
                     <select class="${isEditing ? 'edit' : 'new'}-category">${categoryOptions}</select>
                 </div>
                 <div class="link-actions">
@@ -570,65 +526,6 @@
             // Scroll to the new item and focus the description input
             li.scrollIntoView({ behavior: 'smooth' });
             li.querySelector('.new-description').focus();
-
-            const pasteBtn = li.querySelector('.paste-btn');
-            const newUrlInput = li.querySelector('.new-url');
-
-            // This listener handles pasting from any source (internal copy button or external browser copy)
-            // because it reads from the single, system-wide clipboard.
-            pasteBtn.addEventListener('click', async () => {
-                let clipboardText = '';
-                let success = false;
-
-                // --- Step 1: Try to get clipboard text ---
-                if (window.rabbit && window.rabbit.core) {
-                    // We are on the Rabbit device
-                    try {
-                        const clipboardContent = await window.rabbit.core.getClipboard();
-                        clipboardText = clipboardContent.text || '';
-                        success = true;
-                    } catch (err) {
-                        console.error('Rabbit getClipboard failed:', err);
-                        window.rabbit.core.say({ text: 'Could not access clipboard' });
-                    }
-                } else {
-                    // We are in a browser for testing
-                    try {
-                        clipboardText = await navigator.clipboard.readText();
-                        success = true;
-                    } catch (err) {
-                        console.error('Browser readText failed:', err);
-                        alert('Could not access clipboard. This can happen in some browsers without proper permissions.');
-                    }
-                }
-
-                if (!success) {
-                    return; // Exit if we failed to get clipboard text
-                }
-
-                // --- Step 2: Use the clipboard text ---
-                const pastedText = clipboardText.trim();
-                if (pastedText) {
-                    const currentUrlValue = newUrlInput.value;
-                    // Smart paste: if the input is just the default 'https://' and the pasted text doesn't have a protocol, append it.
-                    // Otherwise, replace the whole value. This prevents "https://https://..."
-                    if (currentUrlValue === 'https://' && !/^[a-zA-Z]+:\/\//.test(pastedText)) {
-                        newUrlInput.value += pastedText;
-                    } else {
-                        newUrlInput.value = pastedText;
-                    }
-                    newUrlInput.focus();
-                    triggerHaptic(); // Positive feedback
-                } else {
-                    // Clipboard is empty, provide feedback
-                    if (window.rabbit && window.rabbit.core) {
-                        window.rabbit.core.say({ text: 'Clipboard is empty' });
-                        window.rabbit.core.vibrate({ pattern: [20, 40, 20] }); // "failure" haptic
-                    } else {
-                        alert('Clipboard is empty.');
-                    }
-                }
-            });
 
             li.querySelector('.save-new-btn').addEventListener('click', () => {
                 const description = li.querySelector('.new-description').value.trim();
