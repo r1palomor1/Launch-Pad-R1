@@ -425,7 +425,7 @@
             localStorage.setItem('launchPadR1Links', JSON.stringify(links));
         }
 
-        linksList.addEventListener('click', (e) => {
+        linksList.addEventListener('click', async (e) => {
             const target = e.target;
 
             // Handle category collapse/expand in 'group' view
@@ -469,11 +469,16 @@
                 const link = links[index];
                 triggerHaptic();
                 if (window.rabbit && window.rabbit.core) {
-                    window.rabbit.core.setClipboard({ text: link.url });
-                    window.rabbit.core.say({ text: 'URL copied' });
+                    try {
+                        await window.rabbit.core.setClipboard({ text: link.url });
+                        await window.rabbit.core.say({ text: 'URL copied' });
+                    } catch (err) {
+                        console.error('Rabbit setClipboard failed:', err);
+                        await window.rabbit.core.say({ text: 'Copy failed' });
+                    }
                 } else {
-                    navigator.clipboard.writeText(link.url);
-                    alert('URL copied to clipboard!');
+                    try { await navigator.clipboard.writeText(link.url); alert('URL copied to clipboard!'); }
+                    catch (err) { alert('Copy failed in browser.'); }
                 }
             }
             // *** LAUNCH BEHAVIOR ***
