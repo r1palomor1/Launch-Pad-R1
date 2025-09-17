@@ -83,6 +83,18 @@
             color: var(--font-color);
             filter: none; /* Override the default button hover */
         }
+        button.icon-only {
+            padding: 6px;
+        }
+        button.secondary svg {
+            width: 18px;
+            height: 18px;
+            display: block;
+            fill: var(--icon-color);
+        }
+        button.secondary:hover svg {
+            fill: var(--font-color);
+        }
         #linksList {
             list-style-type: none;
             padding: 0;
@@ -110,6 +122,9 @@
         .link-info {
             flex-grow: 1;
             overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
         .link-description {
             font-weight: bold;
@@ -119,19 +134,16 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .link-url {
-            font-size: 0.9em;
-            color: var(--icon-color);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            cursor: pointer;
-        }
         .link-actions {
             display: flex;
             gap: 10px;
             flex-direction: column;
             flex-shrink: 0;
+        }
+        /* For the horizontal icons in the normal link view */
+        .link-info > .link-actions {
+            flex-direction: row;
+            gap: 15px;
         }
         .link-actions span {
             cursor: pointer;
@@ -140,8 +152,8 @@
         }
         .link-actions span:hover { color: var(--primary-color); }
         .link-actions svg {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             display: block;
         }
         .category-header {
@@ -302,6 +314,7 @@
         ];
 
         let currentView = localStorage.getItem('launchPadR1View') || 'list';
+        let collapsedCategories = JSON.parse(localStorage.getItem('launchPadR1CollapsedCategories')) || [];
 
         // Simple migration for old data without categories
         links.forEach(link => {
@@ -356,11 +369,18 @@
                     categoryHeader.className = 'category-header collapsible';
                     categoryHeader.textContent = category;
                     linksList.appendChild(categoryHeader);
-
+                    
                     const linksContainer = document.createElement('div');
                     linksContainer.className = 'links-container';
                     groupedLinks[category].forEach(link => renderLinkItem(link, linksContainer));
                     linksList.appendChild(linksContainer);
+
+                    // Check if this category should be expanded or collapsed from memory
+                    const isCollapsed = collapsedCategories.includes(category);
+                    if (!isCollapsed) {
+                        categoryHeader.classList.add('expanded');
+                        linksContainer.classList.add('expanded');
+                    }
                 });
             }
         }
@@ -385,11 +405,11 @@
                 <img src="https://www.google.com/s2/favicons?sz=64&domain_url=${getHostname(link.url)}" class="link-favicon" alt="Favicon" onerror="this.onerror=null; this.src='${GENERIC_FAVICON_SRC}'; this.style.padding='3px';">
                 <div class="link-info">
                     <div class="link-description">${link.description}</div>
-                </div>
-                <div class="link-actions">
-                    <span class="edit-btn" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.7279 9.57627L14.3137 8.16206L5.82842 16.6473V18H7.18263L15.7279 9.57627ZM17.1421 8.16206L18.5563 6.74785L17.1421 5.33363L15.7279 6.74785L17.1421 8.16206ZM7.24264 20H3V15.7574L14.435 4.32233C14.8256 3.93181 15.4587 3.93181 15.8492 4.32233L19.6777 8.15076C20.0682 8.54128 20.0682 9.17445 19.6777 9.56497L8.24264 21H7.24264V20Z"></path></svg></span>
-                    <span class="copy-btn" title="Copy URL"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg></span>
-                    <span class="delete-btn" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17 6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6ZM18 8H6V20H18V8ZM9 11H11V17H9V11ZM13 11H15V17H13V11ZM9 4V6H15V4H9Z"></path></svg></span>
+                    <div class="link-actions">
+                        <span class="edit-btn" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.7279 9.57627L14.3137 8.16206L5.82842 16.6473V18H7.18263L15.7279 9.57627ZM17.1421 8.16206L18.5563 6.74785L17.1421 5.33363L15.7279 6.74785L17.1421 8.16206ZM7.24264 20H3V15.7574L14.435 4.32233C14.8256 3.93181 15.4587 3.93181 15.8492 4.32233L19.6777 8.15076C20.0682 8.54128 20.0682 9.17445 19.6777 9.56497L8.24264 21H7.24264V20Z"></path></svg></span>
+                        <span class="copy-btn" title="Copy URL"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg></span>
+                        <span class="delete-btn" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17 6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6ZM18 8H6V20H18V8ZM9 11H11V17H9V11ZM13 11H15V17H13V11ZM9 4V6H15V4H9Z"></path></svg></span>
+                    </div>
                 </div>
             `;
             parentElement.appendChild(li);
@@ -414,6 +434,18 @@
                 if (linksContainer && linksContainer.classList.contains('links-container')) {
                     linksContainer.classList.toggle('expanded');
                     target.classList.toggle('expanded');
+
+                    // Update and save the collapsed state
+                    const categoryName = target.textContent;
+                    const isNowExpanded = linksContainer.classList.contains('expanded');
+                    if (isNowExpanded) {
+                        collapsedCategories = collapsedCategories.filter(c => c !== categoryName);
+                    } else {
+                        if (!collapsedCategories.includes(categoryName)) {
+                            collapsedCategories.push(categoryName);
+                        }
+                    }
+                    localStorage.setItem('launchPadR1CollapsedCategories', JSON.stringify(collapsedCategories));
                 }
                 return;
             }
@@ -459,22 +491,44 @@
             }
         });
         
-        function editLink(li, index) {
-            const link = links[index];
+        /**
+         * Creates the HTML for the add/edit form.
+         * @param {object|null} link - The link object to edit, or null for a new link.
+         * @returns {string} The innerHTML for the form.
+         */
+        function createFormHTML(link = null) {
+            const isEditing = !!link;
+            const description = isEditing ? link.description : '';
+            const url = isEditing ? link.url : 'https://';
+            const selectedCategory = isEditing ? link.category : 'Other';
+
             const categoryOptions = categories.map(cat => 
-                `<option value="${cat}" ${link.category === cat ? 'selected' : ''}>${cat}</option>`
+                `<option value="${cat}" ${selectedCategory === cat ? 'selected' : ''}>${cat}</option>`
             ).join('');
-            li.innerHTML = `
+
+            const saveButtonClass = isEditing ? 'save-btn' : 'save-new-btn';
+
+            return `
                 <div class="link-info">
-                    <input type="text" class="edit-description" value="${link.description}" placeholder="Description">
-                    <input type="text" class="edit-url" value="${link.url}" placeholder="URL">
-                    <select class="edit-category">${categoryOptions}</select>
+                    <input type="text" class="${isEditing ? 'edit' : 'new'}-description" value="${description}" placeholder="Description">
+                    <div class="input-with-action">
+                        <input type="text" class="${isEditing ? 'edit' : 'new'}-url" value="${url}" placeholder="URL">
+                        ${!isEditing ? `<button type="button" class="paste-btn secondary icon-only" title="Paste from Clipboard">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 2h-4.18C14.4.84 13.3 0 12 0S9.6.84 9.18 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v2h10V4h2v16z"></path></svg>
+                        </button>` : ''}
+                    </div>
+                    <select class="${isEditing ? 'edit' : 'new'}-category">${categoryOptions}</select>
                 </div>
                 <div class="link-actions">
-                    <button class="save-btn">Save</button>
+                    <button class="${saveButtonClass}">Save</button>
                     <button class="cancel-btn secondary">Cancel</button>
                 </div>
             `;
+        }
+
+        function editLink(li, index) {
+            const link = links[index];
+            li.innerHTML = createFormHTML(link);
             li.querySelector('.save-btn').addEventListener('click', () => {
                 const newDescription = li.querySelector('.edit-description').value.trim();
                 const newUrl = li.querySelector('.edit-url').value.trim();
@@ -506,23 +560,7 @@
 
             const li = document.createElement('li');
             li.className = 'link-item';
-            const categoryOptions = categories.map(cat => 
-                `<option value="${cat}" ${cat === 'Other' ? 'selected' : ''}>${cat}</option>`
-            ).join('');
-            li.innerHTML = `
-                <div class="link-info">
-                    <input type="text" class="new-description" placeholder="Description">
-                    <div class="input-with-action">
-                        <input type="text" class="new-url" value="https://" placeholder="URL">
-                        <button type="button" class="paste-btn secondary">Paste</button>
-                    </div>
-                    <select class="new-category">${categoryOptions}</select>
-                </div>
-                <div class="link-actions">
-                    <button class="save-new-btn">Save</button>
-                    <button class="cancel-btn secondary">Cancel</button>
-                </div>
-            `;
+            li.innerHTML = createFormHTML();
             linksList.appendChild(li);
 
             // Scroll to the new item and focus the description input
@@ -531,31 +569,6 @@
 
             const pasteBtn = li.querySelector('.paste-btn');
             const newUrlInput = li.querySelector('.new-url');
-
-            // Function to check clipboard and update button visibility
-            const checkClipboardAndToggleButton = async () => {
-                let hasContent = false;
-                try {
-                    if (window.rabbit && window.rabbit.core && window.rabbit.core.getClipboard) {
-                        const clipboardContent = await window.rabbit.core.getClipboard();
-                        if (clipboardContent && clipboardContent.text) {
-                            hasContent = true;
-                        }
-                    } else if (navigator.clipboard && navigator.clipboard.readText) {
-                        // This may fail if permission isn't granted, which is handled by the catch block.
-                        const text = await navigator.clipboard.readText();
-                        if (text) hasContent = true;
-                    }
-                } catch (err) {
-                    // If we can't read the clipboard, hide the button as a safe default.
-                    console.warn("Could not check clipboard state:", err.name);
-                    hasContent = false;
-                }
-                pasteBtn.style.display = hasContent ? 'inline-block' : 'none';
-            };
-
-            // Check clipboard state when the form is first created
-            checkClipboardAndToggleButton();
 
             pasteBtn.addEventListener('click', async () => {
                 try {
@@ -567,21 +580,33 @@
                         clipboardText = await navigator.clipboard.readText();
                     }
 
-                    if (clipboardText) {
-                        newUrlInput.value = clipboardText;
-                        newUrlInput.focus(); // Focus the input after pasting
+                    const pastedText = clipboardText.trim();
+                    if (pastedText) {
+                        const currentUrlValue = newUrlInput.value;
 
-                        // Clear the clipboard after a successful paste
-                        if (window.rabbit && window.rabbit.core && window.rabbit.core.setClipboard) {
-                            await window.rabbit.core.setClipboard({ text: '' });
-                        } else if (navigator.clipboard && navigator.clipboard.writeText) {
-                            await navigator.clipboard.writeText('');
+                        // Smart paste: if the input is just the default 'https://' and the pasted text doesn't have a protocol, append it.
+                        // Otherwise, replace the whole value. This prevents "https://https://..."
+                        if (currentUrlValue === 'https://' && !/^[a-zA-Z]+:\/\//.test(pastedText)) {
+                            newUrlInput.value += pastedText;
+                        } else {
+                            newUrlInput.value = pastedText;
                         }
-                        // Hide the button since the clipboard is now empty
-                        pasteBtn.style.display = 'none';
+                        newUrlInput.focus();
+                        triggerHaptic(); // Positive feedback
+                    } else {
+                        // Clipboard is empty, provide feedback
+                        if (window.rabbit && window.rabbit.core) {
+                            window.rabbit.core.say({ text: 'Clipboard is empty' });
+                            window.rabbit.core.vibrate({ pattern: [20, 40, 20] }); // "failure" haptic
+                        } else {
+                            alert('Clipboard is empty.');
+                        }
                     }
                 } catch (err) {
                     console.error('Failed to read clipboard contents: ', err);
+                    if (window.rabbit && window.rabbit.core) {
+                        window.rabbit.core.say({ text: 'Could not access clipboard' });
+                    }
                 }
             });
 
