@@ -56,7 +56,7 @@
             font-size: 1em;
         }
         button {
-            padding: 8px 12px;
+            padding: 8px 10px;
             border: none;
             background-color: var(--primary-color);
             color: white;
@@ -97,7 +97,7 @@
         }
         .link-description {
             font-weight: bold;
-            font-size: 1em;
+            font-size: 0.95em;
             cursor: pointer;
             white-space: nowrap;
             overflow: hidden;
@@ -383,7 +383,7 @@
                 launchUrlOnRabbit(link.url, link.description);
             }
             
-            else if (target.classList.contains('delete-btn')) {
+            else if (target.closest('.delete-btn')) {
                 if (confirm(`Are you sure you want to delete "${links[index].description}"?`)) {
                     links.splice(index, 1);
                     saveLinks();
@@ -391,7 +391,7 @@
                 }
             }
             
-            else if (target.classList.contains('edit-btn')) {
+            else if (target.closest('.edit-btn')) {
                 editLink(li, index);
             }
         });
