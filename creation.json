@@ -4,6 +4,8 @@
   "entry_file": "index.html",
   "permissions": [
     "core:launch-url",
-    "core:say"
+    "core:say",
+    "core:clipboard",
+    "core:haptics"
   ]
 }

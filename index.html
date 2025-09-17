@@ -169,6 +169,16 @@
         .link-info > *:first-child {
             margin-top: 0;
         }
+        .input-with-action {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            margin-top: 5px;
+        }
+        .input-with-action input {
+            flex-grow: 1;
+            margin-top: 0; /* Override the default margin for inputs inside this container */
+        }
         .actions-bar {
             display: flex;
             justify-content: space-between;
@@ -271,6 +281,17 @@
             }
         }
 
+        /**
+         * Triggers a short haptic vibration if on the Rabbit device.
+         */
+        function triggerHaptic() {
+            try {
+                if (window.rabbit && window.rabbit.core && window.rabbit.core.vibrate) {
+                    window.rabbit.core.vibrate({ pattern: [50] }); // A short 50ms vibration
+                }
+            } catch (e) { console.error("Haptic feedback failed:", e); }
+        }
+
         // Categories are sorted alphabetically, with 'Other' at the end for better usability.
         const categories = ['Education', 'Entertainment', 'Finance', 'Music', 'News', 'Shopping', 'Social', 'Sports', 'Tools', 'Travel', 'Other'];
 
@@ -367,6 +388,7 @@
                 </div>
                 <div class="link-actions">
                     <span class="edit-btn" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.7279 9.57627L14.3137 8.16206L5.82842 16.6473V18H7.18263L15.7279 9.57627ZM17.1421 8.16206L18.5563 6.74785L17.1421 5.33363L15.7279 6.74785L17.1421 8.16206ZM7.24264 20H3V15.7574L14.435 4.32233C14.8256 3.93181 15.4587 3.93181 15.8492 4.32233L19.6777 8.15076C20.0682 8.54128 20.0682 9.17445 19.6777 9.56497L8.24264 21H7.24264V20Z"></path></svg></span>
+                    <span class="copy-btn" title="Copy URL"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg></span>
                     <span class="delete-btn" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17 6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6ZM18 8H6V20H18V8ZM9 11H11V17H9V11ZM13 11H15V17H13V11ZM9 4V6H15V4H9Z"></path></svg></span>
                 </div>
             `;
@@ -408,6 +430,7 @@
                     return;
                 }
                 const link = links[index];
+                triggerHaptic();
                 launchUrlOnRabbit(link.url, link.description);
             }
             
@@ -421,6 +444,18 @@
             
             else if (target.closest('.edit-btn')) {
                 editLink(li, index);
+            }
+
+            else if (target.closest('.copy-btn')) {
+                const link = links[index];
+                triggerHaptic();
+                if (window.rabbit && window.rabbit.core) {
+                    window.rabbit.core.setClipboard({ text: link.url });
+                    window.rabbit.core.say({ text: 'URL copied' });
+                } else {
+                    navigator.clipboard.writeText(link.url);
+                    alert('URL copied to clipboard!');
+                }
             }
         });
         
@@ -477,7 +512,10 @@
             li.innerHTML = `
                 <div class="link-info">
                     <input type="text" class="new-description" placeholder="Description">
-                    <input type="text" class="new-url" value="https://" placeholder="URL">
+                    <div class="input-with-action">
+                        <input type="text" class="new-url" value="https://" placeholder="URL">
+                        <button type="button" class="paste-btn secondary">Paste</button>
+                    </div>
                     <select class="new-category">${categoryOptions}</select>
                 </div>
                 <div class="link-actions">
@@ -490,6 +528,62 @@
             // Scroll to the new item and focus the description input
             li.scrollIntoView({ behavior: 'smooth' });
             li.querySelector('.new-description').focus();
+
+            const pasteBtn = li.querySelector('.paste-btn');
+            const newUrlInput = li.querySelector('.new-url');
+
+            // Function to check clipboard and update button visibility
+            const checkClipboardAndToggleButton = async () => {
+                let hasContent = false;
+                try {
+                    if (window.rabbit && window.rabbit.core && window.rabbit.core.getClipboard) {
+                        const clipboardContent = await window.rabbit.core.getClipboard();
+                        if (clipboardContent && clipboardContent.text) {
+                            hasContent = true;
+                        }
+                    } else if (navigator.clipboard && navigator.clipboard.readText) {
+                        // This may fail if permission isn't granted, which is handled by the catch block.
+                        const text = await navigator.clipboard.readText();
+                        if (text) hasContent = true;
+                    }
+                } catch (err) {
+                    // If we can't read the clipboard, hide the button as a safe default.
+                    console.warn("Could not check clipboard state:", err.name);
+                    hasContent = false;
+                }
+                pasteBtn.style.display = hasContent ? 'inline-block' : 'none';
+            };
+
+            // Check clipboard state when the form is first created
+            checkClipboardAndToggleButton();
+
+            pasteBtn.addEventListener('click', async () => {
+                try {
+                    let clipboardText = '';
+                    if (window.rabbit && window.rabbit.core && window.rabbit.core.getClipboard) {
+                        const clipboardContent = await window.rabbit.core.getClipboard();
+                        clipboardText = clipboardContent.text || '';
+                    } else if (navigator.clipboard && navigator.clipboard.readText) {
+                        clipboardText = await navigator.clipboard.readText();
+                    }
+
+                    if (clipboardText) {
+                        newUrlInput.value = clipboardText;
+                        newUrlInput.focus(); // Focus the input after pasting
+
+                        // Clear the clipboard after a successful paste
+                        if (window.rabbit && window.rabbit.core && window.rabbit.core.setClipboard) {
+                            await window.rabbit.core.setClipboard({ text: '' });
+                        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                            await navigator.clipboard.writeText('');
+                        }
+                        // Hide the button since the clipboard is now empty
+                        pasteBtn.style.display = 'none';
+                    }
+                } catch (err) {
+                    console.error('Failed to read clipboard contents: ', err);
+                }
+            });
 
             li.querySelector('.save-new-btn').addEventListener('click', () => {
                 const description = li.querySelector('.new-description').value.trim();
