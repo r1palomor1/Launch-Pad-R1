@@ -276,6 +276,41 @@
         .links-container.expanded {
             display: block;
         }
+        /* Custom Prompt Styles */
+        .custom-prompt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 8px;
+        }
+        .custom-prompt-dialog {
+            background-color: var(--item-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .custom-prompt-dialog p {
+            margin: 0;
+            font-weight: bold;
+            text-align: center;
+        }
+        .custom-prompt-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
@@ -314,6 +349,17 @@
         <ul id="linksList"></ul>
     </div>
 
+    <div id="customPromptOverlay" class="custom-prompt-overlay" style="display: none;">
+        <div class="custom-prompt-dialog">
+            <p id="customPromptMessage"></p>
+            <input type="text" id="customPromptInput">
+            <div class="custom-prompt-actions">
+                <button id="customPromptCancel" class="secondary">Cancel</button>
+                <button id="customPromptOk">OK</button>
+            </div>
+        </div>
+    </div>
+
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const searchInput = document.getElementById('searchInput');
@@ -325,6 +371,11 @@
         const quickLaunchBtn = document.getElementById('quickLaunchBtn');
         const toggleAllLink = document.getElementById('toggleAllLink');
         const themeBtn = document.getElementById('themeBtn');
+        const customPromptOverlay = document.getElementById('customPromptOverlay');
+        const customPromptMessage = document.getElementById('customPromptMessage');
+        const customPromptInput = document.getElementById('customPromptInput');
+        const customPromptOk = document.getElementById('customPromptOk');
+        const customPromptCancel = document.getElementById('customPromptCancel');
 
         const GENERIC_FAVICON_SRC = 'data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23888\'%3e%3cpath d=\'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z\'/%3e%3c/svg%3e';
 
@@ -824,7 +875,39 @@
             }
         });
 
-        // --- Theming ---
+        // --- Theming & Custom Prompt ---
+        function showCustomPrompt(message) {
+            return new Promise((resolve) => {
+                customPromptMessage.textContent = message;
+                customPromptInput.value = '';
+                customPromptOverlay.style.display = 'flex';
+                customPromptInput.focus();
+
+                let resolved = false; // Prevent multiple resolutions
+
+                const closePrompt = (value) => {
+                    if (resolved) return;
+                    resolved = true;
+                    
+                    customPromptOverlay.style.display = 'none';
+                    customPromptOk.onclick = null;
+                    customPromptCancel.onclick = null;
+                    customPromptOverlay.onclick = null;
+                    customPromptInput.onkeypress = null;
+                    resolve(value);
+                };
+
+                customPromptOk.onclick = () => closePrompt(customPromptInput.value);
+                customPromptCancel.onclick = () => closePrompt(null);
+                customPromptOverlay.onclick = (e) => {
+                    if (e.target === customPromptOverlay) closePrompt(null);
+                };
+                customPromptInput.onkeypress = (e) => {
+                    if (e.key === 'Enter') closePrompt(customPromptInput.value);
+                };
+            });
+        }
+
         const themes = {
             'rabbit': { name: 'Rabbit', colors: { '--primary-color': '#ff7043', '--bg-color': '#0d0d0d', '--item-bg': '#1c1c1c', '--border-color': '#2a2a2a', '--icon-color': '#7a7a7a' } },
             'ocean': { name: 'Ocean', colors: { '--primary-color': '#3498db', '--bg-color': '#0c1014', '--item-bg': '#1a2633', '--border-color': '#2c3e50', '--icon-color': '#8a9ba8' } },
@@ -929,7 +1012,7 @@
             } catch (e) { console.error("Say feedback failed:", e); }
         }
 
-        function cycleTheme() {
+        async function cycleTheme() {
             const currentIndex = themeKeys.indexOf(currentThemeName);
 
             // If current theme is a custom theme (not in our keys), or if something is out of sync,
@@ -941,7 +1024,7 @@
 
             // If we are on the last predefined theme in our cycle, it's time for the custom prompt.
             if (currentIndex === themeKeys.length - 1) {
-                const customColor = prompt("Enter a color name (e.g., hotpink, #8257e5):");
+                const customColor = await showCustomPrompt("Enter a color name (e.g. hotpink or #8257e5)");
                 if (customColor && customColor.trim()) {
                     // User entered a color. Apply it. The next click will loop to the start.
                     applyTheme(`custom:${customColor.trim()}`);
