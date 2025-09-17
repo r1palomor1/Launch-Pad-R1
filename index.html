@@ -563,6 +563,24 @@
         viewListBtn.addEventListener('click', () => setView('list'));
         viewGroupBtn.addEventListener('click', () => setView('group'));
 
+        // --- Shake to launch a random link ---
+        if (window.rabbit) {
+            window.rabbit.on_rabbit_shake = () => {
+                if (links.length > 0) {
+                    triggerHaptic();
+                    const randomIndex = Math.floor(Math.random() * links.length);
+                    const randomLink = links[randomIndex];
+                    // Announce that it's a random link before launching
+                    launchUrlOnRabbit(randomLink.url, `random link, ${randomLink.description}`);
+                } else {
+                    // Optional feedback if there are no links
+                    if (window.rabbit.core && window.rabbit.core.say) {
+                        window.rabbit.core.say({ text: "No links to launch." });
+                    }
+                }
+            };
+        }
+
         renderLinks();
     });
     </script>
