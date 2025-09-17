@@ -124,7 +124,7 @@
             overflow: hidden; 
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 8px;
         }
         .link-description {
             font-weight: bold;
@@ -455,29 +455,16 @@
             
             const index = parseInt(li.dataset.index);
 
-            // *** NEW LAUNCH BEHAVIOR ***
-            if (target.closest('.link-info') || target.classList.contains('link-favicon')) {
-                // If the item is in edit mode (has an edit input), do not launch.
-                if (li.querySelector('.edit-description')) {
-                    return;
-                }
-                const link = links[index];
-                triggerHaptic();
-                launchUrlOnRabbit(link.url, link.description);
-            }
-            
-            else if (target.closest('.delete-btn')) {
+            if (target.closest('.delete-btn')) {
                 if (confirm(`Are you sure you want to delete "${links[index].description}"?`)) {
                     links.splice(index, 1);
                     saveLinks();
                     renderLinks();
                 }
             }
-            
             else if (target.closest('.edit-btn')) {
                 editLink(li, index);
             }
-
             else if (target.closest('.copy-btn')) {
                 const link = links[index];
                 triggerHaptic();
@@ -488,6 +475,17 @@
                     navigator.clipboard.writeText(link.url);
                     alert('URL copied to clipboard!');
                 }
+            }
+            // *** LAUNCH BEHAVIOR ***
+            // This is the fallback action if no specific button was clicked.
+            else if (target.closest('.link-info') || target.classList.contains('link-favicon')) {
+                // If the item is in edit mode (has an edit input), do not launch.
+                if (li.querySelector('.edit-description')) {
+                    return;
+                }
+                const link = links[index];
+                triggerHaptic();
+                launchUrlOnRabbit(link.url, link.description);
             }
         });
         
@@ -606,6 +604,8 @@
                     console.error('Failed to read clipboard contents: ', err);
                     if (window.rabbit && window.rabbit.core) {
                         window.rabbit.core.say({ text: 'Could not access clipboard' });
+                    } else {
+                        alert('Could not access clipboard. This can happen in some browsers without proper permissions.');
                     }
                 }
             });
