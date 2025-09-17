@@ -515,7 +515,10 @@
             viewListBtn.classList.toggle('active', currentView === 'list');
             viewGroupBtn.classList.toggle('active', currentView === 'group');
 
+            // Reset dynamic sizing before rendering to ensure we start with the default large text.
+            linksList.classList.remove('small-text');
             linksList.innerHTML = '';
+
             if (linksToRender.length === 0) {
                 const query = searchInput.value.trim();
                 if (query) {
@@ -603,8 +606,10 @@
                 });
             }
 
-            // After rendering all items, apply dynamic sizing.
-            applyDynamicSizing();
+            // After rendering, check for overflow. We use requestAnimationFrame to ensure
+            // the browser has completed its layout calculations before we check element sizes,
+            // preventing race conditions and ensuring accurate measurements.
+            requestAnimationFrame(applyDynamicSizing);
         }
 
         /**
