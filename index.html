@@ -760,17 +760,29 @@
 
         // --- Shake to launch a random link ---
         if (window.rabbit) {
-            window.rabbit.on_rabbit_shake = () => {
-                if (shakeLinkIndex >= 0 && shakeLinkIndex < links.length) {
+            // This function is assigned to the shake event handler.
+            // It's designed to be very "chatty" to help diagnose if the event is firing.
+            const handleShake = async () => {
+                try {
+                    // First, confirm the event fired with both haptics and voice.
                     triggerHaptic();
-                    const linkToLaunch = links[shakeLinkIndex];
-                    launchUrlOnRabbit(linkToLaunch.url, linkToLaunch.description);
-                } else {
-                    if (window.rabbit.core && window.rabbit.core.say) { 
-                        window.rabbit.core.say({ text: "Shake launch is disabled." }); 
+                    await window.rabbit.core.say({ text: "Shake detected." });
+
+                    if (shakeLinkIndex >= 0 && shakeLinkIndex < links.length) {
+                        const linkToLaunch = links[shakeLinkIndex];
+                        // The launchUrlOnRabbit function will provide the "Launching..." feedback.
+                        await launchUrlOnRabbit(linkToLaunch.url, linkToLaunch.description);
+                    } else {
+                        // Provide clear feedback if no link is selected.
+                        await window.rabbit.core.say({ text: "Shake launch is disabled." });
                     }
+                } catch (e) {
+                    console.error("Error during shake event:", e);
+                    // If anything goes wrong, announce it.
+                    await window.rabbit.core.say({ text: "An error occurred during the shake action." });
                 }
             };
+            window.rabbit.on_rabbit_shake = handleShake;
         }
 
         renderLinks();
