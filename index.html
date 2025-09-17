@@ -464,6 +464,8 @@
         
         function saveLinks() {
             localStorage.setItem('launchPadR1Links', JSON.stringify(links));
+            // Keep the shake dropdown in sync with available categories
+            setupShakeSetting();
         }
 
         function handleCategoryToggle(headerElement) {
@@ -720,23 +722,40 @@
         viewListBtn.addEventListener('click', () => setView('list'));
         viewGroupBtn.addEventListener('click', () => setView('group'));
 
+        // --- Shake Setting Event Listener (setup once) ---
+        shakeCategorySelect.addEventListener('change', (e) => {
+            shakeSetting = e.target.value;
+            localStorage.setItem('launchPadR1ShakeSetting', shakeSetting);
+        });
+
         // --- Shake Setting ---
         function setupShakeSetting() {
-            // Populate dropdown with categories
-            categories.forEach(cat => {
-                if (cat === 'Other') return; // Don't add 'Other' to shake options
+            const currentShakeValue = shakeCategorySelect.value || shakeSetting; // Use state if UI not set
+            // Clear existing options except for 'All'
+            shakeCategorySelect.innerHTML = '<option value="all">All</option>';
+
+            // Get unique categories currently in use from the links
+            const usedCategories = [...new Set(links.map(link => link.category))].sort();
+
+            // Populate dropdown with used categories that have links
+            usedCategories.forEach(cat => {
+                if (cat === 'Other') return; // 'Other' is usually too broad for a shake shortcut
                 const option = document.createElement('option');
                 option.value = cat;
                 option.textContent = cat;
                 shakeCategorySelect.appendChild(option);
             });
-            // Set the saved value
-            shakeCategorySelect.value = shakeSetting;
-            // Save on change
-            shakeCategorySelect.addEventListener('change', (e) => {
-                shakeSetting = e.target.value;
+
+            // If the previously selected category still exists, re-select it. Otherwise, default to 'all'.
+            const availableOptions = Array.from(shakeCategorySelect.options).map(opt => opt.value);
+            const newValue = availableOptions.includes(currentShakeValue) ? currentShakeValue : 'all';
+            
+            shakeCategorySelect.value = newValue;
+            // Sync state variable and localStorage if it was corrected
+            if (shakeSetting !== newValue) {
+                shakeSetting = newValue;
                 localStorage.setItem('launchPadR1ShakeSetting', shakeSetting);
-            });
+            }
         }
 
         // --- Shake to launch a random link ---
@@ -758,8 +777,8 @@
             };
         }
 
-        setupShakeSetting();
         renderLinks();
+        setupShakeSetting(); // Initial setup after first render
     });
     </script>
 </body>
