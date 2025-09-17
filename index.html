@@ -568,44 +568,58 @@
             const pasteBtn = li.querySelector('.paste-btn');
             const newUrlInput = li.querySelector('.new-url');
 
+            // This listener handles pasting from any source (internal copy button or external browser copy)
+            // because it reads from the single, system-wide clipboard.
             pasteBtn.addEventListener('click', async () => {
-                try {
-                    let clipboardText = '';
-                    if (window.rabbit && window.rabbit.core && window.rabbit.core.getClipboard) {
+                let clipboardText = '';
+                let success = false;
+
+                // --- Step 1: Try to get clipboard text ---
+                if (window.rabbit && window.rabbit.core) {
+                    // We are on the Rabbit device
+                    try {
                         const clipboardContent = await window.rabbit.core.getClipboard();
                         clipboardText = clipboardContent.text || '';
-                    } else if (navigator.clipboard && navigator.clipboard.readText) {
-                        clipboardText = await navigator.clipboard.readText();
-                    }
-
-                    const pastedText = clipboardText.trim();
-                    if (pastedText) {
-                        const currentUrlValue = newUrlInput.value;
-
-                        // Smart paste: if the input is just the default 'https://' and the pasted text doesn't have a protocol, append it.
-                        // Otherwise, replace the whole value. This prevents "https://https://..."
-                        if (currentUrlValue === 'https://' && !/^[a-zA-Z]+:\/\//.test(pastedText)) {
-                            newUrlInput.value += pastedText;
-                        } else {
-                            newUrlInput.value = pastedText;
-                        }
-                        newUrlInput.focus();
-                        triggerHaptic(); // Positive feedback
-                    } else {
-                        // Clipboard is empty, provide feedback
-                        if (window.rabbit && window.rabbit.core) {
-                            window.rabbit.core.say({ text: 'Clipboard is empty' });
-                            window.rabbit.core.vibrate({ pattern: [20, 40, 20] }); // "failure" haptic
-                        } else {
-                            alert('Clipboard is empty.');
-                        }
-                    }
-                } catch (err) {
-                    console.error('Failed to read clipboard contents: ', err);
-                    if (window.rabbit && window.rabbit.core) {
+                        success = true;
+                    } catch (err) {
+                        console.error('Rabbit getClipboard failed:', err);
                         window.rabbit.core.say({ text: 'Could not access clipboard' });
-                    } else {
+                    }
+                } else {
+                    // We are in a browser for testing
+                    try {
+                        clipboardText = await navigator.clipboard.readText();
+                        success = true;
+                    } catch (err) {
+                        console.error('Browser readText failed:', err);
                         alert('Could not access clipboard. This can happen in some browsers without proper permissions.');
+                    }
+                }
+
+                if (!success) {
+                    return; // Exit if we failed to get clipboard text
+                }
+
+                // --- Step 2: Use the clipboard text ---
+                const pastedText = clipboardText.trim();
+                if (pastedText) {
+                    const currentUrlValue = newUrlInput.value;
+                    // Smart paste: if the input is just the default 'https://' and the pasted text doesn't have a protocol, append it.
+                    // Otherwise, replace the whole value. This prevents "https://https://..."
+                    if (currentUrlValue === 'https://' && !/^[a-zA-Z]+:\/\//.test(pastedText)) {
+                        newUrlInput.value += pastedText;
+                    } else {
+                        newUrlInput.value = pastedText;
+                    }
+                    newUrlInput.focus();
+                    triggerHaptic(); // Positive feedback
+                } else {
+                    // Clipboard is empty, provide feedback
+                    if (window.rabbit && window.rabbit.core) {
+                        window.rabbit.core.say({ text: 'Clipboard is empty' });
+                        window.rabbit.core.vibrate({ pattern: [20, 40, 20] }); // "failure" haptic
+                    } else {
+                        alert('Clipboard is empty.');
                     }
                 }
             });
