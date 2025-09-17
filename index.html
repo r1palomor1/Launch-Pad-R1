@@ -426,6 +426,7 @@
         }
 
         linksList.addEventListener('click', async (e) => {
+            console.log('Click event. window.rabbit exists:', !!(window.rabbit && window.rabbit.core));
             const target = e.target;
 
             // Handle category collapse/expand in 'group' view
