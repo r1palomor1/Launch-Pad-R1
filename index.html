@@ -72,6 +72,17 @@
         button:hover {
             filter: brightness(1.15);
         }
+        /* Secondary button style for non-primary actions like 'Cancel' */
+        button.secondary {
+            background-color: transparent;
+            border: 1px solid var(--icon-color);
+            color: var(--icon-color);
+        }
+        button.secondary:hover {
+            background-color: var(--item-bg); /* A subtle hover effect */
+            color: var(--font-color);
+            filter: none; /* Override the default button hover */
+        }
         #linksList {
             list-style-type: none;
             padding: 0;
@@ -145,7 +156,7 @@
             margin-top: 0;
         }
         .link-info input, .link-info select {
-            width: 98%;
+            width: 100%;
             margin-top: 5px;
             padding: 6px;
             border: 1px solid var(--border-color);
@@ -332,13 +343,24 @@
             }
         }
 
+        /**
+         * Extracts the hostname from a URL for favicon services.
+         * @param {string} url The full URL.
+         * @returns {string} The hostname (e.g., "www.google.com").
+         */
+        function getHostname(url) {
+            try {
+                return new URL(url).hostname;
+            } catch (e) { return url; } // Fallback for invalid URLs
+        }
+
         function renderLinkItem(link, parentElement) {
             const index = links.indexOf(link);
             const li = document.createElement('li');
             li.className = 'link-item';
             li.dataset.index = index;
             li.innerHTML = `
-                <img src="https://www.google.com/s2/favicons?sz=64&domain_url=${link.url}" class="link-favicon" alt="Favicon" onerror="this.onerror=null; this.src='${GENERIC_FAVICON_SRC}'; this.style.padding='3px';">
+                <img src="https://www.google.com/s2/favicons?sz=64&domain_url=${getHostname(link.url)}" class="link-favicon" alt="Favicon" onerror="this.onerror=null; this.src='${GENERIC_FAVICON_SRC}'; this.style.padding='3px';">
                 <div class="link-info">
                     <div class="link-description">${link.description}</div>
                 </div>
@@ -414,6 +436,7 @@
                 </div>
                 <div class="link-actions">
                     <button class="save-btn">Save</button>
+                    <button class="cancel-btn secondary">Cancel</button>
                 </div>
             `;
             li.querySelector('.save-btn').addEventListener('click', () => {
@@ -432,9 +455,19 @@
                     alert('Description and URL cannot be empty.');
                 }
             });
+            li.querySelector('.cancel-btn').addEventListener('click', () => {
+                renderLinks(); // Re-render the list to cancel the edit
+            });
         }
 
         addBtn.addEventListener('click', () => {
+            // Prevent adding another new item if one is already being added
+            const existingNewInput = document.querySelector('.new-description');
+            if (existingNewInput) {
+                existingNewInput.focus();
+                return;
+            }
+
             const li = document.createElement('li');
             li.className = 'link-item';
             const categoryOptions = categories.map(cat => 
@@ -448,6 +481,7 @@
                 </div>
                 <div class="link-actions">
                     <button class="save-new-btn">Save</button>
+                    <button class="cancel-btn secondary">Cancel</button>
                 </div>
             `;
             linksList.appendChild(li);
@@ -467,6 +501,10 @@
                 } else {
                     alert('Please provide a description and a full URL.');
                 }
+            });
+
+            li.querySelector('.cancel-btn').addEventListener('click', () => {
+                li.remove(); // Simply remove the new item form
             });
         });
 
