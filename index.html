@@ -198,10 +198,10 @@
             gap: 5px;
         }
         .shake-setting label {
-            font-size: 0.9em;
+            font-size: 0.9em; /* Match select font size */
             color: var(--icon-color);
         }
-        #shakeCategorySelect {
+        #shakeLinkSelect {
             background-color: var(--item-bg);
             color: var(--font-color);
             border: 1px solid var(--border-color);
@@ -271,9 +271,9 @@
                 </span>
             </div>
             <div class="shake-setting">
-                <label for="shakeCategorySelect">Shake:</label>
-                <select id="shakeCategorySelect">
-                    <option value="all">All</option>
+                <label for="shakeLinkSelect">Shake:</label>
+                <select id="shakeLinkSelect">
+                    <option value="-1">Disabled</option>
                 </select>
             </div>
             <button id="addBtn" title="Add new link">
@@ -291,7 +291,7 @@
         const addBtn = document.getElementById('addBtn');
         const viewListBtn = document.getElementById('viewListBtn');
         const viewGroupBtn = document.getElementById('viewGroupBtn');
-        const shakeCategorySelect = document.getElementById('shakeCategorySelect');
+        const shakeLinkSelect = document.getElementById('shakeLinkSelect');
 
         const GENERIC_FAVICON_SRC = 'data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23888\'%3e%3cpath d=\'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z\'/%3e%3c/svg%3e';
 
@@ -338,7 +338,7 @@
 
         let currentView = localStorage.getItem('launchPadR1View') || 'list';
         let collapsedCategories = JSON.parse(localStorage.getItem('launchPadR1CollapsedCategories')) || [];
-        let shakeSetting = localStorage.getItem('launchPadR1ShakeSetting') || 'all';
+        let shakeLinkIndex = parseInt(localStorage.getItem('launchPadR1ShakeLinkIndex') || '-1', 10);
 
         // Simple migration for old data without categories
         links.forEach(link => {
@@ -465,7 +465,7 @@
         function saveLinks() {
             localStorage.setItem('launchPadR1Links', JSON.stringify(links));
             // Keep the shake dropdown in sync with available categories
-            setupShakeSetting();
+            setupShakeLinkSetting();
         }
 
         function handleCategoryToggle(headerElement) {
@@ -722,63 +722,59 @@
         viewListBtn.addEventListener('click', () => setView('list'));
         viewGroupBtn.addEventListener('click', () => setView('group'));
 
-        // --- Shake Setting Event Listener (setup once) ---
-        shakeCategorySelect.addEventListener('change', (e) => {
-            shakeSetting = e.target.value;
-            localStorage.setItem('launchPadR1ShakeSetting', shakeSetting);
+        // --- Shake Setting Event Listener ---
+        shakeLinkSelect.addEventListener('change', (e) => {
+            shakeLinkIndex = parseInt(e.target.value, 10);
+            localStorage.setItem('launchPadR1ShakeLinkIndex', shakeLinkIndex);
         });
 
-        // --- Shake Setting ---
-        function setupShakeSetting() {
-            const currentShakeValue = shakeCategorySelect.value || shakeSetting; // Use state if UI not set
-            // Clear existing options except for 'All'
-            shakeCategorySelect.innerHTML = '<option value="all">All</option>';
+        /**
+         * Populates the shake-to-launch dropdown with the current list of links.
+         */
+        function setupShakeLinkSetting() {
+            const currentShakeIndex = shakeLinkSelect.value || shakeLinkIndex; // Get current value
+            shakeLinkSelect.innerHTML = '<option value="-1">Disabled</option>'; // Reset with disabled option
 
-            // Get unique categories currently in use from the links
-            const usedCategories = [...new Set(links.map(link => link.category))].sort();
-
-            // Populate dropdown with used categories that have links
-            usedCategories.forEach(cat => {
-                if (cat === 'Other') return; // 'Other' is usually too broad for a shake shortcut
+            // Populate dropdown with all links
+            links.forEach((link, index) => {
                 const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = cat;
-                shakeCategorySelect.appendChild(option);
+                option.value = index;
+                option.textContent = link.description;
+                shakeLinkSelect.appendChild(option);
             });
 
-            // If the previously selected category still exists, re-select it. Otherwise, default to 'all'.
-            const availableOptions = Array.from(shakeCategorySelect.options).map(opt => opt.value);
-            const newValue = availableOptions.includes(currentShakeValue) ? currentShakeValue : 'all';
+            // If the previously selected link still exists, re-select it.
+            if (currentShakeIndex >= 0 && currentShakeIndex < links.length) {
+                shakeLinkSelect.value = currentShakeIndex;
+            } else {
+                shakeLinkSelect.value = '-1'; // Default to disabled
+            }
             
-            shakeCategorySelect.value = newValue;
+            const newIndex = parseInt(shakeLinkSelect.value, 10);
             // Sync state variable and localStorage if it was corrected
-            if (shakeSetting !== newValue) {
-                shakeSetting = newValue;
-                localStorage.setItem('launchPadR1ShakeSetting', shakeSetting);
+            if (shakeLinkIndex !== newIndex) {
+                shakeLinkIndex = newIndex;
+                localStorage.setItem('launchPadR1ShakeLinkIndex', shakeLinkIndex);
             }
         }
 
         // --- Shake to launch a random link ---
         if (window.rabbit) {
             window.rabbit.on_rabbit_shake = () => {
-                const candidates = shakeSetting === 'all'
-                    ? links
-                    : links.filter(link => link.category === shakeSetting);
-
-                if (candidates.length > 0) {
+                if (shakeLinkIndex >= 0 && shakeLinkIndex < links.length) {
                     triggerHaptic();
-                    const randomIndex = Math.floor(Math.random() * candidates.length);
-                    const randomLink = candidates[randomIndex];
-                    launchUrlOnRabbit(randomLink.url, `random link, ${randomLink.description}`);
+                    const linkToLaunch = links[shakeLinkIndex];
+                    launchUrlOnRabbit(linkToLaunch.url, linkToLaunch.description);
                 } else {
-                    const feedback = shakeSetting === 'all' ? "No links to launch." : `No links in ${shakeSetting}.`;
-                    if (window.rabbit.core && window.rabbit.core.say) { window.rabbit.core.say({ text: feedback }); }
+                    if (window.rabbit.core && window.rabbit.core.say) { 
+                        window.rabbit.core.say({ text: "Shake launch is disabled." }); 
+                    }
                 }
             };
         }
 
         renderLinks();
-        setupShakeSetting(); // Initial setup after first render
+        setupShakeLinkSetting(); // Initial setup after first render
     });
     </script>
 </body>
