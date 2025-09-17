@@ -158,7 +158,7 @@
         }
         .link-description {
             font-weight: bold;
-            font-size: 0.95em;
+            font-size: 0.9em;
             cursor: pointer;
             white-space: nowrap;
             overflow: hidden;
@@ -173,7 +173,7 @@
         /* For the horizontal icons in the normal link view */
         .link-display > .link-actions {
             flex-direction: row;
-            gap: 15px;
+            gap: 12px;
         }
         .link-actions span {
             cursor: pointer;
@@ -503,6 +503,7 @@
                     `;
                     li.addEventListener('click', () => handleAddFromQuery(query));
                     linksList.appendChild(li);
+                    li.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
                     linksList.innerHTML = '<p style="text-align:center; color: #6c757d;">No links saved. Click "+ Add" to start.</p>';
                 }
