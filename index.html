@@ -308,8 +308,29 @@
         }
         .custom-prompt-actions {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
+            align-items: center;
             gap: 10px;
+        }
+        .custom-prompt-actions-right {
+            display: flex;
+            gap: 10px;
+        }
+        .custom-prompt-dialog select {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--item-bg);
+            color: var(--font-color);
+            font-size: 0.95em;
+        }
+        .custom-prompt-error {
+            color: #e74c3c; /* A noticeable red */
+            font-size: 0.9em;
+            text-align: center;
+            margin: -5px 0 5px 0;
+            min-height: 1.2em; /* Prevent layout shift when message appears */
         }
     </style>
 </head>
@@ -352,10 +373,15 @@
     <div id="customPromptOverlay" class="custom-prompt-overlay" style="display: none;">
         <div class="custom-prompt-dialog">
             <p id="customPromptMessage"></p>
-            <input type="text" id="customPromptInput">
+            <p id="customPromptError" class="custom-prompt-error"></p>
+            <select id="customPromptSelect"></select>
+            <input type="text" id="customPromptInput" placeholder="Or type a name/hex here">
             <div class="custom-prompt-actions">
-                <button id="customPromptCancel" class="secondary">Cancel</button>
-                <button id="customPromptOk">OK</button>
+                <button id="customPromptReset" class="secondary">Rabbit Me!</button>
+                <div class="custom-prompt-actions-right">
+                    <button id="customPromptCancel" class="secondary">Cancel</button>
+                    <button id="customPromptOk">OK</button>
+                </div>
             </div>
         </div>
     </div>
@@ -376,6 +402,9 @@
         const customPromptInput = document.getElementById('customPromptInput');
         const customPromptOk = document.getElementById('customPromptOk');
         const customPromptCancel = document.getElementById('customPromptCancel');
+        const customPromptReset = document.getElementById('customPromptReset');
+        const customPromptError = document.getElementById('customPromptError');
+        const customPromptSelect = document.getElementById('customPromptSelect');
 
         const GENERIC_FAVICON_SRC = 'data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23888\'%3e%3cpath d=\'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z\'/%3e%3c/svg%3e';
 
@@ -497,13 +526,19 @@
                 return a.localeCompare(b);
             });
 
+            // Determine which category, if any, contains the favorite link.
+            let favoriteCategory = null;
+            if (favoriteLinkIndex !== -1 && links[favoriteLinkIndex]) {
+                favoriteCategory = links[favoriteLinkIndex].category;
+            }
+
             updateToggleAllLinkState();
 
             if (currentView === 'list') {
                 sortedCategories.forEach(category => {
                     const categoryHeader = document.createElement('h3');
                     categoryHeader.className = 'category-header';
-                    categoryHeader.textContent = category;
+                    categoryHeader.textContent = category + (category === favoriteCategory ? ' ★' : '');
                     linksList.appendChild(categoryHeader);
 
                     groupedLinks[category].forEach(link => renderLinkItem(link, linksList, linksToRender));
@@ -512,7 +547,7 @@
                 sortedCategories.forEach(category => {
                     const categoryHeader = document.createElement('h3');
                     categoryHeader.className = 'category-header collapsible';
-                    categoryHeader.textContent = category;
+                    categoryHeader.textContent = category + (category === favoriteCategory ? ' ★' : '');
                     linksList.appendChild(categoryHeader);
                     
                     const linksContainer = document.createElement('div');
@@ -587,7 +622,7 @@
             headerElement.classList.toggle('expanded');
 
             // Update and save the collapsed state
-            const categoryName = headerElement.textContent;
+            const categoryName = headerElement.textContent.replace(' ★', '');
             const isNowExpanded = linksContainer.classList.contains('expanded');
             if (isNowExpanded) {
                 collapsedCategories = collapsedCategories.filter(c => c !== categoryName);
@@ -880,6 +915,7 @@
             return new Promise((resolve) => {
                 customPromptMessage.textContent = message;
                 customPromptInput.value = '';
+                customPromptSelect.value = ''; // Reset dropdown
                 customPromptOverlay.style.display = 'flex';
                 customPromptInput.focus();
 
@@ -893,6 +929,7 @@
                     customPromptOk.onclick = null;
                     customPromptCancel.onclick = null;
                     customPromptOverlay.onclick = null;
+                    customPromptReset.onclick = null;
                     customPromptInput.onkeypress = null;
                     resolve(value);
                 };
@@ -902,27 +939,57 @@
                 customPromptOverlay.onclick = (e) => {
                     if (e.target === customPromptOverlay) closePrompt(null);
                 };
+                customPromptReset.onclick = () => closePrompt('reset');
                 customPromptInput.onkeypress = (e) => {
                     if (e.key === 'Enter') closePrompt(customPromptInput.value);
                 };
             });
         }
 
-        const themes = {
-            'rabbit': { name: 'Rabbit', colors: { '--primary-color': '#ff7043', '--bg-color': '#0d0d0d', '--item-bg': '#1c1c1c', '--border-color': '#2a2a2a', '--icon-color': '#7a7a7a' } },
-            'ocean': { name: 'Ocean', colors: { '--primary-color': '#3498db', '--bg-color': '#0c1014', '--item-bg': '#1a2633', '--border-color': '#2c3e50', '--icon-color': '#8a9ba8' } },
-            'forest': { name: 'Forest', colors: { '--primary-color': '#2ecc71', '--bg-color': '#121412', '--item-bg': '#223022', '--border-color': '#2a3d2a', '--icon-color': '#8a9a8a' } },
-            'rainbow': { name: 'Rainbow', colors: { '--primary-color': '#8e44ad', '--bg-color': '#120c14', '--item-bg': '#2c2033', '--border-color': '#41304a', '--icon-color': '#9a8a9a' } }
-        };
-        const themeKeys = Object.keys(themes);
+        const CSS_COLOR_NAMES = ['AliceBlue', 'AntiqueWhite', 'Aqua', 'Aquamarine', 'Azure', 'Beige', 'Bisque', 'Black', 'BlanchedAlmond', 'Blue', 'BlueViolet', 'Brown', 'BurlyWood', 'CadetBlue', 'Chartreuse', 'Chocolate', 'Coral', 'CornflowerBlue', 'Cornsilk', 'Crimson', 'Cyan', 'DarkBlue', 'DarkCyan', 'DarkGoldenRod', 'DarkGray', 'DarkGreen', 'DarkKhaki', 'DarkMagenta', 'DarkOliveGreen', 'DarkOrange', 'DarkOrchid', 'DarkRed', 'DarkSalmon', 'DarkSeaGreen', 'DarkSlateBlue', 'DarkSlateGray', 'DarkTurquoise', 'DarkViolet', 'DeepPink', 'DeepSkyBlue', 'DimGray', 'DodgerBlue', 'FireBrick', 'FloralWhite', 'ForestGreen', 'Fuchsia', 'Gainsboro', 'GhostWhite', 'Gold', 'GoldenRod', 'Gray', 'Green', 'GreenYellow', 'HoneyDew', 'HotPink', 'IndianRed', 'Indigo', 'Ivory', 'Khaki', 'Lavender', 'LavenderBlush', 'LawnGreen', 'LemonChiffon', 'LightBlue', 'LightCoral', 'LightCyan', 'LightGoldenRodYellow', 'LightGray', 'LightGreen', 'LightPink', 'LightSalmon', 'LightSeaGreen', 'LightSkyBlue', 'LightSlateGray', 'LightSteelBlue', 'LightYellow', 'Lime', 'LimeGreen', 'Linen', 'Magenta', 'Maroon', 'MediumAquaMarine', 'MediumBlue', 'MediumOrchid', 'MediumPurple', 'MediumSeaGreen', 'MediumSlateBlue', 'MediumSpringGreen', 'MediumTurquoise', 'MediumVioletRed', 'MidnightBlue', 'MintCream', 'MistyRose', 'Moccasin', 'NavajoWhite', 'Navy', 'OldLace', 'Olive', 'OliveDrab', 'Orange', 'OrangeRed', 'Orchid', 'PaleGoldenRod', 'PaleGreen', 'PaleTurquoise', 'PaleVioletRed', 'PapayaWhip', 'PeachPuff', 'Peru', 'Pink', 'Plum', 'PowderBlue', 'Purple', 'RebeccaPurple', 'Red', 'RosyBrown', 'RoyalBlue', 'SaddleBrown', 'Salmon', 'SandyBrown', 'SeaGreen', 'SeaShell', 'Sienna', 'Silver', 'SkyBlue', 'SlateBlue', 'SlateGray', 'Snow', 'SpringGreen', 'SteelBlue', 'Tan', 'Teal', 'Thistle', 'Tomato', 'Turquoise', 'Violet', 'Wheat', 'White', 'WhiteSmoke', 'Yellow', 'YellowGreen'].sort();
+
+        function setupColorPicker() {
+            const select = customPromptSelect;
+            select.innerHTML = '<option value="">Select a color...</option>';
+            CSS_COLOR_NAMES.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+
+            select.addEventListener('change', () => {
+                customPromptError.textContent = ''; // Clear error on selection
+                if (select.value) {
+                    customPromptInput.value = select.value;
+                    customPromptOk.focus(); // Guide user to the next step
+                }
+            });
+
+            // Also clear the error when the user starts typing a new value
+            customPromptInput.addEventListener('input', () => {
+                customPromptError.textContent = '';
+            });
+        }
+
+        const defaultTheme = { name: 'Rabbit', colors: { '--primary-color': '#ff7043', '--bg-color': '#0d0d0d', '--item-bg': '#1c1c1c', '--border-color': '#2a2a2a', '--icon-color': '#7a7a7a' } };
 
         function colorNameToRgb(name) {
             const el = document.createElement('div');
-            el.style.color = name;
+            // Set a known, unique color that is unlikely to be the result of a valid name.
+            const magicColor = 'rgb(1, 2, 3)';
+            el.style.color = magicColor; 
             document.body.appendChild(el);
+
+            // Now, try to set the user's color.
+            el.style.color = name;
             const computedColor = window.getComputedStyle(el).color;
+            
             document.body.removeChild(el);
-            if (computedColor === 'rgba(0, 0, 0, 0)' || computedColor === 'transparent') return null;
+
+            // If the computed color is still our magic color, the name was invalid.
+            if (computedColor === magicColor || computedColor === 'rgba(0, 0, 0, 0)' || computedColor === 'transparent') return null;
+
             const rgb = computedColor.match(/\d+/g).map(Number);
             return rgb;
         }
@@ -974,7 +1041,7 @@
             };
         }
 
-        function applyTheme(themeIdentifier) {
+        async function applyTheme(themeIdentifier) {
             let themeColors;
             let friendlyName;
 
@@ -982,21 +1049,24 @@
                 const colorName = themeIdentifier.split(':')[1];
                 const primaryRgb = colorNameToRgb(colorName);
                 if (!primaryRgb) {
-                    alert(`'${colorName}' is not a recognized color.`);
-                    return;
+                    customPromptError.textContent = `'${colorName}' is not a recognized name. Try a hex code.`;
+                    return false;
                 }
                 themeColors = generatePaletteFromRgb(primaryRgb);
                 if (!themeColors) {
-                    alert("This color is too dark. Please choose a lighter color.");
-                    return;
+                    customPromptError.textContent = "This color is too dark. Please choose a lighter color.";
+                    return false;
                 }
                 friendlyName = colorName;
             } else {
-                themeColors = themes[themeIdentifier]?.colors;
-                friendlyName = themes[themeIdentifier]?.name;
+                themeColors = defaultTheme.colors;
+                friendlyName = defaultTheme.name;
             }
 
-            if (!themeColors) return;
+            if (!themeColors) return true; // Should not happen, but don't block the loop.
+
+            // If we've reached here, the color is valid, so clear any previous error messages.
+            customPromptError.textContent = '';
 
             for (const [key, value] of Object.entries(themeColors)) {
                 document.documentElement.style.setProperty(key, value);
@@ -1007,41 +1077,48 @@
             // Provide feedback
             try {
                 if (window.rabbit && window.rabbit.core) {
-                    window.rabbit.core.say({ text: `Theme set to ${friendlyName}` });
+                    await window.rabbit.core.say({ text: `Theme set to ${friendlyName}` });
                 }
             } catch (e) { console.error("Say feedback failed:", e); }
+            return true;
         }
 
-        async function cycleTheme() {
-            const currentIndex = themeKeys.indexOf(currentThemeName);
+        async function openThemeEditor() {
+            let success = false;
+            // Clear any errors from a previous session before starting.
+            if (customPromptError) customPromptError.textContent = '';
 
-            // If current theme is a custom theme (not in our keys), or if something is out of sync,
-            // the next click should always loop back to the first theme.
-            if (currentIndex === -1) {
-                applyTheme(themeKeys[0]);
-                return;
-            }
+            while (!success) {
+                const result = await showCustomPrompt("Enter a color, hex, or select one:");
 
-            // If we are on the last predefined theme in our cycle, it's time for the custom prompt.
-            if (currentIndex === themeKeys.length - 1) {
-                const customColor = await showCustomPrompt("Enter a color name (e.g. hotpink or #8257e5)");
-                if (customColor && customColor.trim()) {
-                    // User entered a color. Apply it. The next click will loop to the start.
-                    applyTheme(`custom:${customColor.trim()}`);
+                if (result === 'reset') {
+                    await applyTheme('rabbit');
+                    success = true; // Exit loop after resetting
+                } else if (result && result.trim()) {
+                    let colorInput = result.trim();
+                    let colorToApply = colorInput;
+
+                    // More robust hex detection: strip an optional '#' and then validate.
+                    const potentialHex = colorInput.startsWith('#') ? colorInput.substring(1) : colorInput;
+                    if (/^[0-9a-f]{3}([0-9a-f]{3})?$/i.test(potentialHex)) {
+                        colorToApply = '#' + potentialHex;
+                    }
+
+                    // Try to apply the theme. If it succeeds, the loop will exit.
+                    // If it fails, the error message is set by applyTheme, and the loop continues.
+                    success = await applyTheme(`custom:${colorToApply}`);
                 } else {
-                    // User cancelled the prompt. Loop back to the first theme immediately.
-                    applyTheme(themeKeys[0]);
+                    // User cancelled, so we exit the loop.
+                    success = true;
                 }
-            } else {
-                // Otherwise, just go to the next theme in the list.
-                applyTheme(themeKeys[currentIndex + 1]);
             }
         }
 
-        themeBtn.addEventListener('click', cycleTheme);
+        themeBtn.addEventListener('click', openThemeEditor);
 
         // --- Initial Load ---
         
+        setupColorPicker();
         // Apply the initial theme
         applyTheme(currentThemeName);
 
