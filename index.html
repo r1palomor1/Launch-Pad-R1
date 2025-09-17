@@ -138,7 +138,7 @@
             flex-direction: row;
             align-items: center;
             justify-content: space-between;
-            gap: 6px;
+            gap: 10px; /* Default large gap */
             cursor: pointer;
         }
         .link-favicon {
@@ -158,7 +158,7 @@
         }
         .link-description {
             font-weight: bold;
-            font-size: 0.85em;
+            font-size: 0.95em; /* Default large font */
             cursor: pointer;
             white-space: nowrap;
             overflow: hidden;
@@ -173,7 +173,7 @@
         /* For the horizontal icons in the normal link view */
         .link-display > .link-actions {
             flex-direction: row;
-            gap: 6px;
+            gap: 10px; /* Default large gap */
         }
         .link-actions span {
             cursor: pointer;
@@ -182,13 +182,18 @@
         }
         .link-actions span:hover { color: var(--primary-color); }
         .link-actions svg {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             display: block;
         }
         .favorite-btn.is-favorite, .favorite-indicator {
             color: #FFD700; /* Gold, for high visibility across all themes */
         }
+        /* Dynamic Sizing for Link Descriptions */
+        #linksList.small-text .link-display { gap: 6px; }
+        #linksList.small-text .link-description { font-size: 0.85em; }
+        #linksList.small-text .link-display > .link-actions { gap: 6px; }
+        #linksList.small-text .link-actions svg { width: 16px; height: 16px; }
         .category-header {
             font-size: 1em;
             font-weight: bold;
@@ -483,6 +488,28 @@
             }
         }
 
+        /**
+         * Checks if any link descriptions are overflowing and applies a compact
+         * style to the entire list if necessary to ensure uniformity.
+         */
+        function applyDynamicSizing() {
+            const descriptions = linksList.querySelectorAll('.link-description');
+            if (descriptions.length === 0) {
+                linksList.classList.remove('small-text');
+                return;
+            }
+
+            let isOverflowing = false;
+            descriptions.forEach(desc => {
+                // Check if the scrollWidth (actual content width) is greater than the clientWidth (visible area width)
+                if (desc.scrollWidth > desc.clientWidth) {
+                    isOverflowing = true;
+                }
+            });
+
+            linksList.classList.toggle('small-text', isOverflowing);
+        }
+
         function renderLinks(linksToRender = links) {
             // Set active icon
             viewListBtn.classList.toggle('active', currentView === 'list');
@@ -575,6 +602,9 @@
                     }
                 });
             }
+
+            // After rendering all items, apply dynamic sizing.
+            applyDynamicSizing();
         }
 
         /**
