@@ -186,6 +186,9 @@
             height: 18px;
             display: block;
         }
+        .favorite-btn.is-favorite, .favorite-indicator {
+            color: #FFD700; /* Gold, for high visibility across all themes */
+        }
         .category-header {
             font-size: 1em;
             font-weight: bold;
@@ -538,7 +541,11 @@
                 sortedCategories.forEach(category => {
                     const categoryHeader = document.createElement('h3');
                     categoryHeader.className = 'category-header';
-                    categoryHeader.textContent = category + (category === favoriteCategory ? ' ★' : '');
+                    if (category === favoriteCategory) {
+                        categoryHeader.innerHTML = `${category} <span class="favorite-indicator">★</span>`;
+                    } else {
+                        categoryHeader.textContent = category;
+                    }
                     linksList.appendChild(categoryHeader);
 
                     groupedLinks[category].forEach(link => renderLinkItem(link, linksList, linksToRender));
@@ -547,7 +554,11 @@
                 sortedCategories.forEach(category => {
                     const categoryHeader = document.createElement('h3');
                     categoryHeader.className = 'category-header collapsible';
-                    categoryHeader.textContent = category + (category === favoriteCategory ? ' ★' : '');
+                    if (category === favoriteCategory) {
+                        categoryHeader.innerHTML = `${category} <span class="favorite-indicator">★</span>`;
+                    } else {
+                        categoryHeader.textContent = category;
+                    }
                     linksList.appendChild(categoryHeader);
                     
                     const linksContainer = document.createElement('div');
@@ -599,7 +610,7 @@
             `;
             // Style the favorite button if it's the current favorite
             if (originalIndex === favoriteLinkIndex) {
-                li.querySelector('.favorite-btn svg').style.color = 'var(--primary-color)';
+                li.querySelector('.favorite-btn').classList.add('is-favorite');
             }
             parentElement.appendChild(li);
         }
