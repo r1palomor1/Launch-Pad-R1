@@ -6,6 +6,6 @@
     "core:launch-url",
     "core:say",
     "core:haptics",
-    "core:fetch"
+    "core:serpapi"
   ]
 }

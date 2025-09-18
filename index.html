@@ -64,6 +64,41 @@
             gap: 4px;
             margin-bottom: 15px;
         }
+        .search-input-wrapper {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+        }
+        .search-input-wrapper input {
+            width: 100%;
+            /* Add padding to the right so text doesn't go under the 'X' button */
+            padding-right: 30px;
+        }
+        #clearSearchBtn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--icon-color);
+            cursor: pointer;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex; /* Use flex to center the SVG inside */
+            align-items: center;
+            justify-content: center;
+        }
+        #clearSearchBtn:hover {
+            color: var(--font-color);
+            filter: none; /* Override default button hover */
+        }
+        #clearSearchBtn svg {
+            width: 20px;
+            height: 20px;
+        }
         #searchBtn, #addBtn, #quickLaunchBtn {
             width: 38px; /* Make it a square icon button */
             padding: 7px; /* (38px button size - 24px icon size) / 2 */
@@ -142,18 +177,6 @@
         }
         .web-search-item:hover {
             background-color: #252525;
-        }
-        .web-search-item .link-description {
-            text-align: center;
-            width: 100%;
-        }
-        .web-suggestion .link-actions button {
-            padding: 6px 12px;
-            font-size: 1.1em;
-        }
-        .error-message {
-            text-align: center;
-            color: #e74c3c;
         }
         .link-display {
             flex-grow: 1;
@@ -243,34 +266,6 @@
         .link-info > *:first-child {
             margin-top: 0;
         }
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 10px;
-}
-.input-with-action {
-    position: relative;
-}
-.input-with-action input {
-    padding-right: 42px; /* Space for the button */
-}
-.input-with-action button {
-    position: absolute;
-    top: 50%;
-    right: 5px;
-    transform: translateY(-50%);
-    width: 32px;
-    height: 32px;
-    padding: 5px;
-    background: transparent;
-    border: none;
-    color: var(--icon-color);
-}
-.input-with-action button:hover {
-    background-color: #3a3a3a;
-    color: var(--font-color);
-}
         .actions-bar {
             display: flex;
             justify-content: space-between;
@@ -401,7 +396,12 @@
             <button id="themeBtn" title="Change Theme">Theme!</button>
         </header>
         <div class="search-section">
-            <input type="text" id="searchInput" placeholder="Search or Add...">
+            <div class="search-input-wrapper">
+                <input type="text" id="searchInput" placeholder="Search or Add..." autocomplete="off">
+                <button id="clearSearchBtn" title="Clear search" style="display: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z"></path></svg>
+                </button>
+            </div>
             <button id="searchBtn" title="Search with DuckDuckGo">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.031 16.617l4.283 4.282-1.415 1.415-4.282-4.283A8.96 8.96 0 0 1 11 20c-4.968 0-9-4.032-9-9s4.032-9 9-9 9 4.032 9 9a8.96 8.96 0 0 1-1.969 5.617zm-2.006-.742A6.977 6.977 0 0 0 18 11c0-3.868-3.133-7-7-7-3.868 0-7 3.132-7 7 0 3.867 3.132 7 7 7a6.977 6.977 0 0 0 4.875-1.975l.15-.15z"/></svg>
             </button>
@@ -449,6 +449,7 @@
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
         const searchBtn = document.getElementById('searchBtn');
         const linksList = document.getElementById('linksList');
         const addBtn = document.getElementById('addBtn');
@@ -464,8 +465,8 @@
         const customPromptCancel = document.getElementById('customPromptCancel');
         const customPromptReset = document.getElementById('customPromptReset');
         const customPromptError = document.getElementById('customPromptError');
-        const customPromptSelect = document.getElementById('customPromptSelect');
 
+        let suggestionRequestCount = 0;
         const GENERIC_FAVICON_SRC = 'data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23888\'%3e%3cpath d=\'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z\'/%3e%3c/svg%3e';
 
         /**
@@ -500,6 +501,18 @@
             } catch (e) { console.error("Haptic feedback failed:", e); }
         }
 
+        /**
+         * Returns a function, that, as long as it continues to be invoked, will not
+         * be triggered. The function will be called after it stops being called for
+         * N milliseconds.
+         */
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
         // Categories are sorted alphabetically, with 'Other' at the end for better usability.
         const categories = ['Education', 'Entertainment', 'Finance', 'Music', 'News', 'Shopping', 'Social', 'Sports', 'Tools', 'Travel', 'Other'];
 
@@ -574,12 +587,15 @@
             if (linksToRender.length === 0) {
                 const query = searchInput.value.trim();
                 if (query) {
+                    // Always offer to add the query. The handleAddFromQuery function is smart
+                    // enough to handle both single and multi-word queries appropriately.
                     linksList.innerHTML = `
-                        <li class="link-item web-search-item">
-                            <div class="link-description">🔍 Search web for "${query}"</div>
+                        <li class="link-item add-suggestion-item">
+                            <div class="link-favicon" style="display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--primary-color);">+</div>
+                            <div class="link-description">Add "${query}"</div>
                         </li>
                     `;
-                    linksList.querySelector('.web-search-item').addEventListener('click', () => fetchWebSuggestions(query));
+                    linksList.querySelector('.add-suggestion-item').addEventListener('click', () => handleAddFromQuery(query));
                 } else {
                     linksList.innerHTML = '<p style="text-align:center; color: #6c757d;">No links saved. Click "+ Add" to start.</p>';
                 }
@@ -643,9 +659,13 @@
                     groupedLinks[category].forEach(link => renderLinkItem(link, linksContainer, linksToRender));
                     linksList.appendChild(linksContainer);
 
+                    const isSearching = searchInput.value.trim() !== '';
                     // Check if this category should be expanded or collapsed from memory
                     const isCollapsed = collapsedCategories.includes(category);
-                    if (!isCollapsed) {
+
+                    // If the user is searching, always expand the resulting categories.
+                    // Otherwise, respect the user's collapsed/expanded preference.
+                    if (isSearching || !isCollapsed) {
                         categoryHeader.classList.add('expanded');
                         linksContainer.classList.add('expanded');
                     }
@@ -737,9 +757,7 @@
                     localStorage.setItem('launchPadR1FavoriteLinkIndex', '-1');
                 }
                 saveLinks();
-                // Re-apply the current filter to show the updated list
-                // without losing the user's search context.
-                handleFilter();
+                searchHandler(searchInput.value);
             }
         }
 
@@ -779,7 +797,7 @@
                     favoriteLinkIndex = index;
                 }
                 localStorage.setItem('launchPadR1FavoriteLinkIndex', favoriteLinkIndex);
-                handleFilter(); // Re-render to show the new favorite state
+                searchHandler(searchInput.value); // Re-render to show the new favorite state
             } else if (target.closest('.link-display') || target.closest('.link-favicon')) {
                 handleLaunchLink(li, index);
             }
@@ -805,10 +823,7 @@
             return `
                 <div class="link-info">
                     <input type="text" class="${inputClassPrefix}-description" value="${description}" placeholder="Description">
-                    <div class="input-with-action">
-                        <input type="text" class="${inputClassPrefix}-url" value="${url}" placeholder="URL (e.g., https://...)">
-                        <button class="fetch-title-btn" title="Fetch Title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.0006 22.0001L8.89941 18.8989L12.0006 15.7977L13.4148 17.2119L12.0006 18.6261L14.8289 21.4544L12.0006 22.0001ZM12.0006 8.20237L10.5864 6.78816L12.0006 5.37395L15.1018 8.47512L12.0006 11.5763L10.5864 10.1621L12.0006 8.74789V8.20237ZM2.94971 13.0503L6.78812 10.5865L8.20234 12.0007L5.37402 14.829L2.39941 12.0007L2.94971 13.0503ZM18.8994 5.10059L17.2121 6.78784L18.6263 8.20206L21.6009 5.37378L18.8994 5.10059ZM8.89941 5.10059L2.39941 12.0007L5.17157 14.8288L12.0006 8.00012L8.89941 5.10059ZM15.1018 18.8989L21.6009 12.0007L18.8287 9.1724L12.0006 16.0001L15.1018 18.8989Z"></path></svg></button>
-                    </div>
+                    <input type="text" class="${inputClassPrefix}-url" value="${url}" placeholder="URL (e.g., https://...)">
                     <select class="${inputClassPrefix}-category">${categoryOptions}</select>
                     <div class="form-actions">
                         <button class="cancel-btn secondary">Cancel</button>
@@ -816,113 +831,6 @@
                     </div>
                 </div>
             `;
-        }
-
-        async function fetchTitle(urlInput, descriptionInput, button) {
-            const targetUrl = urlInput.value.trim();
-            // Make the check case-insensitive to handle inputs like 'Https://'
-            if (!targetUrl || !targetUrl.toLowerCase().startsWith('http')) {
-                alert('Please enter a valid URL starting with http or https.');
-                return;
-            }
-
-            button.disabled = true;
-            const originalText = descriptionInput.value;
-            descriptionInput.value = 'Fetching title...';
-
-            // Use a powerful proxy API (microlink.io) which is better at handling various sites.
-            const proxyUrl = `https://api.microlink.io/?url=${encodeURIComponent(targetUrl)}`;
-
-            try {
-                const response = await fetch(proxyUrl);
-                if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
-                
-                const data = await response.json();
-
-                // Microlink's response structure is { status: 'success', data: { title: '...' } }
-                if (data && data.status === 'success' && data.data && data.data.title) {
-                    let fullTitle = data.data.title.trim();
-                    let finalTitle = fullTitle;
-
-                    // Use a regular expression to split by any common separator,
-                    // handling optional spaces around it for more robust parsing.
-                    const parts = fullTitle.split(/\s*(-|\||–|—|:)\s*/);
-                    if (parts.length > 1) {
-                        finalTitle = parts[0].trim();
-                    }
-                    descriptionInput.value = finalTitle;
-                } else {
-                    descriptionInput.value = originalText; // Restore original if no title found
-                    alert('Title not found.');
-                }
-            } catch (e) {
-                console.error("Fetch title error:", e);
-                descriptionInput.value = originalText; // Restore on error
-                alert('Could not fetch title. The website may be blocking requests.');
-            } finally {
-                button.disabled = false;
-            }
-        }
-
-        async function fetchWebSuggestions(query) {
-            linksList.innerHTML = '<p style="text-align:center; color: #6c757d;">Searching the web...</p>';
-            try {
-                // We will fetch the simple HTML version of DuckDuckGo's search results
-                // and parse it ourselves to get high-quality, relevant links.
-                const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
-                
-                // This direct fetch will fail in local browsers due to CORS, but is designed
-                // to work on the Rabbit R1 device with the core:fetch permission.
-                const response = await fetch(searchUrl);
-                if (!response.ok) throw new Error('Network error');
-
-                const htmlContent = await response.text();
-
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlContent, 'text/html');
-                const results = [];
-                // The class 'result__a' is what DDG's HTML version uses for its main result links.
-                doc.querySelectorAll('.result__a').forEach(link => {
-                    results.push({
-                        text: link.textContent.trim(),
-                        url: new URL(link.href).searchParams.get('uddg') // Extract the real URL
-                    });
-                });
-
-                renderWebSuggestions(results.filter(r => r.url)); // Filter out any invalid results
-            } catch (e) {
-                console.error("Web suggestion fetch error:", e);
-                const errorMsg = e.message.includes('Failed to fetch') 
-                    ? 'Could not fetch suggestions. (This is expected in local browsers due to CORS. Please test on device.)'
-                    : 'Could not fetch suggestions. Please try again.';
-                linksList.innerHTML = `<p class="error-message">${errorMsg}</p>`;
-            }
-        }
-
-        function renderWebSuggestions(results) {
-            linksList.innerHTML = '';
-            if (results.length === 0) {
-                linksList.innerHTML = `<p style="text-align:center; color: #6c757d;">No web suggestions found.</p>`;
-                return;
-            }
-
-            results.slice(0, 5).forEach(result => { // Limit to 5 suggestions
-                const li = document.createElement('li');
-                li.className = 'link-item web-suggestion';
-                li.innerHTML = `
-                    <img src="https://www.google.com/s2/favicons?sz=64&domain_url=${getHostname(result.url)}" class="link-favicon" alt="Favicon" onerror="this.onerror=null; this.src='${GENERIC_FAVICON_SRC}'; this.style.padding='3px';">
-                    <div class="link-display">
-                        <div class="link-description">${result.text}</div>
-                        <div class="link-actions">
-                            <button class="add-suggestion-btn">+</button>
-                        </div>
-                    </div>
-                `;
-                li.querySelector('.add-suggestion-btn').addEventListener('click', () => {
-                    showAddForm({ description: result.text.split(/\s*(-|\||–|—|:)\s*/)[0], url: result.url, category: 'Other' });
-                });
-                linksList.appendChild(li);
-            });
         }
 
         function editLink(li, index) {
@@ -941,19 +849,14 @@
                         category: newCategory
                     };
                     saveLinks();
-                    handleFilter(); // Re-apply filter to show the change
+                    searchHandler(searchInput.value); // Re-apply filter to show the change
                 } else {
                     alert('Description and URL cannot be empty.');
                 }
             });
             li.querySelector('.cancel-btn').addEventListener('click', () => {
-                handleFilter(); // Re-render the list to cancel, respecting filter
+                searchHandler(searchInput.value); // Re-render the list to cancel, respecting filter
             });
-
-            const urlInput = li.querySelector('.edit-url');
-            const descriptionInput = li.querySelector('.edit-description');
-            const fetchBtn = li.querySelector('.fetch-title-btn');
-            fetchBtn.addEventListener('click', () => fetchTitle(urlInput, descriptionInput, fetchBtn));
         }
 
         function showAddForm(prefillData = {}) {
@@ -1001,50 +904,42 @@
             li.querySelector('.save-new-btn').addEventListener('click', saveHandler);
             li.querySelector('.cancel-btn').addEventListener('click', () => {
                 li.remove();
-                searchInput.value = '';
-                handleFilter(); // Re-render full list
+                searchHandler(''); // Re-render full list, clearing the search
             });
-
-            const urlInput = li.querySelector('.new-url');
-            const descriptionInput = li.querySelector('.new-description');
-            const fetchBtn = li.querySelector('.fetch-title-btn');
-            fetchBtn.addEventListener('click', () => fetchTitle(urlInput, descriptionInput, fetchBtn));
         }
 
         addBtn.addEventListener('click', () => showAddForm());
 
-        function handleAddFromQuery(query) {
-            if (!query) return;
+        function handleAddFromQuery(description, url) {
+            if (!description) return;
 
-            // Clear the "Add..." suggestion from the list before showing the form.
+            // Clear suggestions from the list before showing the form.
             linksList.innerHTML = '';
 
-            const hasSpaces = query.includes(' ');
             let prefillData = {};
+            const hasSpaces = description.includes(' ');
 
             if (hasSpaces) {
                 // For complex queries, just pre-fill the description.
-                prefillData = {
-                    description: query.replace(/\b\w/g, l => l.toUpperCase()),
-                    url: 'https://'
-                };
+                prefillData = { description: description.replace(/\b\w/g, l => l.toUpperCase()), url: url || 'https://' };
             } else {
                 // For simple queries, pre-fill both description and a guessed URL.
-                const hasProtocol = query.startsWith('http://') || query.startsWith('https://');
-                const looksLikeDomain = query.includes('.');
-                const url = hasProtocol ? query : (looksLikeDomain ? `https://${query}` : `https://www.${query}.com`);
-                const description = query.split('.')[0].replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\b\w/g, l => l.toUpperCase());
-                prefillData = { description, url, category: 'Other' };
+                const finalUrl = url || (() => {
+                    const hasProtocol = description.startsWith('http://') || description.startsWith('https://');
+                    const looksLikeDomain = description.includes('.');
+                    return hasProtocol ? description : (looksLikeDomain ? `https://${description}` : `https://www.${description}.com`);
+                })();
+                const finalDescription = description.split('.')[0].replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\b\w/g, l => l.toUpperCase());
+                prefillData = { description: finalDescription, url: finalUrl, category: 'Other' };
             }
-            
             showAddForm(prefillData);
         }
 
-        /**
-         * Adds a new link to the list, saves it, and refreshes the UI.
-         * @param {object} linkData - The link object to add.
-         * @returns {boolean} - True if the link was added, false otherwise.
-         */
+        // This is the new message handler that will receive search results from the Rabbit OS
+        window.onPluginMessage = function(e) {
+            handleOSMessage(e);
+        };
+
         function addNewLink(linkData) {
             if (!linkData || !linkData.description || !linkData.url || linkData.url === 'https://') {
                 alert('Please provide a description and a full URL.');
@@ -1052,10 +947,16 @@
             }
             links.push(linkData);
             saveLinks();
-            searchInput.value = '';
-            renderLinks();
 
-            // Provide auditory feedback on the device
+            // --- Enhancement: Expand the category of the newly added link ---
+            // This provides immediate visual confirmation to the user in Group View.
+            const newCategory = linkData.category || 'Other';
+            collapsedCategories = collapsedCategories.filter(c => c !== newCategory);
+            localStorage.setItem('launchPadR1CollapsedCategories', JSON.stringify(collapsedCategories));
+
+            searchInput.value = '';
+            renderLinks(); // Render the full, updated list
+
             try {
                 if (window.rabbit && window.rabbit.core) {
                     window.rabbit.core.say({ text: `Added ${linkData.description}` });
@@ -1071,20 +972,128 @@
                 launchUrlOnRabbit(searchUrl, `search for ${query}`);
                 searchInput.value = '';
             }
-            handleFilter(); // Clear filter after searching
+            searchHandler(''); // Clear search results and show full list
         }
 
-        function handleFilter() {
-            const query = searchInput.value.trim().toLowerCase();
+        function renderCombinedResults(query, apiSuggestions, localResults) {
+            linksList.innerHTML = '';
+            let hasContent = false;
+
+            // Filter out web suggestions that already exist in the user's links to prevent duplicates.
+            const existingUrls = new Set(links.map(link => link.url.replace(/\/$/, ''))); // Normalize by removing trailing slash
+            const filteredApiSuggestions = apiSuggestions.filter(sugg => {
+                const normalizedSuggUrl = sugg.link.replace(/\/$/, '');
+                return !existingUrls.has(normalizedSuggUrl);
+            });
+
+            // Render API suggestions
+            if (filteredApiSuggestions.length > 0) {
+                hasContent = true;
+                const header = document.createElement('h3');
+                header.className = 'category-header';
+                header.textContent = 'Web Suggestions';
+                linksList.appendChild(header);
+
+                filteredApiSuggestions.slice(0, 4).forEach(sugg => {
+                    const suggLi = document.createElement('li');
+                    suggLi.className = 'link-item add-suggestion-item';
+                    suggLi.innerHTML = `
+                        <img src="https://www.google.com/s2/favicons?sz=64&domain_url=${getHostname(sugg.link)}" class="link-favicon" alt="Favicon" onerror="this.onerror=null; this.src='${GENERIC_FAVICON_SRC}'; this.style.padding='3px';">
+                        <div class="link-description">Add: ${sugg.title}</div>
+                    `;
+                    suggLi.addEventListener('click', () => handleAddFromQuery(sugg.title, sugg.link));
+                    linksList.appendChild(suggLi);
+                });
+            }
+
+            // Render local search results
+            if (localResults.length > 0) {
+                const header = document.createElement('h3');
+                header.className = 'category-header';
+                header.textContent = 'In Your Links';
+                if (hasContent) { // If we already rendered suggestions, add space
+                    header.style.marginTop = '20px';
+                }
+                linksList.appendChild(header);
+                hasContent = true;
+
+                renderLinks(localResults); // Use the existing renderLinks logic
+            }
+
+            // If no content at all, show a web search prompt
+            if (!hasContent) {
+                linksList.innerHTML = `
+                    <li class="link-item web-search-item">
+                        <div class="link-description">Search for "${query}" on the web</div>
+                    </li>
+                `;
+                linksList.querySelector('.web-search-item').addEventListener('click', () => performExternalSearch(query));
+            }
+            
+            requestAnimationFrame(applyDynamicSizing);
+        }
+
+        function handleOSMessage(e) {
+            console.log("Received plugin message:", e);
+            try {
+                let data = null;
+                if (e.data) {
+                    data = typeof e.data == "string" ? JSON.parse(e.data) : e.data;
+                }
+                
+                const query = searchInput.value.trim().toLowerCase();
+                const localResults = links.filter(link => 
+                    link.description.toLowerCase().includes(query) ||
+                    link.url.toLowerCase().includes(query)
+                );
+
+                if (data && data.organic_results) {
+                    console.log("Google search results received:", data.organic_results.length, "results");
+                    renderCombinedResults(query, data.organic_results, localResults);
+                } else {
+                    console.log("Received data but no organic_results. Falling back to local search.");
+                    renderCombinedResults(query, [], localResults);
+                }
+            } catch (err) {
+                console.error("Error parsing plugin message:", err);
+            }
+        }
+
+        function searchHandler(query) {
+            query = query.trim();
             if (!query) {
                 renderLinks(links); // Render all links if query is empty
                 return;
             }
-            const filteredLinks = links.filter(link => 
-                link.description.toLowerCase().includes(query) ||
-                link.url.toLowerCase().includes(query)
-            );
-            renderLinks(filteredLinks);
+
+            // Check if we are on the Rabbit device
+            if (typeof PluginMessageHandler !== "undefined") {
+                const messageToOS = {
+                    message: JSON.stringify({
+                        query_params: {
+                            engine: "google", // Use Google for general web search
+                            q: query,
+                            hl: "en"
+                        },
+                        useLocation: false
+                    }),
+                    useSerpAPI: true
+                };
+                PluginMessageHandler.postMessage(JSON.stringify(messageToOS));
+            } else {
+                // --- Browser Mode: Use Mock Data for Testing ---
+                console.log("[Browser Mode] Simulating search for:", query);
+                const mockApiResults = [
+                    { title: `Mock Result for '${query}'`, link: `https://www.example.com/search?q=${query}` },
+                    { title: "The Verge - Tech News", link: "https://www.theverge.com" },
+                    { title: "Hacker News", link: "https://news.ycombinator.com" }
+                ];
+                const localResults = links.filter(link => 
+                    link.description.toLowerCase().includes(query.toLowerCase()) ||
+                    link.url.toLowerCase().includes(query.toLowerCase())
+                );
+                renderCombinedResults(query, mockApiResults, localResults);
+            }
         }
 
         searchBtn.addEventListener('click', () => performExternalSearch());
@@ -1093,7 +1102,22 @@
                 performExternalSearch();
             }
         });
-        searchInput.addEventListener('input', handleFilter);
+
+        const debouncedSearch = debounce(searchHandler, 400);
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value;
+            // Show/hide clear button
+            clearSearchBtn.style.display = query.length > 0 ? 'flex' : 'none';
+            debouncedSearch(query);
+        });
+
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            clearSearchBtn.style.display = 'none';
+            searchHandler(''); // This will re-render all links
+            searchInput.focus();
+            triggerHaptic(); // Give feedback on clear
+        });
 
         viewListBtn.addEventListener('click', () => setView('list'));
         viewGroupBtn.addEventListener('click', () => setView('group'));
@@ -1107,7 +1131,7 @@
             // The link only appears when there's something to collapse, so its only action is to collapse all.
             collapsedCategories = [...allCategoriesInApp];
             localStorage.setItem('launchPadR1CollapsedCategories', JSON.stringify(collapsedCategories));
-            handleFilter(); // Re-render respecting the current search query
+            searchHandler(searchInput.value); // Re-render respecting the current search query
         });
 
         // --- Quick Launch Event Listener ---
@@ -1331,6 +1355,7 @@
 
         // --- Initial Load ---
         
+        themeBtn.addEventListener('click', openThemeEditor);
         setupColorPicker();
         // Apply the initial theme
         applyTheme(currentThemeName);
