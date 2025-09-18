@@ -344,18 +344,18 @@
             /* Align to top to avoid keyboard overlap on small screens */
             align-items: flex-start;
             z-index: 1000;
-            padding: 25px 8px 8px; /* Add more top padding */
+            padding: 15px 8px 8px; /* Reduced top padding to bring dialog higher */
         }
         .custom-prompt-dialog {
             background-color: var(--item-bg);
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
             width: 100%;
             max-width: 320px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 8px; /* Reduced gap to save vertical space */
         }
         .custom-prompt-dialog p {
             margin: 0;
@@ -367,6 +367,7 @@
             justify-content: space-between;
             align-items: center;
             gap: 10px;
+            margin-top: 5px; /* Add a bit of extra space above the buttons */
         }
         .custom-prompt-actions-right {
             display: flex;
@@ -385,7 +386,7 @@
             color: #e74c3c; /* A noticeable red */
             font-size: 0.9em;
             text-align: center;
-            margin: -5px 0 5px 0;
+            margin: 0; /* Use flex-gap for spacing */
             min-height: 1.2em; /* Prevent layout shift when message appears */
         }
     </style>
