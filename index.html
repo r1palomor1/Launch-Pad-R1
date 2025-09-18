@@ -98,6 +98,11 @@
         button:hover {
             filter: brightness(1.15);
         }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            filter: none;
+        }
         /* Secondary button style for non-primary actions like 'Cancel' */
         button.secondary {
             background-color: var(--item-bg);
@@ -205,6 +210,20 @@
         }
         #linksList > h3:first-of-type {
             margin-top: 0;
+        }
+        .input-with-action {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .input-with-action input {
+            flex-grow: 1;
+        }
+        .input-with-action button {
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            padding: 5px;
         }
         .link-info input, .link-info select {
             width: 100%;
@@ -807,7 +826,10 @@
             return `
                 <div class="link-info">
                     <input type="text" class="${inputClassPrefix}-description" value="${description}" placeholder="Description">
-                    <input type="text" class="${inputClassPrefix}-url" value="${url}" placeholder="URL">
+                    <div class="input-with-action">
+                        <input type="text" class="${inputClassPrefix}-url" value="${url}" placeholder="URL">
+                        <button class="fetch-title-btn secondary" title="Fetch Title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.0006 22.0001L8.89941 18.8989L12.0006 15.7977L13.4148 17.2119L12.0006 18.6261L14.8289 21.4544L12.0006 22.0001ZM12.0006 8.20237L10.5864 6.78816L12.0006 5.37395L15.1018 8.47512L12.0006 11.5763L10.5864 10.1621L12.0006 8.74789V8.20237ZM2.94971 13.0503L6.78812 10.5865L8.20234 12.0007L5.37402 14.829L2.39941 12.0007L2.94971 13.0503ZM18.8994 5.10059L17.2121 6.78784L18.6263 8.20206L21.6009 5.37378L18.8994 5.10059ZM8.89941 5.10059L2.39941 12.0007L5.17157 14.8288L12.0006 8.00012L8.89941 5.10059ZM15.1018 18.8989L21.6009 12.0007L18.8287 9.1724L12.0006 16.0001L15.1018 18.8989Z"></path></svg></button>
+                    </div>
                     <select class="${inputClassPrefix}-category">${categoryOptions}</select>
                 </div>
                 <div class="link-actions">
@@ -815,6 +837,42 @@
                     <button class="cancel-btn secondary">Cancel</button>
                 </div>
             `;
+        }
+
+        async function fetchTitle(urlInput, descriptionInput, button) {
+            const targetUrl = urlInput.value.trim();
+            if (!targetUrl || !targetUrl.startsWith('http')) {
+                alert('Please enter a valid URL starting with http or https.');
+                return;
+            }
+
+            button.disabled = true;
+            const originalText = descriptionInput.value;
+            descriptionInput.value = 'Fetching title...';
+
+            // Use a powerful proxy API (microlink.io) which is better at handling various sites.
+            const proxyUrl = `https://api.microlink.io/?url=${encodeURIComponent(targetUrl)}`;
+
+            try {
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
+                
+                const data = await response.json();
+
+                // Microlink's response structure is { status: 'success', data: { title: '...' } }
+                if (data && data.status === 'success' && data.data && data.data.title) {
+                    descriptionInput.value = data.data.title.trim();
+                } else {
+                    descriptionInput.value = originalText; // Restore original if no title found
+                    alert('Title not found.');
+                }
+            } catch (e) {
+                console.error("Fetch title error:", e);
+                descriptionInput.value = originalText; // Restore on error
+                alert('Could not fetch title. The website may be blocking requests.');
+            } finally {
+                button.disabled = false;
+            }
         }
 
         function editLink(li, index) {
@@ -839,6 +897,11 @@
             li.querySelector('.cancel-btn').addEventListener('click', () => {
                 handleFilter(); // Re-render the list to cancel, respecting filter
             });
+
+            const urlInput = li.querySelector('.edit-url');
+            const descriptionInput = li.querySelector('.edit-description');
+            const fetchBtn = li.querySelector('.fetch-title-btn');
+            fetchBtn.addEventListener('click', () => fetchTitle(urlInput, descriptionInput, fetchBtn));
         }
 
         function showAddForm(prefillData = {}) {
@@ -889,6 +952,11 @@
                 searchInput.value = '';
                 handleFilter(); // Re-render full list
             });
+
+            const urlInput = li.querySelector('.new-url');
+            const descriptionInput = li.querySelector('.new-description');
+            const fetchBtn = li.querySelector('.fetch-title-btn');
+            fetchBtn.addEventListener('click', () => fetchTitle(urlInput, descriptionInput, fetchBtn));
         }
 
         addBtn.addEventListener('click', () => showAddForm());
@@ -1221,22 +1289,37 @@
         }
 
         async function fetchQuote() {
+            // Immediately show the dialog with a loading state.
+            showQuoteDialog("Fetching quote...", "");
+            quoteCloseBtn.disabled = true;
+
             try {
-                if (window.rabbit && window.rabbit.core) {
-                    await window.rabbit.core.say({ text: "Getting a quote..." });
+                // Use a CORS proxy to bypass potential browser security restrictions on the device.
+                // Switched to ZenQuotes API, which is secure and well-maintained.
+                const apiUrl = 'https://zenquotes.io/api/random';
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
+                const response = await fetch(proxyUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.statusText}`);
                 }
-                const response = await window.rabbit.core.fetch({ url: 'https://api.quotable.io/random', method: 'GET' });
-                const data = await response.json();
-                if (data && data.content && data.author) {
-                    showQuoteDialog(data.content, data.author);
+
+                // The proxy wraps the original response, so we need to parse it twice.
+                const outerData = await response.json();
+                const data = JSON.parse(outerData.contents);
+
+                // ZenQuotes returns an array with a single quote object: [{ q: "quote", a: "author" }]
+                if (data && data.length > 0 && data[0].q && data[0].a) {
+                    // Success: Update the dialog with the fetched quote.
+                    showQuoteDialog(data[0].q, data[0].a);
                 } else {
                     throw new Error("Invalid quote format received.");
                 }
             } catch (e) {
                 console.error("Fetch quote error:", e);
-                if (window.rabbit && window.rabbit.core) {
-                    await window.rabbit.core.say({ text: "Sorry, I couldn't get a quote right now." });
-                }
+                showQuoteDialog("Sorry, something went wrong.", "Please try again later.");
+            } finally {
+                quoteCloseBtn.disabled = false;
             }
         }
 
