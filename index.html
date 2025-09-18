@@ -345,6 +345,10 @@
             align-items: flex-start;
             z-index: 1000;
             padding: 15px 8px 8px; /* Reduced top padding to bring dialog higher */
+            transition: padding-top 0.2s ease-in-out; /* Smooth transition for focus */
+        }
+        .custom-prompt-overlay.input-focused {
+            padding-top: 5px; /* Move dialog higher when keyboard is expected */
         }
         .custom-prompt-dialog {
             background-color: var(--item-bg);
@@ -1152,13 +1156,21 @@
         });
 
         // --- Theming & Custom Prompt ---
+        // Add listeners to adjust layout when keyboard is likely visible
+        customPromptInput.addEventListener('focus', () => {
+            customPromptOverlay.classList.add('input-focused');
+        });
+        customPromptInput.addEventListener('blur', () => {
+            customPromptOverlay.classList.remove('input-focused');
+        });
+
         function showCustomPrompt(message) {
             return new Promise((resolve) => {
                 customPromptMessage.textContent = message;
                 customPromptInput.value = '';
                 customPromptSelect.value = ''; // Reset dropdown
                 customPromptOverlay.style.display = 'flex';
-                customPromptInput.focus();
+                // Do not auto-focus input to prevent keyboard from appearing immediately.
 
                 let resolved = false; // Prevent multiple resolutions
 
