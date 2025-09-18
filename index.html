@@ -64,14 +64,14 @@
             gap: 4px;
             margin-bottom: 15px;
         }
-        #searchBtn, #addBtn, #quickLaunchBtn, #quoteBtn {
+        #searchBtn, #addBtn, #quickLaunchBtn {
             width: 38px; /* Make it a square icon button */
             padding: 7px; /* (38px button size - 24px icon size) / 2 */
         }
-        #addBtn, #quickLaunchBtn, #quoteBtn {
+        #addBtn, #quickLaunchBtn {
             height: 38px; /* Ensure it's a perfect square */
         }
-        #searchBtn svg, #addBtn svg, #quickLaunchBtn svg, #quoteBtn svg {
+        #searchBtn svg, #addBtn svg, #quickLaunchBtn svg {
             width: 24px;
             height: 24px;
         }
@@ -359,37 +359,23 @@
             margin: -5px 0 5px 0;
             min-height: 1.2em; /* Prevent layout shift when message appears */
         }
-        /* Quote Dialog Styles */
-        .quote-dialog-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1001; /* Above prompt */
-            padding: 8px;
-        }
-        .quote-dialog {
+        /* Daily Quote Styles */
+        #dailyQuoteContainer {
+            margin-top: 25px;
+            padding: 15px;
             background-color: var(--item-bg);
-            padding: 20px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
-            width: 100%;
-            max-width: 320px;
             text-align: center;
         }
-        .quote-text {
+        #dailyQuoteText {
             font-style: italic;
-            font-size: 1.1em;
-            margin-bottom: 15px;
+            margin: 0 0 10px 0;
         }
-        .quote-author {
+        #dailyQuoteAuthor {
             font-weight: bold;
             color: var(--primary-color);
+            margin: 0;
         }
     </style>
 </head>
@@ -421,15 +407,16 @@
                 </button>
             </div>
             <div class="app-actions">
-                <button id="quoteBtn" title="Get a Quote">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10.4999 17H6.49988V13H8.49988C8.49988 11.8954 9.39531 11 10.4999 11V9C8.29076 9 6.49988 10.7909 6.49988 13V17H4.49988V19H10.4999V17ZM19.4999 17H15.5V13H17.5C17.5 11.8954 18.3954 11 19.5 11V9C17.2908 9 15.5 10.7909 15.5 13V17H13.5V19H19.4999V17Z"></path></svg>
-                </button>
                 <button id="addBtn" title="Add new link">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11 11V5H13V11H19V13H13V19H11V13H5V11H11Z"></path></svg>
                 </button>
             </div>
         </div>
         <ul id="linksList"></ul>
+    </div>
+    <div id="dailyQuoteContainer" style="display: none;">
+        <p id="dailyQuoteText"></p>
+        <p id="dailyQuoteAuthor"></p>
     </div>
 
     <div id="customPromptOverlay" class="custom-prompt-overlay" style="display: none;">
@@ -445,14 +432,6 @@
                     <button id="customPromptOk">OK</button>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div id="quoteDialogOverlay" class="quote-dialog-overlay" style="display: none;">
-        <div class="quote-dialog">
-            <p id="quoteText"></p>
-            <p id="quoteAuthor"></p>
-            <button id="quoteCloseBtn" style="margin-top: 20px;">Close</button>
         </div>
     </div>
 
@@ -475,11 +454,9 @@
         const customPromptReset = document.getElementById('customPromptReset');
         const customPromptError = document.getElementById('customPromptError');
         const customPromptSelect = document.getElementById('customPromptSelect');
-        const quoteBtn = document.getElementById('quoteBtn');
-        const quoteDialogOverlay = document.getElementById('quoteDialogOverlay');
-        const quoteText = document.getElementById('quoteText');
-        const quoteAuthor = document.getElementById('quoteAuthor');
-        const quoteCloseBtn = document.getElementById('quoteCloseBtn');
+        const dailyQuoteContainer = document.getElementById('dailyQuoteContainer');
+        const dailyQuoteText = document.getElementById('dailyQuoteText');
+        const dailyQuoteAuthor = document.getElementById('dailyQuoteAuthor');
 
         const GENERIC_FAVICON_SRC = 'data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23888\'%3e%3cpath d=\'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z\'/%3e%3c/svg%3e';
 
@@ -581,6 +558,13 @@
             // Set active icon
             viewListBtn.classList.toggle('active', currentView === 'list');
             viewGroupBtn.classList.toggle('active', currentView === 'group');
+
+            // Show quote container only in group view and if it has content
+            if (currentView === 'group' && dailyQuoteText.textContent) {
+                dailyQuoteContainer.style.display = 'block';
+            } else {
+                dailyQuoteContainer.style.display = 'none';
+            }
 
             // Reset dynamic sizing before rendering to ensure we start with the default large text.
             linksList.classList.remove('small-text');
@@ -1277,63 +1261,53 @@
             }
         }
 
-        // --- Quote of the Day ---
-        function showQuoteDialog(quote, author) {
-            quoteText.textContent = `“${quote}”`;
-            quoteAuthor.textContent = `— ${author}`;
-            quoteDialogOverlay.style.display = 'flex';
-        }
+        async function manageDailyQuote() {
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+            const storedQuote = JSON.parse(localStorage.getItem('launchPadR1DailyQuote'));
 
-        function hideQuoteDialog() {
-            quoteDialogOverlay.style.display = 'none';
-        }
+            if (storedQuote && storedQuote.date === today) {
+                dailyQuoteText.textContent = `“${storedQuote.quote}”`;
+                dailyQuoteAuthor.textContent = `— ${storedQuote.author}`;
+                return;
+            }
 
-        async function fetchQuote() {
-            // Immediately show the dialog with a loading state.
-            showQuoteDialog("Fetching quote...", "");
-            quoteCloseBtn.disabled = true;
-
+            // If no valid quote for today, fetch a new one.
             try {
-                // Use a CORS proxy to bypass potential browser security restrictions on the device.
-                // Switched to ZenQuotes API, which is secure and well-maintained.
                 const apiUrl = 'https://zenquotes.io/api/random';
                 const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
                 const response = await fetch(proxyUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`Network response was not ok: ${response.statusText}`);
-                }
+                if (!response.ok) throw new Error('Network error');
 
-                // The proxy wraps the original response, so we need to parse it twice.
                 const outerData = await response.json();
                 const data = JSON.parse(outerData.contents);
 
-                // ZenQuotes returns an array with a single quote object: [{ q: "quote", a: "author" }]
                 if (data && data.length > 0 && data[0].q && data[0].a) {
-                    // Success: Update the dialog with the fetched quote.
-                    showQuoteDialog(data[0].q, data[0].a);
+                    const newQuote = { quote: data[0].q, author: data[0].a, date: today };
+                    localStorage.setItem('launchPadR1DailyQuote', JSON.stringify(newQuote));
+                    dailyQuoteText.textContent = `“${newQuote.quote}”`;
+                    dailyQuoteAuthor.textContent = `— ${newQuote.author}`;
                 } else {
-                    throw new Error("Invalid quote format received.");
+                    throw new Error('Invalid quote format');
                 }
             } catch (e) {
-                console.error("Fetch quote error:", e);
-                showQuoteDialog("Sorry, something went wrong.", "Please try again later.");
-            } finally {
-                quoteCloseBtn.disabled = false;
+                console.error("Failed to fetch daily quote:", e);
+                // If fetching fails, don't show the quote container.
+                dailyQuoteContainer.style.display = 'none';
             }
         }
-
-        quoteBtn.addEventListener('click', fetchQuote);
-        quoteCloseBtn.addEventListener('click', hideQuoteDialog);
-        quoteDialogOverlay.addEventListener('click', (e) => { if (e.target === quoteDialogOverlay) hideQuoteDialog(); });
 
         // --- Initial Load ---
         
         setupColorPicker();
         // Apply the initial theme
         applyTheme(currentThemeName);
+        
+        // Use an async IIFE (Immediately Invoked Function Expression) to manage initial data loading
+        (async () => {
+            await manageDailyQuote();
+            renderLinks();
+        })();
 
-        renderLinks();
     });
     </script>
 </body>
