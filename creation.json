@@ -5,6 +5,7 @@
   "permissions": [
     "core:launch-url",
     "core:say",
-    "core:haptics"
+    "core:haptics",
+    "core:fetch"
   ]
 }

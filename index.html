@@ -64,14 +64,14 @@
             gap: 4px;
             margin-bottom: 15px;
         }
-        #searchBtn, #addBtn, #quickLaunchBtn {
+        #searchBtn, #addBtn, #quickLaunchBtn, #quoteBtn {
             width: 38px; /* Make it a square icon button */
             padding: 7px; /* (38px button size - 24px icon size) / 2 */
         }
-        #addBtn, #quickLaunchBtn {
+        #addBtn, #quickLaunchBtn, #quoteBtn {
             height: 38px; /* Ensure it's a perfect square */
         }
-        #searchBtn svg, #addBtn svg, #quickLaunchBtn svg {
+        #searchBtn svg, #addBtn svg, #quickLaunchBtn svg, #quoteBtn svg {
             width: 24px;
             height: 24px;
         }
@@ -340,6 +340,38 @@
             margin: -5px 0 5px 0;
             min-height: 1.2em; /* Prevent layout shift when message appears */
         }
+        /* Quote Dialog Styles */
+        .quote-dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001; /* Above prompt */
+            padding: 8px;
+        }
+        .quote-dialog {
+            background-color: var(--item-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 320px;
+            text-align: center;
+        }
+        .quote-text {
+            font-style: italic;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+        .quote-author {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
     </style>
 </head>
 <body>
@@ -370,6 +402,9 @@
                 </button>
             </div>
             <div class="app-actions">
+                <button id="quoteBtn" title="Get a Quote">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10.4999 17H6.49988V13H8.49988C8.49988 11.8954 9.39531 11 10.4999 11V9C8.29076 9 6.49988 10.7909 6.49988 13V17H4.49988V19H10.4999V17ZM19.4999 17H15.5V13H17.5C17.5 11.8954 18.3954 11 19.5 11V9C17.2908 9 15.5 10.7909 15.5 13V17H13.5V19H19.4999V17Z"></path></svg>
+                </button>
                 <button id="addBtn" title="Add new link">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11 11V5H13V11H19V13H13V19H11V13H5V11H11Z"></path></svg>
                 </button>
@@ -394,6 +429,14 @@
         </div>
     </div>
 
+    <div id="quoteDialogOverlay" class="quote-dialog-overlay" style="display: none;">
+        <div class="quote-dialog">
+            <p id="quoteText"></p>
+            <p id="quoteAuthor"></p>
+            <button id="quoteCloseBtn" style="margin-top: 20px;">Close</button>
+        </div>
+    </div>
+
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const searchInput = document.getElementById('searchInput');
@@ -413,6 +456,11 @@
         const customPromptReset = document.getElementById('customPromptReset');
         const customPromptError = document.getElementById('customPromptError');
         const customPromptSelect = document.getElementById('customPromptSelect');
+        const quoteBtn = document.getElementById('quoteBtn');
+        const quoteDialogOverlay = document.getElementById('quoteDialogOverlay');
+        const quoteText = document.getElementById('quoteText');
+        const quoteAuthor = document.getElementById('quoteAuthor');
+        const quoteCloseBtn = document.getElementById('quoteCloseBtn');
 
         const GENERIC_FAVICON_SRC = 'data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23888\'%3e%3cpath d=\'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z\'/%3e%3c/svg%3e';
 
@@ -1161,7 +1209,40 @@
             }
         }
 
-        themeBtn.addEventListener('click', openThemeEditor);
+        // --- Quote of the Day ---
+        function showQuoteDialog(quote, author) {
+            quoteText.textContent = `“${quote}”`;
+            quoteAuthor.textContent = `— ${author}`;
+            quoteDialogOverlay.style.display = 'flex';
+        }
+
+        function hideQuoteDialog() {
+            quoteDialogOverlay.style.display = 'none';
+        }
+
+        async function fetchQuote() {
+            try {
+                if (window.rabbit && window.rabbit.core) {
+                    await window.rabbit.core.say({ text: "Getting a quote..." });
+                }
+                const response = await window.rabbit.core.fetch({ url: 'https://api.quotable.io/random', method: 'GET' });
+                const data = await response.json();
+                if (data && data.content && data.author) {
+                    showQuoteDialog(data.content, data.author);
+                } else {
+                    throw new Error("Invalid quote format received.");
+                }
+            } catch (e) {
+                console.error("Fetch quote error:", e);
+                if (window.rabbit && window.rabbit.core) {
+                    await window.rabbit.core.say({ text: "Sorry, I couldn't get a quote right now." });
+                }
+            }
+        }
+
+        quoteBtn.addEventListener('click', fetchQuote);
+        quoteCloseBtn.addEventListener('click', hideQuoteDialog);
+        quoteDialogOverlay.addEventListener('click', (e) => { if (e.target === quoteDialogOverlay) hideQuoteDialog(); });
 
         // --- Initial Load ---
         
