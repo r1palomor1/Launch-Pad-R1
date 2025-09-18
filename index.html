@@ -359,24 +359,6 @@
             margin: -5px 0 5px 0;
             min-height: 1.2em; /* Prevent layout shift when message appears */
         }
-        /* Daily Quote Styles */
-        #dailyQuoteContainer {
-            margin-top: 25px;
-            padding: 15px;
-            background-color: var(--item-bg);
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            text-align: center;
-        }
-        #dailyQuoteText {
-            font-style: italic;
-            margin: 0 0 10px 0;
-        }
-        #dailyQuoteAuthor {
-            font-weight: bold;
-            color: var(--primary-color);
-            margin: 0;
-        }
     </style>
 </head>
 <body>
@@ -414,10 +396,6 @@
         </div>
         <ul id="linksList"></ul>
     </div>
-    <div id="dailyQuoteContainer" style="display: none;">
-        <p id="dailyQuoteText"></p>
-        <p id="dailyQuoteAuthor"></p>
-    </div>
 
     <div id="customPromptOverlay" class="custom-prompt-overlay" style="display: none;">
         <div class="custom-prompt-dialog">
@@ -454,9 +432,6 @@
         const customPromptReset = document.getElementById('customPromptReset');
         const customPromptError = document.getElementById('customPromptError');
         const customPromptSelect = document.getElementById('customPromptSelect');
-        const dailyQuoteContainer = document.getElementById('dailyQuoteContainer');
-        const dailyQuoteText = document.getElementById('dailyQuoteText');
-        const dailyQuoteAuthor = document.getElementById('dailyQuoteAuthor');
 
         const GENERIC_FAVICON_SRC = 'data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23888\'%3e%3cpath d=\'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z\'/%3e%3c/svg%3e';
 
@@ -558,13 +533,6 @@
             // Set active icon
             viewListBtn.classList.toggle('active', currentView === 'list');
             viewGroupBtn.classList.toggle('active', currentView === 'group');
-
-            // Show quote container only in group view and if it has content
-            if (currentView === 'group' && dailyQuoteText.textContent) {
-                dailyQuoteContainer.style.display = 'block';
-            } else {
-                dailyQuoteContainer.style.display = 'none';
-            }
 
             // Reset dynamic sizing before rendering to ensure we start with the default large text.
             linksList.classList.remove('small-text');
@@ -825,7 +793,8 @@
 
         async function fetchTitle(urlInput, descriptionInput, button) {
             const targetUrl = urlInput.value.trim();
-            if (!targetUrl || !targetUrl.startsWith('http')) {
+            // Make the check case-insensitive to handle inputs like 'Https://'
+            if (!targetUrl || !targetUrl.toLowerCase().startsWith('http')) {
                 alert('Please enter a valid URL starting with http or https.');
                 return;
             }
@@ -845,7 +814,18 @@
 
                 // Microlink's response structure is { status: 'success', data: { title: '...' } }
                 if (data && data.status === 'success' && data.data && data.data.title) {
-                    descriptionInput.value = data.data.title.trim();
+                    let fullTitle = data.data.title.trim();
+                    let finalTitle = fullTitle;
+
+                    // Smartly truncate the title by splitting at common separators.
+                    const separators = [' - ', ' | ', ' – ', ' — ', ': '];
+                    for (const sep of separators) {
+                        if (fullTitle.includes(sep)) {
+                            finalTitle = fullTitle.split(sep)[0].trim();
+                            break; // Use the first separator found
+                        }
+                    }
+                    descriptionInput.value = finalTitle;
                 } else {
                     descriptionInput.value = originalText; // Restore original if no title found
                     alert('Title not found.');
@@ -1261,52 +1241,13 @@
             }
         }
 
-        async function manageDailyQuote() {
-            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-            const storedQuote = JSON.parse(localStorage.getItem('launchPadR1DailyQuote'));
-
-            if (storedQuote && storedQuote.date === today) {
-                dailyQuoteText.textContent = `“${storedQuote.quote}”`;
-                dailyQuoteAuthor.textContent = `— ${storedQuote.author}`;
-                return;
-            }
-
-            // If no valid quote for today, fetch a new one.
-            try {
-                const apiUrl = 'https://zenquotes.io/api/random';
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
-                const response = await fetch(proxyUrl);
-                if (!response.ok) throw new Error('Network error');
-
-                const outerData = await response.json();
-                const data = JSON.parse(outerData.contents);
-
-                if (data && data.length > 0 && data[0].q && data[0].a) {
-                    const newQuote = { quote: data[0].q, author: data[0].a, date: today };
-                    localStorage.setItem('launchPadR1DailyQuote', JSON.stringify(newQuote));
-                    dailyQuoteText.textContent = `“${newQuote.quote}”`;
-                    dailyQuoteAuthor.textContent = `— ${newQuote.author}`;
-                } else {
-                    throw new Error('Invalid quote format');
-                }
-            } catch (e) {
-                console.error("Failed to fetch daily quote:", e);
-                // If fetching fails, don't show the quote container.
-                dailyQuoteContainer.style.display = 'none';
-            }
-        }
-
         // --- Initial Load ---
         
         setupColorPicker();
         // Apply the initial theme
         applyTheme(currentThemeName);
         
-        // Use an async IIFE (Immediately Invoked Function Expression) to manage initial data loading
-        (async () => {
-            await manageDailyQuote();
-            renderLinks();
-        })();
+        renderLinks();
 
     });
     </script>
