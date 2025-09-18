@@ -341,9 +341,10 @@
             background-color: rgba(0, 0, 0, 0.7);
             display: flex;
             justify-content: center;
-            align-items: center;
+            /* Align to top to avoid keyboard overlap on small screens */
+            align-items: flex-start;
             z-index: 1000;
-            padding: 8px;
+            padding: 25px 8px 8px; /* Add more top padding */
         }
         .custom-prompt-dialog {
             background-color: var(--item-bg);
