@@ -136,6 +136,25 @@
         .add-suggestion-item:hover {
             background-color: #252525;
         }
+        .web-search-item {
+            justify-content: center;
+            cursor: pointer;
+        }
+        .web-search-item:hover {
+            background-color: #252525;
+        }
+        .web-search-item .link-description {
+            text-align: center;
+            width: 100%;
+        }
+        .web-suggestion .link-actions button {
+            padding: 6px 12px;
+            font-size: 1.1em;
+        }
+        .error-message {
+            text-align: center;
+            color: #e74c3c;
+        }
         .link-display {
             flex-grow: 1;
             overflow: hidden;
@@ -555,18 +574,12 @@
             if (linksToRender.length === 0) {
                 const query = searchInput.value.trim();
                 if (query) {
-                    // Show a clickable suggestion to add the new item
-                    const li = document.createElement('li');
-                    li.className = 'link-item add-suggestion-item';
-                    li.innerHTML = `
-                        <div class="link-favicon" style="display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--primary-color);">+</div>
-                        <div class="link-info">
-                            <div class="link-description">Add "${query}"</div>
-                        </div>
+                    linksList.innerHTML = `
+                        <li class="link-item web-search-item">
+                            <div class="link-description">🔍 Search web for "${query}"</div>
+                        </li>
                     `;
-                    li.addEventListener('click', () => handleAddFromQuery(query));
-                    linksList.appendChild(li);
-                    li.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    linksList.querySelector('.web-search-item').addEventListener('click', () => fetchWebSuggestions(query));
                 } else {
                     linksList.innerHTML = '<p style="text-align:center; color: #6c757d;">No links saved. Click "+ Add" to start.</p>';
                 }
@@ -851,6 +864,67 @@
             }
         }
 
+        async function fetchWebSuggestions(query) {
+            linksList.innerHTML = '<p style="text-align:center; color: #6c757d;">Searching the web...</p>';
+            try {
+                // We will fetch the simple HTML version of DuckDuckGo's search results
+                // and parse it ourselves to get high-quality, relevant links.
+                const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+                
+                // This direct fetch will fail in local browsers due to CORS, but is designed
+                // to work on the Rabbit R1 device with the core:fetch permission.
+                const response = await fetch(searchUrl);
+                if (!response.ok) throw new Error('Network error');
+
+                const htmlContent = await response.text();
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlContent, 'text/html');
+                const results = [];
+                // The class 'result__a' is what DDG's HTML version uses for its main result links.
+                doc.querySelectorAll('.result__a').forEach(link => {
+                    results.push({
+                        text: link.textContent.trim(),
+                        url: new URL(link.href).searchParams.get('uddg') // Extract the real URL
+                    });
+                });
+
+                renderWebSuggestions(results.filter(r => r.url)); // Filter out any invalid results
+            } catch (e) {
+                console.error("Web suggestion fetch error:", e);
+                const errorMsg = e.message.includes('Failed to fetch') 
+                    ? 'Could not fetch suggestions. (This is expected in local browsers due to CORS. Please test on device.)'
+                    : 'Could not fetch suggestions. Please try again.';
+                linksList.innerHTML = `<p class="error-message">${errorMsg}</p>`;
+            }
+        }
+
+        function renderWebSuggestions(results) {
+            linksList.innerHTML = '';
+            if (results.length === 0) {
+                linksList.innerHTML = `<p style="text-align:center; color: #6c757d;">No web suggestions found.</p>`;
+                return;
+            }
+
+            results.slice(0, 5).forEach(result => { // Limit to 5 suggestions
+                const li = document.createElement('li');
+                li.className = 'link-item web-suggestion';
+                li.innerHTML = `
+                    <img src="https://www.google.com/s2/favicons?sz=64&domain_url=${getHostname(result.url)}" class="link-favicon" alt="Favicon" onerror="this.onerror=null; this.src='${GENERIC_FAVICON_SRC}'; this.style.padding='3px';">
+                    <div class="link-display">
+                        <div class="link-description">${result.text}</div>
+                        <div class="link-actions">
+                            <button class="add-suggestion-btn">+</button>
+                        </div>
+                    </div>
+                `;
+                li.querySelector('.add-suggestion-btn').addEventListener('click', () => {
+                    showAddForm({ description: result.text.split(/\s*(-|\||–|—|:)\s*/)[0], url: result.url, category: 'Other' });
+                });
+                linksList.appendChild(li);
+            });
+        }
+
         function editLink(li, index) {
             const link = links[index];
             // Temporarily remove the favicon during edit to maximize space
@@ -990,8 +1064,8 @@
             return true;
         }
 
-        function performSearch() {
-            const query = searchInput.value.trim();
+        function performExternalSearch(queryOverride) {
+            const query = queryOverride || searchInput.value.trim();
             if (query) {
                 const searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
                 launchUrlOnRabbit(searchUrl, `search for ${query}`);
@@ -1013,10 +1087,10 @@
             renderLinks(filteredLinks);
         }
 
-        searchBtn.addEventListener('click', performSearch);
+        searchBtn.addEventListener('click', () => performExternalSearch());
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                performSearch();
+                performExternalSearch();
             }
         });
         searchInput.addEventListener('input', handleFilter);
