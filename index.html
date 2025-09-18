@@ -230,24 +230,39 @@
     flex-direction: column;
     gap: 8px;
 }
-.form-row {
+.form-container label {
+    font-size: 0.8em;
+    font-weight: bold;
+    color: var(--icon-color);
+    margin-bottom: -4px; /* Pull it closer to the input */
+}
+.form-actions {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
 }
-.form-row > *:first-child { /* The input or select element */
-    flex-grow: 1;
-    min-width: 0; /* Prevent flexbox overflow */
+.input-with-action {
+    position: relative;
 }
-.form-row > button {
-    flex-shrink: 0;
-    padding: 5px 8px;
-    font-size: 0.9em;
+.input-with-action input {
+    padding-right: 42px !important; /* Space for the button, !important to override other styles */
 }
-.form-row > .fetch-title-btn {
-    padding: 5px;
+.input-with-action button {
+    position: absolute;
+    top: 50%;
+    right: 5px;
+    transform: translateY(-50%);
     width: 32px;
     height: 32px;
+    padding: 5px;
+    background: transparent;
+    border: none;
+    color: var(--icon-color);
+}
+.input-with-action button:hover {
+    background-color: #3a3a3a;
+    color: var(--font-color);
 }
         .actions-bar {
             display: flex;
@@ -850,46 +865,10 @@
             }
         }
 
-        /**
-         * Creates the HTML for the add/edit form using a two-column grid layout.
-         * @param {object|null} linkData - The link object to edit, or null for a new link.
-         * @returns {string} The innerHTML for the form.
-         */
-        function createFormHTML(linkData = {}, isForEditing = false) {
-            const description = linkData.description || '';
-            const url = linkData.url || 'https://';
-            const selectedCategory = linkData.category || 'Other';
-
-            const categoryOptions = categories.map(cat => 
-                `<option value="${cat}" ${selectedCategory === cat ? 'selected' : ''}>${cat}</option>`
-            ).join('');
-
-            const inputClassPrefix = isForEditing ? 'edit' : 'new';
-            const saveButtonClass = isForEditing ? 'save-btn' : 'save-new-btn';
-
-            return `
-                <div class="form-container">
-                    <div class="form-row">
-                        <input type="text" class="${inputClassPrefix}-description" value="${description}" placeholder="Description">
-                        <button class="${saveButtonClass}">${isForEditing ? 'Save' : 'Add'}</button>
-                    </div>
-                    <div class="form-row">
-                        <input type="text" class="${inputClassPrefix}-url" value="${url}" placeholder="URL">
-                        <button class="fetch-title-btn secondary" title="Fetch Title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.0006 22.0001L8.89941 18.8989L12.0006 15.7977L13.4148 17.2119L12.0006 18.6261L14.8289 21.4544L12.0006 22.0001ZM12.0006 8.20237L10.5864 6.78816L12.0006 5.37395L15.1018 8.47512L12.0006 11.5763L10.5864 10.1621L12.0006 8.74789V8.20237ZM2.94971 13.0503L6.78812 10.5865L8.20234 12.0007L5.37402 14.829L2.39941 12.0007L2.94971 13.0503ZM18.8994 5.10059L17.2121 6.78784L18.6263 8.20206L21.6009 5.37378L18.8994 5.10059ZM8.89941 5.10059L2.39941 12.0007L5.17157 14.8288L12.0006 8.00012L8.89941 5.10059ZM15.1018 18.8989L21.6009 12.0007L18.8287 9.1724L12.0006 16.0001L15.1018 18.8989Z"></path></svg></button>
-                    </div>
-                    <div class="form-row">
-                        <select class="${inputClassPrefix}-category">${categoryOptions}</select>
-                        <button class="cancel-btn secondary">Cancel</button>
-                    </div>
-                </div>
-            `;
-        }
-
         function editLink(li, index) {
             const link = links[index];
-            const favicon = li.querySelector('.link-favicon');
-            const faviconHTML = favicon ? favicon.outerHTML : '';
-            li.innerHTML = faviconHTML + createFormHTML(link, true);
+            // Temporarily remove the favicon during edit to maximize space
+            li.innerHTML = createFormHTML(link, true);
 
             li.querySelector('.save-btn').addEventListener('click', () => {
                 const newDescription = li.querySelector('.edit-description').value.trim();
