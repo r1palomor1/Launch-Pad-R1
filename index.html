@@ -831,13 +831,11 @@
                     let fullTitle = data.data.title.trim();
                     let finalTitle = fullTitle;
 
-                    // Smartly truncate the title by splitting at common separators.
-                    const separators = [' - ', ' | ', ' – ', ' — ', ': '];
-                    for (const sep of separators) {
-                        if (fullTitle.includes(sep)) {
-                            finalTitle = fullTitle.split(sep)[0].trim();
-                            break; // Use the first separator found
-                        }
+                    // Use a regular expression to split by any common separator,
+                    // handling optional spaces around it for more robust parsing.
+                    const parts = fullTitle.split(/\s*(-|\||–|—|:)\s*/);
+                    if (parts.length > 1) {
+                        finalTitle = parts[0].trim();
                     }
                     descriptionInput.value = finalTitle;
                 } else {
