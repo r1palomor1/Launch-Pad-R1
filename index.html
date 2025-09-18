@@ -348,7 +348,7 @@
             transition: padding-top 0.2s ease-in-out; /* Smooth transition for focus */
         }
         .custom-prompt-overlay.input-focused {
-            padding-top: 5px; /* Move dialog higher when keyboard is expected */
+            padding-top: 2px; /* Move dialog almost to the top edge to ensure buttons are visible */
         }
         .custom-prompt-dialog {
             background-color: var(--item-bg);
@@ -360,6 +360,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px; /* Reduced gap to save vertical space */
+            transition: padding 0.2s ease-in-out, gap 0.2s ease-in-out; /* Smooth transition */
         }
         .custom-prompt-dialog p {
             margin: 0;
@@ -385,6 +386,18 @@
             background-color: var(--item-bg);
             color: var(--font-color);
             font-size: 0.95em;
+            /* Transitions for smooth collapse when keyboard is active */
+            transition: opacity 0.2s ease-in-out, height 0.2s ease-in-out, margin 0.2s ease-in-out, padding 0.2s ease-in-out, border 0.2s ease-in-out;
+            overflow: hidden;
+        }
+        /* When keyboard is active, shrink the dialog and hide the select dropdown to save space */
+        .custom-prompt-overlay.input-focused .custom-prompt-dialog {
+            padding: 10px;
+            gap: 5px;
+        }
+        .custom-prompt-overlay.input-focused #customPromptSelect {
+            opacity: 0;
+            height: 0; padding-top: 0; padding-bottom: 0; margin: 0; border: none;
         }
         .custom-prompt-error {
             color: #e74c3c; /* A noticeable red */
