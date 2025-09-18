@@ -212,18 +212,27 @@
             margin-top: 0;
         }
         .input-with-action {
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            position: relative;
         }
         .input-with-action input {
-            flex-grow: 1;
+            /* width: 100% is inherited from .link-info input */
+            padding-right: 42px; /* Space for the button */
         }
         .input-with-action button {
-            flex-shrink: 0;
+            position: absolute;
+            top: 50%;
+            right: 5px;
+            transform: translateY(-50%);
             width: 32px;
             height: 32px;
             padding: 5px;
+            background: transparent;
+            border: none;
+            color: var(--icon-color);
+        }
+        .input-with-action button:hover {
+            background-color: #3a3a3a;
+            color: var(--font-color);
         }
         .link-info input, .link-info select {
             width: 100%;
@@ -780,7 +789,7 @@
                     <input type="text" class="${inputClassPrefix}-description" value="${description}" placeholder="Description">
                     <div class="input-with-action">
                         <input type="text" class="${inputClassPrefix}-url" value="${url}" placeholder="URL">
-                        <button class="fetch-title-btn secondary" title="Fetch Title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.0006 22.0001L8.89941 18.8989L12.0006 15.7977L13.4148 17.2119L12.0006 18.6261L14.8289 21.4544L12.0006 22.0001ZM12.0006 8.20237L10.5864 6.78816L12.0006 5.37395L15.1018 8.47512L12.0006 11.5763L10.5864 10.1621L12.0006 8.74789V8.20237ZM2.94971 13.0503L6.78812 10.5865L8.20234 12.0007L5.37402 14.829L2.39941 12.0007L2.94971 13.0503ZM18.8994 5.10059L17.2121 6.78784L18.6263 8.20206L21.6009 5.37378L18.8994 5.10059ZM8.89941 5.10059L2.39941 12.0007L5.17157 14.8288L12.0006 8.00012L8.89941 5.10059ZM15.1018 18.8989L21.6009 12.0007L18.8287 9.1724L12.0006 16.0001L15.1018 18.8989Z"></path></svg></button>
+                        <button class="fetch-title-btn" title="Fetch Title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.0006 22.0001L8.89941 18.8989L12.0006 15.7977L13.4148 17.2119L12.0006 18.6261L14.8289 21.4544L12.0006 22.0001ZM12.0006 8.20237L10.5864 6.78816L12.0006 5.37395L15.1018 8.47512L12.0006 11.5763L10.5864 10.1621L12.0006 8.74789V8.20237ZM2.94971 13.0503L6.78812 10.5865L8.20234 12.0007L5.37402 14.829L2.39941 12.0007L2.94971 13.0503ZM18.8994 5.10059L17.2121 6.78784L18.6263 8.20206L21.6009 5.37378L18.8994 5.10059ZM8.89941 5.10059L2.39941 12.0007L5.17157 14.8288L12.0006 8.00012L8.89941 5.10059ZM15.1018 18.8989L21.6009 12.0007L18.8287 9.1724L12.0006 16.0001L15.1018 18.8989Z"></path></svg></button>
                     </div>
                     <select class="${inputClassPrefix}-category">${categoryOptions}</select>
                 </div>
