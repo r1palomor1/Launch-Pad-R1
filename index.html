@@ -29,12 +29,14 @@
             max-width: 480px;
             min-width: 240px;
             margin: 0 auto;
-            padding: var(--rabbit-safe-area-inset-top, 20px) 8px 8px;
+            /* Top padding is now handled by the header to fill the safe area with the background */
+            padding: 0 8px 8px;
         }
         header {
             position: relative;
             text-align: center;
             align-items: center;
+            padding-top: var(--rabbit-safe-area-inset-top, 20px);
             margin-bottom: 10px;
         }
         header img {
@@ -264,8 +266,15 @@
             height: 18px;
             display: block;
         }
-        .favorite-btn.is-favorite, .favorite-indicator {
+        .favorite-btn.is-favorite {
             color: #FFD700; /* Gold, for high visibility across all themes */
+        }
+        .favorite-indicator {
+            color: #E6C300; /* A slightly less bright gold */
+            font-size: 0.85em; /* Make it a bit smaller than the header text */
+            /* The star character can sometimes sit high, this helps align it */
+            display: inline-block;
+            transform: translateY(-1px);
         }
         /* Dynamic Sizing for Link Descriptions */
         #linksList.small-text .link-display { gap: 6px; }
@@ -340,6 +349,9 @@
             fill: var(--icon-color);
         }
         .view-btn.active svg {
+            fill: var(--primary-color);
+        }
+        #quickLaunchBtn.active svg {
             fill: var(--primary-color);
         }
         /* Group View Styles */
@@ -635,6 +647,8 @@
             // Set active icon
             viewListBtn.classList.toggle('active', currentView === 'list');
             viewGroupBtn.classList.toggle('active', currentView === 'group');
+            // Update the quick launch button to show if a favorite is set
+            quickLaunchBtn.classList.toggle('active', favoriteLinkIndex !== -1);
             
             // Clear the list and prepare a document fragment for efficient rendering.
             linksList.innerHTML = '';
