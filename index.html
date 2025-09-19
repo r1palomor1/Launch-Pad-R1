@@ -21,7 +21,7 @@
             font-family: var(--font-family);
             background-color: var(--bg-color);
             color: var(--font-color);
-            font-size: 15px; /* Base font size for smaller display */
+            font-size: 14px; /* Base font size for smaller display */
             margin: 0;
         }
         .main-view {
@@ -35,11 +35,11 @@
             position: relative;
             text-align: center;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         header img {
             max-width: 100%;
-            height: 65px;
+            height: 45px;
             object-fit: contain;
         }
         header #themeBtn {
@@ -62,7 +62,7 @@
         .search-section {
             display: flex;
             gap: 4px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         .search-input-wrapper {
             position: relative;
@@ -158,7 +158,7 @@
             background-color: var(--item-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 12px;
+            padding: 10px;
             margin-bottom: 8px;
             display: flex;
             align-items: center;
@@ -205,7 +205,7 @@
         }
         .link-description {
             font-weight: bold;
-            font-size: 0.95em; /* Default large font */
+            font-size: 1em; /* Default large font */
             cursor: pointer;
             white-space: nowrap;
             overflow: hidden;
@@ -238,7 +238,7 @@
         }
         /* Dynamic Sizing for Link Descriptions */
         #linksList.small-text .link-display { gap: 6px; }
-        #linksList.small-text .link-description { font-size: 0.85em; }
+        #linksList.small-text .link-description { font-size: 0.9em; }
         #linksList.small-text .link-display > .link-actions { gap: 6px; }
         #linksList.small-text .link-actions svg { width: 16px; height: 16px; }
         .category-header {
@@ -1030,10 +1030,8 @@
                 }
                 linksList.appendChild(header);
                 hasContent = true;
-
-                renderLinks(localResults); // Use the existing renderLinks logic
+                localResults.forEach(link => renderLinkItem(link, linksList));
             }
-
             // If no content at all, show a web search prompt
             if (!hasContent) {
                 linksList.innerHTML = `
@@ -1148,6 +1146,18 @@
             // Show/hide clear button
             clearSearchBtn.style.display = query.length > 0 ? 'flex' : 'none';
             debouncedSearch(query);
+        });
+
+        searchInput.addEventListener('focus', () => {
+            // When the user focuses the search input, scroll it to the top of the view.
+            // This helps prevent the on-screen keyboard from covering the search results.
+            // We wrap it in a small timeout to allow the keyboard to start animating in.
+            setTimeout(() => {
+                const header = document.querySelector('header');
+                if (header) {
+                    header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100);
         });
 
         clearSearchBtn.addEventListener('click', () => {
