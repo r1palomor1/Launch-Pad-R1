@@ -104,16 +104,21 @@
             width: 20px;
             height: 20px;
         }
+        /* Make action buttons consistent with view-control icons */
         #searchBtn, #addBtn, #quickLaunchBtn {
-            width: 32px; /* Make it a smaller square icon button */
-            padding: 6px; /* (32px button size - 20px icon size) / 2 */
-        }
-        #addBtn, #quickLaunchBtn {
-            height: 32px; /* Ensure it's a perfect square */
+            background: transparent;
+            border: none;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         #searchBtn svg, #addBtn svg, #quickLaunchBtn svg {
             width: 20px;
             height: 20px;
+            fill: var(--icon-color);
         }
         input[type="text"] {
             flex-grow: 1;
@@ -137,6 +142,13 @@
         }
         button:hover {
             filter: brightness(1.15);
+        }
+        /* Override default hover for transparent icon buttons and give them a new one */
+        #searchBtn:hover, #addBtn:hover, #quickLaunchBtn:hover {
+            filter: none;
+        }
+        #searchBtn:hover svg, #addBtn:hover svg, #quickLaunchBtn:hover svg, .view-btn:hover svg {
+            fill: var(--primary-color);
         }
         button:disabled {
             opacity: 0.6;
@@ -1043,15 +1055,19 @@
                 hasContent = true;
                 localResults.forEach(link => renderLinkItem(link, linksList));
             }
-            // If no content at all, show a web search prompt
-            if (!hasContent) {
-                linksList.innerHTML = `
-                    <li class="link-item web-search-item">
-                        <div class="link-description">Search for "${query}" on the web</div>
-                    </li>
-                `;
-                linksList.querySelector('.web-search-item').addEventListener('click', () => performExternalSearch(query));
-            }
+
+            // Always add a final option to perform an external web search. This makes the
+            // action predictable and teaches the user what the search button does.
+            const webSearchLi = document.createElement('li');
+            webSearchLi.className = 'link-item web-search-item';
+            webSearchLi.innerHTML = `
+                <div class="link-favicon" style="display: flex; align-items: center; justify-content: center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--primary-color)" width="20" height="20"><path d="M18.031 16.617l4.283 4.282-1.415 1.415-4.282-4.283A8.96 8.96 0 0 1 11 20c-4.968 0-9-4.032-9-9s4.032-9 9-9 9 4.032 9 9a8.96 8.96 0 0 1-1.969 5.617zm-2.006-.742A6.977 6.977 0 0 0 18 11c0-3.868-3.133-7-7-7-3.868 0-7 3.132-7 7 0 3.867 3.132 7 7 7a6.977 6.977 0 0 0 4.875-1.975l.15-.15z"/></svg>
+                </div>
+                <div class="link-description">Search for "${query}" on the web</div>
+            `;
+            webSearchLi.addEventListener('click', () => performExternalSearch(query));
+            linksList.appendChild(webSearchLi);
             
             requestAnimationFrame(applyDynamicSizing);
         }
@@ -1165,8 +1181,13 @@
             if (e.target.matches('input[type="text"], select')) {
                 mainView.classList.add('input-mode-active');
 
-                // If it's the main search input, also scroll it into view to avoid the keyboard.
+                // Special handling for the main search input
                 if (e.target.id === 'searchInput') {
+                    // If the search input is empty when focused, clear the list and show a prompt.
+                    if (e.target.value.trim() === '') {
+                        linksList.innerHTML = '<p style="text-align:center; color: #6c757d;">Search your links or add from the web.</p>';
+                    }
+                    // Scroll it into view to avoid the keyboard.
                     setTimeout(() => {
                         const searchSection = document.querySelector('.search-section');
                         if (searchSection) {
@@ -1180,7 +1201,13 @@
         mainView.addEventListener('focusout', (e) => {
             if (e.target.matches('input[type="text"], select')) {
                 // Use a small delay to prevent UI from shifting if the user clicks a button, which triggers focusout.
-                setTimeout(() => mainView.classList.remove('input-mode-active'), 150);
+                setTimeout(() => {
+                    mainView.classList.remove('input-mode-active');
+                    // If the search input was blurred and is now empty, restore the full list.
+                    if (e.target.id === 'searchInput' && e.target.value.trim() === '') {
+                        searchHandler('');
+                    }
+                }, 150);
             }
         });
 
