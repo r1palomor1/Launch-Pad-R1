@@ -193,7 +193,8 @@
             cursor: pointer;
         }
         .web-search-item:hover {
-            background-color: #252525;
+            background-color: #2c2c2c;
+            border-color: var(--primary-color);
         }
         .link-display {
             flex-grow: 1;
@@ -621,13 +622,15 @@
             // Set active icon
             viewListBtn.classList.toggle('active', currentView === 'list');
             viewGroupBtn.classList.toggle('active', currentView === 'group');
-
-            // Reset dynamic sizing before rendering to ensure we start with the default large text.
-            linksList.classList.remove('small-text');
+            
+            // Clear the list and prepare a document fragment for efficient rendering.
             linksList.innerHTML = '';
+            const fragment = document.createDocumentFragment();
 
             if (linksToRender.length === 0) {
                 const query = searchInput.value.trim();
+                // For empty states, we can directly set innerHTML as it's simple and a single operation.
+                // No need for the fragment optimization here.
                 if (query) {
                     // Always offer to add the query. The handleAddFromQuery function is smart
                     // enough to handle both single and multi-word queries appropriately.
@@ -641,6 +644,7 @@
                 } else {
                     linksList.innerHTML = '<p style="text-align:center; color: #6c757d;">No links saved. Click "+ Add" to start.</p>';
                 }
+                linksList.classList.remove('small-text'); // Ensure sizing is reset for empty state
                 return;
             }
 
@@ -681,16 +685,16 @@
                     } else {
                         categoryHeader.textContent = category;
                     }
-                    linksList.appendChild(categoryHeader);
+                    fragment.appendChild(categoryHeader);
 
-                    groupedLinks[category].forEach(link => renderLinkItem(link, linksList, linksToRender));
+                    groupedLinks[category].forEach(link => fragment.appendChild(renderLinkItem(link, linksToRender)));
                 });
             } else { // Group View
                 sortedCategories.forEach(category => {
                     const categoryHeader = document.createElement('h3');
                     categoryHeader.className = 'category-header collapsible';
                     if (category === favoriteCategory) {
-                        categoryHeader.innerHTML = `${category} <span class="favorite-indicator">★</span>`;
+                        categoryHeader.innerHTML = `${category} <span class="favorite-indicator" aria-hidden="true">★</span>`;
                     } else {
                         categoryHeader.textContent = category;
                     }
@@ -698,8 +702,8 @@
                     
                     const linksContainer = document.createElement('div');
                     linksContainer.className = 'links-container';
-                    groupedLinks[category].forEach(link => renderLinkItem(link, linksContainer, linksToRender));
-                    linksList.appendChild(linksContainer);
+                    groupedLinks[category].forEach(link => linksContainer.appendChild(renderLinkItem(link, linksToRender)));
+                    fragment.appendChild(linksContainer);
 
                     const isSearching = searchInput.value.trim() !== '';
                     // Check if this category should be expanded or collapsed from memory
@@ -714,6 +718,9 @@
                 });
             }
 
+            // Append the fully constructed fragment to the DOM in one go.
+            linksList.appendChild(fragment);
+
             // After rendering, check for overflow. We use requestAnimationFrame to ensure
             // the browser has completed its layout calculations before we check element sizes,
             // preventing race conditions and ensuring accurate measurements.
@@ -721,7 +728,7 @@
         }
 
         /**
-         * Extracts the hostname from a URL for favicon services.
+         * Extracts the hostname from a URL for favicon services. Returns the original string if invalid.
          * @param {string} url The full URL.
          * @returns {string} The hostname (e.g., "www.google.com").
          */
@@ -731,7 +738,7 @@
             } catch (e) { return url; } // Fallback for invalid URLs
         }
 
-        function renderLinkItem(link, parentElement, sourceArray = links) {
+        function renderLinkItem(link, sourceArray = links) {
             // We need the original index from the main `links` array for editing/deleting
             const originalIndex = links.indexOf(link);
             if (originalIndex === -1) return; // Should not happen
@@ -756,7 +763,7 @@
             if (originalIndex === favoriteLinkIndex) {
                 li.querySelector('.favorite-btn').classList.add('is-favorite');
             }
-            parentElement.appendChild(li);
+            return li;
         }
 
         function setView(view) {
@@ -1013,7 +1020,7 @@
         }
 
         function renderCombinedResults(query, apiSuggestions, localResults) {
-            linksList.innerHTML = '';
+            const fragment = document.createDocumentFragment();
             let hasContent = false;
 
             // Filter out web suggestions that already exist in the user's links to prevent duplicates.
@@ -1029,7 +1036,7 @@
                 const header = document.createElement('h3');
                 header.className = 'category-header';
                 header.textContent = 'Web Suggestions';
-                linksList.appendChild(header);
+                fragment.appendChild(header);
 
                 filteredApiSuggestions.slice(0, 4).forEach(sugg => {
                     const suggLi = document.createElement('li');
@@ -1039,7 +1046,7 @@
                         <div class="link-description">Add: ${sugg.title}</div>
                     `;
                     suggLi.addEventListener('click', () => handleAddFromQuery(sugg.title, sugg.link));
-                    linksList.appendChild(suggLi);
+                    fragment.appendChild(suggLi);
                 });
             }
 
@@ -1051,9 +1058,9 @@
                 if (hasContent) { // If we already rendered suggestions, add space
                     header.style.marginTop = '20px';
                 }
-                linksList.appendChild(header);
+                fragment.appendChild(header);
                 hasContent = true;
-                localResults.forEach(link => renderLinkItem(link, linksList));
+                localResults.forEach(link => fragment.appendChild(renderLinkItem(link)));
             }
 
             // Always add a final option to perform an external web search. This makes the
@@ -1067,8 +1074,11 @@
                 <div class="link-description">Search for "${query}" on the web</div>
             `;
             webSearchLi.addEventListener('click', () => performExternalSearch(query));
-            linksList.appendChild(webSearchLi);
+            fragment.appendChild(webSearchLi);
             
+            // Clear the list and append the new results in one operation.
+            linksList.innerHTML = '';
+            linksList.appendChild(fragment);
             requestAnimationFrame(applyDynamicSizing);
         }
 
