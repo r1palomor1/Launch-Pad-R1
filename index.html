@@ -59,8 +59,9 @@
             background: var(--item-bg);
             filter: brightness(1.15);
         }
-        /* When search is active, hide the header to make more room */
-        .main-view.search-active header {
+        /* When an input is active, hide header and action bars to maximize space */
+        .main-view.input-mode-active header,
+        .main-view.input-mode-active .actions-bar {
             display: none;
         }
         .search-section {
@@ -104,15 +105,15 @@
             height: 20px;
         }
         #searchBtn, #addBtn, #quickLaunchBtn {
-            width: 38px; /* Make it a square icon button */
-            padding: 7px; /* (38px button size - 24px icon size) / 2 */
+            width: 32px; /* Make it a smaller square icon button */
+            padding: 6px; /* (32px button size - 20px icon size) / 2 */
         }
         #addBtn, #quickLaunchBtn {
-            height: 38px; /* Ensure it's a perfect square */
+            height: 32px; /* Ensure it's a perfect square */
         }
         #searchBtn svg, #addBtn svg, #quickLaunchBtn svg {
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
         }
         input[type="text"] {
             flex-grow: 1;
@@ -300,11 +301,16 @@
         }
         .view-btn {
             cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .view-btn svg {
             display: block;
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
             fill: var(--icon-color);
         }
         .view-btn.active svg {
@@ -1153,23 +1159,29 @@
             debouncedSearch(query);
         });
 
-        searchInput.addEventListener('focus', () => {
-            mainView.classList.add('search-active');
-            // When the user focuses the search input, scroll the search bar to the top.
-            // This helps prevent the on-screen keyboard from covering the search results.
-            // We wrap it in a small timeout to allow the keyboard to start animating in.
-            setTimeout(() => {
-                const searchSection = document.querySelector('.search-section');
-                if (searchSection) {
-                    searchSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // --- Global Input Focus Handling ---
+        // When any text input or select is focused, hide non-essential UI to maximize space.
+        mainView.addEventListener('focusin', (e) => {
+            if (e.target.matches('input[type="text"], select')) {
+                mainView.classList.add('input-mode-active');
+
+                // If it's the main search input, also scroll it into view to avoid the keyboard.
+                if (e.target.id === 'searchInput') {
+                    setTimeout(() => {
+                        const searchSection = document.querySelector('.search-section');
+                        if (searchSection) {
+                            searchSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }, 100);
                 }
-            }, 100);
+            }
         });
 
-        searchInput.addEventListener('blur', () => {
-            // Use a small delay to prevent the header from reappearing and causing a layout shift
-            // if the user clicks on a button inside the search results, which would trigger a blur.
-            setTimeout(() => mainView.classList.remove('search-active'), 150);
+        mainView.addEventListener('focusout', (e) => {
+            if (e.target.matches('input[type="text"], select')) {
+                // Use a small delay to prevent UI from shifting if the user clicks a button, which triggers focusout.
+                setTimeout(() => mainView.classList.remove('input-mode-active'), 150);
+            }
         });
 
         clearSearchBtn.addEventListener('click', () => {
