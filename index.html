@@ -34,20 +34,25 @@
         }
         header {
             position: relative;
-            text-align: center;
-            align-items: center;
-            padding-top: var(--rabbit-safe-area-inset-top, 20px);
-            margin-bottom: 8px; /* Restored a bit of margin for balance */
+            /* Define a fixed height for the header area: safe area + content space */
+            height: calc(var(--rabbit-safe-area-inset-top, 20px) + 40px);
+            margin-bottom: 8px;
         }
         header img {
-            max-width: 100%;
+            position: absolute;
             height: 35px; /* A balanced height for the logo */
             object-fit: contain;
+            /* Center the logo horizontally and vertically */
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
         }
         header #themeBtn {
             position: absolute;
-            top: var(--rabbit-safe-area-inset-top, 20px); /* Align with logo */
             right: 0;
+            /* Vertically center the button */
+            top: 50%;
+            transform: translateY(-50%);
             background: transparent;
             border: none;
             color: var(--primary-color);
