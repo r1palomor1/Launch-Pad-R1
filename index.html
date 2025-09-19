@@ -196,6 +196,15 @@
             background-color: #2c2c2c;
             border-color: var(--primary-color);
         }
+        .search-prompt {
+            text-align: center;
+            color: var(--icon-color);
+            padding: 40px 20px;
+            font-size: 1.1em;
+            line-height: 1.5;
+            opacity: 0.8;
+            user-select: none; /* Prevent text selection on this prompt */
+        }
         .link-display {
             flex-grow: 1;
             overflow: hidden;
@@ -1009,19 +1018,39 @@
             return true;
         }
 
-        function performExternalSearch(queryOverride) {
+        async function performExternalSearch(queryOverride) {
             const query = queryOverride || searchInput.value.trim();
             if (query) {
+                // Provide immediate feedback that the launch is happening. This prevents the
+                // UI from flashing back to the main list before the external URL is launched.
+                linksList.innerHTML = `<div class="search-prompt">Launching web search for "${query}"...</div>`;
+
                 const searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
-                launchUrlOnRabbit(searchUrl, `search for ${query}`);
+                await launchUrlOnRabbit(searchUrl, `search for ${query}`);
+                
+                // This code will likely run only if the user returns to the app,
+                // at which point we want to reset to the main view.
                 searchInput.value = '';
+                searchHandler('');
+            } else {
+                // If called with no query (e.g. empty search box + enter), just show the main list.
+                searchHandler('');
             }
-            searchHandler(''); // Clear search results and show full list
         }
 
         function renderCombinedResults(query, apiSuggestions, localResults) {
             const fragment = document.createDocumentFragment();
             let hasContent = false;
+
+            // Render local search results first, as they are most relevant to the user.
+            if (localResults.length > 0) {
+                const header = document.createElement('h3');
+                header.className = 'category-header';
+                header.textContent = 'In Your Links';
+                fragment.appendChild(header);
+                hasContent = true;
+                localResults.forEach(link => fragment.appendChild(renderLinkItem(link)));
+            }
 
             // Filter out web suggestions that already exist in the user's links to prevent duplicates.
             const existingUrls = new Set(links.map(link => link.url.replace(/\/$/, ''))); // Normalize by removing trailing slash
@@ -1030,13 +1059,16 @@
                 return !existingUrls.has(normalizedSuggUrl);
             });
 
-            // Render API suggestions
+            // Render API suggestions second.
             if (filteredApiSuggestions.length > 0) {
-                hasContent = true;
                 const header = document.createElement('h3');
                 header.className = 'category-header';
                 header.textContent = 'Web Suggestions';
+                if (hasContent) { // If we already rendered local results, add space
+                    header.style.marginTop = '20px';
+                }
                 fragment.appendChild(header);
+                hasContent = true;
 
                 filteredApiSuggestions.slice(0, 4).forEach(sugg => {
                     const suggLi = document.createElement('li');
@@ -1048,19 +1080,6 @@
                     suggLi.addEventListener('click', () => handleAddFromQuery(sugg.title, sugg.link));
                     fragment.appendChild(suggLi);
                 });
-            }
-
-            // Render local search results
-            if (localResults.length > 0) {
-                const header = document.createElement('h3');
-                header.className = 'category-header';
-                header.textContent = 'In Your Links';
-                if (hasContent) { // If we already rendered suggestions, add space
-                    header.style.marginTop = '20px';
-                }
-                fragment.appendChild(header);
-                hasContent = true;
-                localResults.forEach(link => fragment.appendChild(renderLinkItem(link)));
             }
 
             // Always add a final option to perform an external web search. This makes the
@@ -1195,7 +1214,7 @@
                 if (e.target.id === 'searchInput') {
                     // If the search input is empty when focused, clear the list and show a prompt.
                     if (e.target.value.trim() === '') {
-                        linksList.innerHTML = '<p style="text-align:center; color: #6c757d;">Search your links or add from the web.</p>';
+                        linksList.innerHTML = '<div class="search-prompt">Search your links or add from the web.</div>';
                     }
                     // Scroll it into view to avoid the keyboard.
                     setTimeout(() => {
