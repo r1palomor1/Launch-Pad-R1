@@ -59,6 +59,10 @@
             background: var(--item-bg);
             filter: brightness(1.15);
         }
+        /* When search is active, hide the header to make more room */
+        .main-view.search-active header {
+            display: none;
+        }
         .search-section {
             display: flex;
             gap: 4px;
@@ -467,6 +471,7 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+        const mainView = document.getElementById('mainView');
         const searchInput = document.getElementById('searchInput');
         const clearSearchBtn = document.getElementById('clearSearchBtn');
         const searchBtn = document.getElementById('searchBtn');
@@ -1149,15 +1154,22 @@
         });
 
         searchInput.addEventListener('focus', () => {
-            // When the user focuses the search input, scroll it to the top of the view.
+            mainView.classList.add('search-active');
+            // When the user focuses the search input, scroll the search bar to the top.
             // This helps prevent the on-screen keyboard from covering the search results.
             // We wrap it in a small timeout to allow the keyboard to start animating in.
             setTimeout(() => {
-                const header = document.querySelector('header');
-                if (header) {
-                    header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const searchSection = document.querySelector('.search-section');
+                if (searchSection) {
+                    searchSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             }, 100);
+        });
+
+        searchInput.addEventListener('blur', () => {
+            // Use a small delay to prevent the header from reappearing and causing a layout shift
+            // if the user clicks on a button inside the search results, which would trigger a blur.
+            setTimeout(() => mainView.classList.remove('search-active'), 150);
         });
 
         clearSearchBtn.addEventListener('click', () => {
