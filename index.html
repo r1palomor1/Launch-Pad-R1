@@ -954,11 +954,6 @@
             showAddForm(prefillData);
         }
 
-        // This is the new message handler that will receive search results from the Rabbit OS
-        window.onPluginMessage = function(e) {
-            handleOSMessage(e);
-        };
-
         function addNewLink(linkData) {
             if (!linkData || !linkData.description || !linkData.url || linkData.url === 'https://') {
                 alert('Please provide a description and a full URL.');
@@ -1052,26 +1047,36 @@
             requestAnimationFrame(applyDynamicSizing);
         }
 
-        function handleOSMessage(e) {
-            console.log("Received plugin message:", e);
+        function handleOSMessage(e, requestQuery) {
+            // First, check if the results are still relevant. If the user has changed the
+            // search text since this request was sent, discard the incoming results.
+            const currentQueryInBox = searchInput.value.trim();
+            if (requestQuery.toLowerCase() !== currentQueryInBox.toLowerCase()) {
+                console.log(`Stale results for "${requestQuery}" received, but input is now "${currentQueryInBox}". Discarding.`);
+                return;
+            }
+
+            console.log("Received plugin message for query:", requestQuery, e);
             try {
                 let data = null;
                 if (e.data) {
                     data = typeof e.data == "string" ? JSON.parse(e.data) : e.data;
                 }
                 
-                const query = searchInput.value.trim().toLowerCase();
+                // Use the 'requestQuery' which is guaranteed to be the one that generated these results.
+                const queryForFilter = requestQuery.trim().toLowerCase();
                 const localResults = links.filter(link => 
-                    link.description.toLowerCase().includes(query) ||
-                    link.url.toLowerCase().includes(query)
+                    link.description.toLowerCase().includes(queryForFilter) ||
+                    link.url.toLowerCase().includes(queryForFilter)
                 );
 
                 if (data && data.organic_results) {
                     console.log("Google search results received:", data.organic_results.length, "results");
-                    renderCombinedResults(query, data.organic_results, localResults);
+                    // Pass the original-case query to the render function for display purposes.
+                    renderCombinedResults(requestQuery, data.organic_results, localResults);
                 } else {
                     console.log("Received data but no organic_results. Falling back to local search.");
-                    renderCombinedResults(query, [], localResults);
+                    renderCombinedResults(requestQuery, [], localResults);
                 }
             } catch (err) {
                 console.error("Error parsing plugin message:", err);
@@ -1087,6 +1092,13 @@
 
             // Check if we are on the Rabbit device
             if (typeof PluginMessageHandler !== "undefined") {
+                // By setting the handler here, we create a closure. This specific instance
+                // of the handler "knows" which 'query' it is for. This prevents race
+                // conditions where a response for an old query arrives after a new
+                // query has been typed.
+                window.onPluginMessage = function(e) {
+                    handleOSMessage(e, query);
+                };
                 const messageToOS = {
                     message: JSON.stringify({
                         query_params: {
@@ -1111,7 +1123,15 @@
                     link.description.toLowerCase().includes(query.toLowerCase()) ||
                     link.url.toLowerCase().includes(query.toLowerCase())
                 );
-                renderCombinedResults(query, mockApiResults, localResults);
+                // Simulate the async nature and the check for stale results
+                setTimeout(() => {
+                    const currentQueryInBox = searchInput.value.trim();
+                    if (query.toLowerCase() === currentQueryInBox.toLowerCase()) {
+                        renderCombinedResults(query, mockApiResults, localResults);
+                    } else {
+                        console.log(`[Browser Mode] Stale results for "${query}" received, but input is now "${currentQueryInBox}". Discarding.`);
+                    }
+                }, 200); // 200ms mock delay
             }
         }
 
