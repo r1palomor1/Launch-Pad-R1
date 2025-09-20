@@ -70,11 +70,6 @@
             background: var(--item-bg);
             filter: brightness(1.15);
         }
-        /* When an input is active, hide header and action bars to maximize space */
-        .main-view.input-mode-active header,
-        .main-view.input-mode-active .actions-bar {
-            display: none;
-        }
         /* In input mode, show the search and cancel buttons */
         .main-view.input-mode-active .search-section #searchBtn,
         .main-view.input-mode-active .search-section #cancelSearchBtn {
@@ -136,9 +131,14 @@
         #searchBtn {
             display: none;
         }
-        #searchBtn svg, #quickLaunchBtn svg, #deleteAllBtn svg {
+        #quickLaunchBtn svg, #deleteAllBtn svg {
             width: 18px;
             height: 18px;
+            fill: var(--icon-color);
+        }
+        #searchBtn svg {
+            width: 16px; /* Smaller icon for search */
+            height: 16px;
             fill: var(--icon-color);
         }
         input[type="text"] {
@@ -150,11 +150,6 @@
             color: var(--font-color);
             font-size: 1em;
             min-width: 0; /* Fix for flexbox overflow */
-        }
-        /* Make the main search input thinner to save space in the default view */
-        #searchInput {
-            padding-top: 6px;
-            padding-bottom: 6px;
         }
         input[type="text"]:focus {
             outline: none;
@@ -491,16 +486,19 @@
         }
 
         /* --- Custom Scrollbar for Lists --- */
+        #customPromptColorList::-webkit-scrollbar, /* Specificity for theme picker */
         .favorites-list::-webkit-scrollbar,
         .delete-links-list::-webkit-scrollbar,
         .theme-color-list::-webkit-scrollbar {
             width: 6px;
         }
+        #customPromptColorList::-webkit-scrollbar-track,
         .favorites-list::-webkit-scrollbar-track,
         .delete-links-list::-webkit-scrollbar-track,
         .theme-color-list::-webkit-scrollbar-track {
             background: transparent;
         }
+        #customPromptColorList::-webkit-scrollbar-thumb,
         .favorites-list::-webkit-scrollbar-thumb,
         .delete-links-list::-webkit-scrollbar-thumb,
         .theme-color-list::-webkit-scrollbar-thumb {
@@ -1556,8 +1554,11 @@
         const debouncedSearch = debounce(searchHandler, 400);
         searchInput.addEventListener('input', () => {
             const query = searchInput.value;
-            // Show/hide clear button
             clearSearchBtn.style.display = query.length > 0 ? 'flex' : 'none';
+            // In input mode, hide the 'Cancel' button when the user starts typing.
+            if (mainView.classList.contains('input-mode-active')) {
+                cancelSearchBtn.style.display = query.length > 0 ? 'none' : 'flex';
+            }
             debouncedSearch(query);
         });
 
@@ -1578,8 +1579,14 @@
 
                 // Special handling for the main search input
                 if (e.target.id === 'searchInput') {
+            const query = e.target.value.trim();
+            // When focusing, hide the 'Cancel' button if there's already text.
+            cancelSearchBtn.style.display = query.length > 0 ? 'none' : 'flex';
+            // Also ensure the clear button is shown if there's text.
+            clearSearchBtn.style.display = query.length > 0 ? 'flex' : 'none';
+
                     // If the search input is empty when focused, clear the list and show a prompt.
-                    if (e.target.value.trim() === '') {
+            if (query === '') {
                         linksList.innerHTML = `<div class="search-prompt">Search your links or add from the web.</div>`;
                     }
                     // Scroll it into view to avoid the keyboard.
@@ -1615,6 +1622,8 @@
         clearSearchBtn.addEventListener('click', () => {
             searchInput.value = '';
             clearSearchBtn.style.display = 'none';
+            // With the input cleared, show the 'Cancel' button again.
+            cancelSearchBtn.style.display = 'flex';
             searchHandler(''); // This will re-render all links
             searchInput.focus();
             triggerHaptic(); // Give feedback on clear
