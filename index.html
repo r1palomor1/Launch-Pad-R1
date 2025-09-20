@@ -440,14 +440,13 @@
             list-style: none;
             padding: 0;
             margin: 0;
-            max-height: 25vh;
+            max-height: 40vh; /* Increased height to show more colors */
             overflow-y: auto;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             background-color: var(--bg-color);
             /* Transitions for smooth collapse when keyboard is active */
             transition: opacity 0.2s ease-in-out, height 0.2s ease-in-out, margin 0.2s ease-in-out, padding 0.2s ease-in-out, border 0.2s ease-in-out;
-            overflow: hidden;
         }
         .theme-color-item {
             padding: 8px;
@@ -627,8 +626,11 @@
             color: #e74c3c; /* A noticeable red */
             font-size: 0.9em;
             text-align: center;
-            margin: 0; /* Use flex-gap for spacing */
-            min-height: 1.2em; /* Prevent layout shift when message appears */
+            margin: 0;
+        }
+        .custom-prompt-error:empty {
+            /* Hide the element completely when there is no error message to show */
+            display: none;
         }
     </style>
 </head>
