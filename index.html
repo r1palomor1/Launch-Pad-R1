@@ -1912,59 +1912,55 @@
             }, 150);
         });
 
-        function showThemeDialog() {
-            return new Promise((resolve) => {
-                themeDialogInput.value = '';
-                themeDialogError.textContent = '';
-                themeDialogOverlay.style.display = 'flex';
-                themeColorList.scrollTop = 0;
-                
-                // When the dialog is shown, ensure the focused class is not present initially.
-                themeDialogOverlay.classList.remove('input-focused');
-                
-                let resolved = false;
-                const closeDialog = (value) => {
-                    if (resolved) return;
-                    resolved = true;
-                    themeDialogOverlay.style.display = 'none';
-                    // Cleanup listeners
-                    themeDialogOk.onclick = null;
-                    themeDialogCancel.onclick = null;
-                    themeDialogOverlay.onclick = null;
-                    themeDialogReset.onclick = null;
-                    themeDialogInput.onkeypress = null;
-                    resolve(value);
-                };
-
-                themeDialogOk.onclick = () => closeDialog(themeDialogInput.value);
-                themeDialogCancel.onclick = () => closeDialog(null);
-                themeDialogOverlay.onclick = (e) => {
-                    if (e.target.id === 'themeDialogOverlay') closeDialog(null);
-                };
-                themeDialogReset.onclick = () => closeDialog('reset');
-                themeDialogInput.onkeypress = (e) => {
-                    if (e.key === 'Enter') { e.preventDefault(); closeDialog(themeDialogInput.value); }
-                };
-            });
+        function openThemeEditor() {
+            themeDialogInput.value = '';
+            themeDialogError.textContent = '';
+            themeDialogOverlay.style.display = 'flex';
+            themeColorList.scrollTop = 0;
+            
+            // When the dialog is shown, ensure the focused class is not present initially.
+            themeDialogOverlay.classList.remove('input-focused');
         }
 
-        async function openThemeEditor() {
-            let done = false;
-            while (!done) {
-                const result = await showThemeDialog();
+        function setupThemeDialogListeners() {
+            const closeDialog = () => {
+                themeDialogOverlay.style.display = 'none';
+                scrollToTop();
+            };
 
-                if (result === 'reset') {
-                    await applyTheme('rabbit');
-                    done = true;
-                } else if (result && result.trim()) {
-                    const applyResult = await applyTheme(`custom:${result.trim()}`);
-                    done = applyResult.success;
-                    if (!done) themeDialogError.textContent = applyResult.error;
-                } else {
-                    done = true; // User cancelled or entered nothing
+            themeDialogOk.addEventListener('click', async () => {
+                const colorInput = themeDialogInput.value.trim();
+                if (colorInput) {
+                    triggerHaptic();
+                    const applyResult = await applyTheme(`custom:${colorInput}`);
+                    if (!applyResult.success) {
+                        themeDialogError.textContent = applyResult.error;
+                    } else {
+                        themeDialogError.textContent = ''; // Clear error on success
+                    }
                 }
-            }
-            scrollToTop();
+            });
+
+            themeDialogInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    themeDialogOk.click(); // Simulate a click on the OK button
+                }
+            });
+
+            themeDialogCancel.addEventListener('click', closeDialog);
+
+            themeDialogOverlay.addEventListener('click', (e) => {
+                if (e.target.id === 'themeDialogOverlay') {
+                    closeDialog();
+                }
+            });
+
+            themeDialogReset.addEventListener('click', async () => {
+                triggerHaptic();
+                await applyTheme('rabbit');
+                closeDialog(); // Reset and close
+            });
         }
 
 
@@ -2145,6 +2141,7 @@
 
         // --- Initial Load ---
         setupThemePicker();
+        setupThemeDialogListeners();
         // Apply the initial theme
         applyTheme(currentThemeName);
         
