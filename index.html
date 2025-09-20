@@ -1648,16 +1648,21 @@
                 favoritesPromptClose.onclick = null;
             };
 
-            favoritesList.onclick = (e) => {
+            favoritesList.onclick = async (e) => {
                 const removeBtn = e.target.closest('.remove-favorite-btn');
                 if (removeBtn) {
                     const li = removeBtn.closest('.favorite-list-item');
-                    const idToRemove = li.dataset.id;
-                    favoriteLinkIds.delete(idToRemove);
-                    saveLinks();
-                    triggerHaptic();
-                    renderFavoritesList(); // Re-render the popup list
-                    renderLinks(); // Re-render the main list in the background
+                    const linkName = li.dataset.name;
+                    const confirmed = await showConfirm(`Remove "${linkName}" from favorites?`);
+
+                    if (confirmed) {
+                        const idToRemove = li.dataset.id;
+                        favoriteLinkIds.delete(idToRemove);
+                        saveLinks();
+                        triggerHaptic();
+                        renderFavoritesList(); // Re-render the popup list
+                        renderLinks(); // Re-render the main list in the background
+                    }
                 } else {
                     const li = e.target.closest('.favorite-list-item');
                     if (li) {
