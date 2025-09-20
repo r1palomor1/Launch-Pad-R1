@@ -512,7 +512,7 @@
         }
 
         .scrollable-list-dialog:focus {
-            outline: 1px solid var(--primary-color);
+            outline: 2px solid var(--primary-color);
             outline-offset: 1px;
         }
 
@@ -756,7 +756,7 @@
     
     <div id="themeDialogOverlay" class="custom-prompt-overlay" style="display: none;">
         <div class="custom-prompt-dialog">
-            <p class="custom-prompt-title">Change Theme</p>
+            <p id="themeDialogTitle" class="custom-prompt-title">Change Theme</p>
             <p id="themeDialogError" class="custom-prompt-error"></p>
             <ul id="themeColorList" class="theme-color-list scrollable-list-dialog" tabindex="-1"></ul>
             <div class="dialog-input-wrapper">
@@ -825,6 +825,7 @@
         const themeBtn = document.getElementById('themeBtn');
         const deleteAllBtn = document.getElementById('deleteAllBtn');
         const themeDialogOverlay = document.getElementById('themeDialogOverlay');
+        const themeDialogTitle = document.getElementById('themeDialogTitle');
         const themeDialogError = document.getElementById('themeDialogError');
         const themeColorList = document.getElementById('themeColorList');
         const themeDialogInput = document.getElementById('themeDialogInput');
@@ -1926,6 +1927,10 @@
 
             if (!themeColors) return { success: true }; // Should not happen if no error
 
+            // Live-update the dialog title color for immediate feedback.
+            // This is the key change to show the user the effect of their choice.
+            themeDialogTitle.style.color = themeColors['--primary-color'];
+
             for (const [key, value] of Object.entries(themeColors)) {
                 document.documentElement.style.setProperty(key, value);
             }
@@ -1961,6 +1966,9 @@
             themeDialogError.textContent = '';
             themeDialogOverlay.style.display = 'flex';
             themeColorList.scrollTop = 0;
+            
+            // Set the title color to the current theme's primary color when opening.
+            themeDialogTitle.style.color = getComputedStyle(document.documentElement).getPropertyValue('--primary-color');
             
             // When the dialog is shown, ensure the focused class is not present initially.
             themeDialogOverlay.classList.remove('input-focused');
