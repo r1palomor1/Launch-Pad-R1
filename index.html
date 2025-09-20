@@ -1936,8 +1936,13 @@
                     if (!applyResult.success) {
                         themeDialogError.textContent = applyResult.error;
                     } else {
-                        themeDialogError.textContent = ''; // Clear error on success
+                        // On successful application, close the dialog.
+                        closeDialog();
                     }
+                } else {
+                    // If the input is empty, "OK" simply closes the dialog,
+                    // keeping any theme that was live-previewed from the list.
+                    closeDialog();
                 }
             });
 
