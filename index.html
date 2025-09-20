@@ -229,7 +229,7 @@
             display: flex;
             flex-direction: row;
             align-items: center;
-            gap: 10px; /* Default large gap */
+            gap: 6px;
             cursor: pointer;
         }
         .link-favicon {
@@ -250,7 +250,7 @@
         .link-description {
             flex-grow: 1; /* Allow description to take available space */
             font-weight: bold;
-            font-size: 1em; /* Default large font */
+            font-size: 0.9em;
             cursor: pointer;
             white-space: nowrap;
             overflow: hidden;
@@ -265,7 +265,7 @@
         /* For the horizontal icons in the normal link view */
         .link-display > .link-actions {
             flex-direction: row;
-            gap: 10px; /* Default large gap */
+            gap: 6px;
         }
         .link-actions span {
             cursor: pointer;
@@ -274,8 +274,8 @@
         }
         .link-actions span:hover { color: var(--primary-color); }
         .link-actions svg {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             display: block;
         }
         .favorite-btn.is-favorite {
@@ -288,11 +288,6 @@
             display: inline-block;
             transform: translateY(-1px);
         }
-        /* Dynamic Sizing for Link Descriptions */
-        #linksList.small-text .link-display { gap: 6px; }
-        #linksList.small-text .link-description { font-size: 0.9em; }
-        #linksList.small-text .link-display > .link-actions { gap: 6px; }
-        #linksList.small-text .link-actions svg { width: 16px; height: 16px; }
         .category-header {
             font-size: 1em;
             font-weight: bold;
@@ -878,28 +873,6 @@
             }
         }
 
-        /**
-         * Checks if any link descriptions are overflowing and applies a compact
-         * style to the entire list if necessary to ensure uniformity.
-         */
-        function applyDynamicSizing() {
-            const descriptions = linksList.querySelectorAll('.link-description');
-            if (descriptions.length === 0) {
-                linksList.classList.remove('small-text');
-                return;
-            }
-
-            let isOverflowing = false;
-            descriptions.forEach(desc => {
-                // Check if the scrollWidth (actual content width) is greater than the clientWidth (visible area width)
-                if (desc.scrollWidth > desc.clientWidth) {
-                    isOverflowing = true;
-                }
-            });
-
-            linksList.classList.toggle('small-text', isOverflowing);
-        }
-
         function renderLinks(linksToRender = links) {
             // Update the view toggle button to show the icon for the *other* view.
             if (currentView === 'list') {
@@ -935,7 +908,6 @@
                 } else {
                     linksList.innerHTML = '<p style="text-align:center; color: #6c757d;">No links saved. Click "+ Add" to start.</p>';
                 }
-                linksList.classList.remove('small-text'); // Ensure sizing is reset for empty state
                 return;
             }
 
@@ -1007,11 +979,6 @@
 
             // Append the fully constructed fragment to the DOM in one go.
             linksList.appendChild(fragment);
-
-            // After rendering, check for overflow. We use requestAnimationFrame to ensure
-            // the browser has completed its layout calculations before we check element sizes,
-            // preventing race conditions and ensuring accurate measurements.
-            requestAnimationFrame(applyDynamicSizing);
         }
 
         /**
@@ -1409,7 +1376,6 @@
             // Clear the list and append the new results in one operation.
             linksList.innerHTML = '';
             linksList.appendChild(fragment);
-            requestAnimationFrame(applyDynamicSizing);
         }
 
         function handleOSMessage(e, requestQuery) {
@@ -1540,9 +1506,15 @@
 
         mainView.addEventListener('focusout', (e) => {
             if (e.target.matches('input[type="text"], select')) {
-                // Use a small delay to prevent UI from shifting if the user clicks a button, which triggers focusout.
+                // Use a small delay. If focus moves to another input, the 'input-mode-active'
+                // class will still be present. If it moves to a button or outside, we check.
                 setTimeout(() => {
-                    mainView.classList.remove('input-mode-active');
+                    const activeEl = document.activeElement;
+                    // If the new active element is not an input/select inside our main view, then we can hide the bars.
+                    if (!mainView.contains(activeEl) || !activeEl.matches('input[type="text"], select')) {
+                        mainView.classList.remove('input-mode-active');
+                    }
+
                     // If the search input was blurred and is now empty, restore the full list.
                     if (e.target.id === 'searchInput' && e.target.value.trim() === '') {
                         searchHandler('');
