@@ -98,31 +98,31 @@
             /* Add padding to the right so text doesn't go under the 'X' button */
             padding-right: 30px;
         }
-        #clearSearchBtn {
+        /* Common style for clear buttons in input fields */
+        #clearSearchBtn, #clearThemeInputBtn {
             position: absolute;
             right: 8px;
             top: 50%;
             transform: translateY(-50%);
             background: transparent;
             border: none;
-            color: var(--icon-color);
             cursor: pointer;
             padding: 0;
             width: 20px;
             height: 20px;
-            display: flex; /* Use flex to center the SVG inside */
+            display: flex;
             align-items: center;
             justify-content: center;
+            color: var(--icon-color);
         }
-        #clearSearchBtn:hover {
+        #clearSearchBtn:hover, #clearThemeInputBtn:hover {
             color: var(--font-color);
-            filter: none; /* Override default button hover */
+            filter: none;
         }
-        #clearSearchBtn svg {
+        #clearSearchBtn svg, #clearThemeInputBtn svg {
             width: 20px;
             height: 20px;
         }
-        /* Make action buttons consistent with view-control icons */
         #searchBtn, #quickLaunchBtn, #deleteAllBtn {
             background: transparent;
             border: none;
@@ -696,30 +696,6 @@
             width: 100%;
             padding-right: 30px; /* Space for clear button */
         }
-        .dialog-input-wrapper button {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: transparent;
-            border: none;
-            color: var(--icon-color);
-            cursor: pointer;
-            padding: 0;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .dialog-input-wrapper button:hover {
-            color: var(--font-color);
-            filter: none;
-        }
-        .dialog-input-wrapper button svg {
-            width: 20px;
-            height: 20px;
-        }
     </style>
 </head>
 <body>
@@ -1037,22 +1013,9 @@
             const fragment = document.createDocumentFragment();
 
             if (linksToRender.length === 0) {
-                const query = searchInput.value.trim();
-                // For empty states, we can directly set innerHTML as it's simple and a single operation.
-                // No need for the fragment optimization here.
-                if (query) {
-                    // Always offer to add the query. The handleAddFromQuery function is smart
-                    // enough to handle both single and multi-word queries appropriately.
-                    linksList.innerHTML = `
-                        <li class="link-item add-suggestion-item">
-                            <div class="link-favicon" style="display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--primary-color);">+</div>
-                            <div class="link-description">Add "${query}"</div>
-                        </li>
-                    `;
-                    linksList.querySelector('.add-suggestion-item').addEventListener('click', () => handleAddFromQuery(query));
-                } else {
-                    linksList.innerHTML = '<p style="text-align:center; color: #6c757d;">No links saved. Click "+ Add" to start.</p>';
-                }
+                // This function is only called with all links when the search input is empty.
+                // So if linksToRender is empty, it means the user has no links saved at all.
+                linksList.innerHTML = '<p style="text-align:center; color: #6c757d;">No links saved. Type in the search box to add a new link.</p>';
                 return;
             }
 
