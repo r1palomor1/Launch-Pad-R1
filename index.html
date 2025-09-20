@@ -1770,9 +1770,16 @@
                 const li = e.target.closest('.theme-color-item');
                 if (li) {
                     triggerHaptic();
-                    themeDialogInput.value = li.dataset.colorName;
-                    themeDialogError.textContent = ''; // Clear any error
-                    themeDialogInput.focus(); // Move focus to input
+                    const colorName = li.dataset.colorName;
+                    // Apply the theme immediately when a color is picked from the list.
+                    // The dialog remains open for the user to try other colors or close it.
+                    const applyResult = await applyTheme(`custom:${colorName}`);
+                    if (!applyResult.success) {
+                        themeDialogError.textContent = applyResult.error;
+                    } else {
+                        // Clear any previous error message on success.
+                        themeDialogError.textContent = '';
+                    }
                 }
             });
         }
