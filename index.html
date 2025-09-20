@@ -496,6 +496,13 @@
             border: 2px solid var(--bg-color); /* Match list background for padding effect */
         }
 
+        .delete-links-list:focus,
+        .favorites-list:focus,
+        .theme-color-list:focus {
+            outline: 1px solid var(--primary-color);
+            outline-offset: 1px;
+        }
+
         .actions-bar {
             display: flex;
             justify-content: space-between;
@@ -693,7 +700,7 @@
         <div class="custom-prompt-dialog">
             <p id="customPromptMessage" class="custom-prompt-title"></p>
             <p id="customPromptError" class="custom-prompt-error"></p>
-            <ul id="customPromptColorList" class="theme-color-list"></ul>
+            <ul id="customPromptColorList" class="theme-color-list" tabindex="-1"></ul>
             <input type="text" id="customPromptInput" placeholder="Or type a name/hex here">
             <div class="custom-prompt-actions">
                 <button id="customPromptReset" class="secondary">Rabbit Me!</button>
@@ -712,7 +719,7 @@
                 <label><input type="radio" name="delete-mode" value="keep-favs"> Delete All Except Favorite</label>
                 <label><input type="radio" name="delete-mode" value="selected" checked> Select Links to Delete:</label>
             </div>
-            <ul id="deleteLinksList" class="delete-links-list">
+            <ul id="deleteLinksList" class="delete-links-list" tabindex="-1">
                 <!-- Links will be populated here by JS -->
             </ul>
             <div class="custom-prompt-actions">
@@ -725,7 +732,7 @@
     <div id="favoritesPromptOverlay" class="custom-prompt-overlay" style="display: none;">
         <div class="custom-prompt-dialog">
             <p class="custom-prompt-title">Favorites</p>
-            <ul id="favoritesList" class="favorites-list">
+            <ul id="favoritesList" class="favorites-list" tabindex="-1">
                 <!-- Favorite links will be populated here by JS -->
             </ul>
             <div class="custom-prompt-actions">
@@ -1641,6 +1648,7 @@
 
             renderFavoritesList();
             favoritesPromptOverlay.style.display = 'flex';
+            favoritesList.focus();
 
             const closeDialog = () => {
                 favoritesPromptOverlay.style.display = 'none';
@@ -1702,6 +1710,7 @@
                 customPromptInput.value = '';
                 customPromptOverlay.style.display = 'flex';
                 customPromptColorList.scrollTop = 0;
+                customPromptColorList.focus();
                 // Do not auto-focus input to prevent keyboard from appearing immediately.
 
                 let resolved = false; // Prevent multiple resolutions
@@ -1980,6 +1989,7 @@
                 renderDeleteList();
                 deletePromptOverlay.style.display = 'flex';
                 deleteLinksList.scrollTop = 0; // Ensure list starts at the top
+                deleteLinksList.focus();
 
                 updateButtonState(); // Set initial button state
 
