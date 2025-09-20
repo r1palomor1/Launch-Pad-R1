@@ -75,6 +75,12 @@
         .main-view.input-mode-active .actions-bar {
             display: none;
         }
+        /* In input mode, show the search and cancel buttons */
+        .main-view.input-mode-active .search-section #searchBtn,
+        .main-view.input-mode-active .search-section #cancelSearchBtn {
+            display: flex;
+            align-items: center; /* Vertically align with input */
+        }
         .search-section {
             display: flex;
             gap: 4px;
@@ -120,15 +126,19 @@
             background: transparent;
             border: none;
             padding: 0;
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
+        /* Hide the web search button by default on the main view */
+        #searchBtn {
+            display: none;
+        }
         #searchBtn svg, #quickLaunchBtn svg, #deleteAllBtn svg {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             fill: var(--icon-color);
         }
         input[type="text"] {
@@ -140,6 +150,11 @@
             color: var(--font-color);
             font-size: 1em;
             min-width: 0; /* Fix for flexbox overflow */
+        }
+        /* Make the main search input thinner to save space in the default view */
+        #searchInput {
+            padding-top: 6px;
+            padding-bottom: 6px;
         }
         input[type="text"]:focus {
             outline: none;
@@ -183,6 +198,11 @@
             background-color: #2c2c2c;
             color: var(--font-color);
             filter: none; /* Override the default button hover */
+        }
+        /* The cancel button is only shown in input mode */
+        #cancelSearchBtn {
+            display: none;
+            padding: 0 12px; /* Make it a bit wider than default */
         }
         #linksList {
             list-style-type: none;
@@ -471,13 +491,19 @@
         }
 
         /* --- Custom Scrollbar for Lists --- */
-        .scrollable-list-dialog::-webkit-scrollbar {
+        .favorites-list::-webkit-scrollbar,
+        .delete-links-list::-webkit-scrollbar,
+        .theme-color-list::-webkit-scrollbar {
             width: 6px;
         }
-        .scrollable-list-dialog::-webkit-scrollbar-track {
+        .favorites-list::-webkit-scrollbar-track,
+        .delete-links-list::-webkit-scrollbar-track,
+        .theme-color-list::-webkit-scrollbar-track {
             background: transparent;
         }
-        .scrollable-list-dialog::-webkit-scrollbar-thumb {
+        .favorites-list::-webkit-scrollbar-thumb,
+        .delete-links-list::-webkit-scrollbar-thumb,
+        .theme-color-list::-webkit-scrollbar-thumb {
             background-color: var(--icon-color);
             border-radius: 3px;
             border: 2px solid var(--bg-color); /* Match list background for padding effect */
@@ -492,7 +518,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px; /* Reduced to gain space */
         }
         .list-actions {
             display: flex;
@@ -518,16 +544,16 @@
         }
         .view-btn {
             cursor: pointer;
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         .view-btn svg {
             display: block;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             fill: var(--icon-color);
         }
         .view-btn.active svg {
@@ -650,7 +676,7 @@
         </header>
         <div class="search-section">
             <div class="search-input-wrapper">
-                <input type="text" id="searchInput" placeholder="Search or Add..." autocomplete="off">
+                <input type="text" id="searchInput" placeholder="Filter or add..." autocomplete="off">
                 <button id="clearSearchBtn" title="Clear search" style="display: none;">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z"></path></svg>
                 </button>
@@ -658,6 +684,7 @@
             <button id="searchBtn" title="Search with DuckDuckGo">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.031 16.617l4.283 4.282-1.415 1.415-4.282-4.283A8.96 8.96 0 0 1 11 20c-4.968 0-9-4.032-9-9s4.032-9 9-9 9 4.032 9 9a8.96 8.96 0 0 1-1.969 5.617zm-2.006-.742A6.977 6.977 0 0 0 18 11c0-3.868-3.133-7-7-7-3.868 0-7 3.132-7 7 0 3.867 3.132 7 7 7a6.977 6.977 0 0 0 4.875-1.975l.15-.15z"/></svg>
             </button>
+            <button id="cancelSearchBtn" class="secondary">Cancel</button>
         </div>
         <div class="actions-bar">
             <div class="list-actions">
@@ -745,6 +772,7 @@
         const toggleViewBtn = document.getElementById('toggleViewBtn');
         const quickLaunchBtn = document.getElementById('quickLaunchBtn');
         const toggleAllLink = document.getElementById('toggleAllLink');
+        const cancelSearchBtn = document.getElementById('cancelSearchBtn');
         const themeBtn = document.getElementById('themeBtn');
         const deleteAllBtn = document.getElementById('deleteAllBtn');
         const customPromptOverlay = document.getElementById('customPromptOverlay');
@@ -1531,6 +1559,15 @@
             // Show/hide clear button
             clearSearchBtn.style.display = query.length > 0 ? 'flex' : 'none';
             debouncedSearch(query);
+        });
+
+        cancelSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            clearSearchBtn.style.display = 'none';
+            // Re-render the full list immediately
+            searchHandler('');
+            // Blurring the input will trigger the focusout event, which hides the input-mode UI
+            searchInput.blur();
         });
 
         // --- Global Input Focus Handling ---
