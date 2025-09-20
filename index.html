@@ -2022,7 +2022,8 @@
                     // On success, clear any error and blur the input to hide the keyboard
                     // and show the full dialog again for preview.
                     themeDialogError.textContent = '';
-                    themeDialogInput.blur();
+                    themeDialogInput.blur(); // Hide keyboard
+                    themeDialogOverlay.classList.remove('input-focused'); // Explicitly show full dialog
                 } else {
                     // On failure, show the error and keep the input focused for correction.
                     themeDialogError.textContent = applyResult.error;
