@@ -656,6 +656,10 @@
             padding: 10px;
             gap: 5px;
         }
+        .custom-prompt-overlay.input-focused .theme-color-list {
+            /* Hide the list when typing to save space */
+            display: none;
+        }
         .custom-prompt-error {
             color: #e74c3c; /* A noticeable red */
             font-size: 0.9em;
@@ -827,6 +831,13 @@
                     window.rabbit.core.vibrate({ pattern: [50] }); // A short 50ms vibration
                 }
             } catch (e) { console.error("Haptic feedback failed:", e); }
+        }
+
+        /**
+         * Scrolls the main window to the top, ensuring the header is visible.
+         */
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         /**
@@ -1572,6 +1583,7 @@
             searchHandler('');
             // Blurring the input will trigger the focusout event, which hides the input-mode UI
             searchInput.blur();
+            scrollToTop();
         });
 
         // --- Global Input Focus Handling ---
@@ -1688,6 +1700,7 @@
                 favoritesPromptOverlay.style.display = 'none';
                 favoritesList.onclick = null;
                 favoritesPromptClose.onclick = null;
+                scrollToTop();
             };
 
             favoritesList.onclick = async (e) => {
@@ -1928,6 +1941,7 @@
                     done = true; // User cancelled or entered nothing
                 }
             }
+            scrollToTop();
         }
 
 
@@ -2095,6 +2109,7 @@
 
                 saveLinks();
                 renderLinks();
+                scrollToTop();
                 try {
                     if (window.rabbit && window.rabbit.core) {
                         window.rabbit.core.say({ text: "Links deleted." });
