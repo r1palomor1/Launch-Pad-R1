@@ -77,6 +77,7 @@
             align-items: center; /* Vertically align with input */
         }
         /* When an input is active, hide the action bar to reduce clutter */
+        .main-view.input-mode-active header,
         .main-view.input-mode-active .actions-bar {
             display: none;
         }
@@ -647,25 +648,6 @@
             display: flex;
             gap: 10px;
         }
-        /* When keyboard is active, shrink the dialog and hide the select dropdown to save space */
-        .custom-prompt-overlay.input-focused .custom-prompt-dialog {
-            padding: 10px;
-            gap: 5px;
-        }
-        .custom-prompt-overlay.input-focused .theme-color-list {
-            opacity: 0;
-            height: 0; padding-top: 0; padding-bottom: 0; margin: 0; border: none;
-        }
-        .custom-prompt-error {
-            color: #e74c3c; /* A noticeable red */
-            font-size: 0.9em;
-            text-align: center;
-            margin: 0;
-        }
-        .custom-prompt-error:empty {
-            /* Hide the element completely when there is no error message to show */
-            display: none;
-        }
     </style>
 </head>
 <body>
@@ -676,7 +658,7 @@
         </header>
         <div class="search-section">
             <div class="search-input-wrapper">
-                <input type="text" id="searchInput" placeholder="Filter or add..." autocomplete="off">
+                <input type="text" id="searchInput" placeholder="Search or Add..." autocomplete="off">
                 <button id="clearSearchBtn" title="Clear search" style="display: none;">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z"></path></svg>
                 </button>
@@ -707,19 +689,14 @@
 
         <ul id="linksList"></ul>
     </div>
-
-    <div id="customPromptOverlay" class="custom-prompt-overlay" style="display: none;">
+    
+    <div id="themePromptOverlay" class="custom-prompt-overlay" style="display: none;">
         <div class="custom-prompt-dialog">
-            <p id="customPromptMessage" class="custom-prompt-title"></p>
-            <p id="customPromptError" class="custom-prompt-error"></p>
-            <ul id="customPromptColorList" class="theme-color-list scrollable-list-dialog" tabindex="-1"></ul>
-            <input type="text" id="customPromptInput" placeholder="Or type a name/hex here">
+            <p class="custom-prompt-title">Change Theme</p>
+            <ul id="themeColorList" class="theme-color-list scrollable-list-dialog" tabindex="-1"></ul>
             <div class="custom-prompt-actions">
-                <button id="customPromptReset" class="secondary">Rabbit Me!</button>
-                <div class="custom-prompt-actions-right">
-                    <button id="customPromptCancel" class="secondary">Cancel</button>
-                    <button id="customPromptOk">OK</button>
-                </div>
+                <button id="themePromptReset" class="secondary">Rabbit Me!</button>
+                <button id="themePromptClose" class="secondary">Close</button>
             </div>
         </div>
     </div>
@@ -775,14 +752,10 @@
         const cancelSearchBtn = document.getElementById('cancelSearchBtn');
         const themeBtn = document.getElementById('themeBtn');
         const deleteAllBtn = document.getElementById('deleteAllBtn');
-        const customPromptOverlay = document.getElementById('customPromptOverlay');
-        const customPromptMessage = document.getElementById('customPromptMessage');
-        const customPromptColorList = document.getElementById('customPromptColorList');
-        const customPromptInput = document.getElementById('customPromptInput');
-        const customPromptOk = document.getElementById('customPromptOk');
-        const customPromptCancel = document.getElementById('customPromptCancel');
-        const customPromptReset = document.getElementById('customPromptReset');
-        const customPromptError = document.getElementById('customPromptError');
+        const themePromptOverlay = document.getElementById('themePromptOverlay');
+        const themeColorList = document.getElementById('themeColorList');
+        const themePromptReset = document.getElementById('themePromptReset');
+        const themePromptClose = document.getElementById('themePromptClose');
         const deletePromptOverlay = document.getElementById('deletePromptOverlay');
         const deleteLinksList = document.getElementById('deleteLinksList');
         const deletePromptCancel = document.getElementById('deletePromptCancel');
@@ -1729,59 +1702,12 @@
             openFavoritesDialog(); // No need to await this as it manages its own lifecycle
         });
 
-        // --- Theming & Custom Prompt ---
-        // Add listeners to adjust layout when keyboard is likely visible
-        customPromptInput.addEventListener('focus', () => {
-            customPromptOverlay.classList.add('input-focused');
-        });
-        customPromptInput.addEventListener('blur', () => {
-            customPromptOverlay.classList.remove('input-focused');
-        });
-
-        function showCustomPrompt(message) {
-            return new Promise((resolve) => {
-                customPromptMessage.textContent = message;
-                customPromptInput.value = '';
-                customPromptOverlay.style.display = 'flex';
-                customPromptColorList.scrollTop = 0;
-                customPromptColorList.focus();
-                // Do not auto-focus input to prevent keyboard from appearing immediately.
-
-                let resolved = false; // Prevent multiple resolutions
-
-                const closePrompt = (value) => {
-                    if (resolved) return;
-                    resolved = true;
-                    
-                    customPromptOverlay.style.display = 'none';
-                    customPromptOk.onclick = null;
-                    customPromptCancel.onclick = null;
-                    customPromptOverlay.onclick = null;
-                    customPromptReset.onclick = null;
-                    customPromptInput.onkeypress = null;
-                    resolve(value);
-                };
-
-                customPromptOk.onclick = () => closePrompt(customPromptInput.value);
-                customPromptCancel.onclick = () => closePrompt(null);
-                customPromptOverlay.onclick = (e) => {
-                    // Close only if the click is on the overlay itself (which has the ID), not on any of its children.
-                    // This is more robust against issues where layout shifts during a click.
-                    if (e.target.id === 'customPromptOverlay') {
-                        closePrompt(null);
-                    }
-                };
-                customPromptReset.onclick = () => closePrompt('reset');
-                customPromptInput.onkeypress = (e) => {
-                    if (e.key === 'Enter') closePrompt(customPromptInput.value);
-                };
-            });
-        }
+        // --- Theming ---
 
         const CSS_COLOR_NAMES = ['AliceBlue', 'AntiqueWhite', 'Aqua', 'Aquamarine', 'Azure', 'Beige', 'Bisque', 'Black', 'BlanchedAlmond', 'Blue', 'BlueViolet', 'Brown', 'BurlyWood', 'CadetBlue', 'Chartreuse', 'Chocolate', 'Coral', 'CornflowerBlue', 'Cornsilk', 'Crimson', 'Cyan', 'DarkBlue', 'DarkCyan', 'DarkGoldenRod', 'DarkGray', 'DarkGreen', 'DarkKhaki', 'DarkMagenta', 'DarkOliveGreen', 'DarkOrange', 'DarkOrchid', 'DarkRed', 'DarkSalmon', 'DarkSeaGreen', 'DarkSlateBlue', 'DarkSlateGray', 'DarkTurquoise', 'DarkViolet', 'DeepPink', 'DeepSkyBlue', 'DimGray', 'DodgerBlue', 'FireBrick', 'FloralWhite', 'ForestGreen', 'Fuchsia', 'Gainsboro', 'GhostWhite', 'Gold', 'GoldenRod', 'Gray', 'Green', 'GreenYellow', 'HoneyDew', 'HotPink', 'IndianRed', 'Indigo', 'Ivory', 'Khaki', 'Lavender', 'LavenderBlush', 'LawnGreen', 'LemonChiffon', 'LightBlue', 'LightCoral', 'LightCyan', 'LightGoldenRodYellow', 'LightGray', 'LightGreen', 'LightPink', 'LightSalmon', 'LightSeaGreen', 'LightSkyBlue', 'LightSlateGray', 'LightSteelBlue', 'LightYellow', 'Lime', 'LimeGreen', 'Linen', 'Magenta', 'Maroon', 'MediumAquaMarine', 'MediumBlue', 'MediumOrchid', 'MediumPurple', 'MediumSeaGreen', 'MediumSlateBlue', 'MediumSpringGreen', 'MediumTurquoise', 'MediumVioletRed', 'MidnightBlue', 'MintCream', 'MistyRose', 'Moccasin', 'NavajoWhite', 'Navy', 'OldLace', 'Olive', 'OliveDrab', 'Orange', 'OrangeRed', 'Orchid', 'PaleGoldenRod', 'PaleGreen', 'PaleTurquoise', 'PaleVioletRed', 'PapayaWhip', 'PeachPuff', 'Peru', 'Pink', 'Plum', 'PowderBlue', 'Purple', 'RebeccaPurple', 'Red', 'RosyBrown', 'RoyalBlue', 'SaddleBrown', 'Salmon', 'SandyBrown', 'SeaGreen', 'SeaShell', 'Sienna', 'Silver', 'SkyBlue', 'SlateBlue', 'SlateGray', 'Snow', 'SpringGreen', 'SteelBlue', 'Tan', 'Teal', 'Thistle', 'Tomato', 'Turquoise', 'Violet', 'Wheat', 'White', 'WhiteSmoke', 'Yellow', 'YellowGreen'].sort();
 
-        function setupColorPicker() {
-            const list = customPromptColorList;
+        function setupThemePicker() {
+            const list = themeColorList;
             list.innerHTML = '';
             const fragment = document.createDocumentFragment();
             CSS_COLOR_NAMES.forEach(name => {
@@ -1793,18 +1719,12 @@
             });
             list.appendChild(fragment);
 
-            list.addEventListener('click', (e) => {
+            list.addEventListener('click', async (e) => {
                 const li = e.target.closest('.theme-color-item');
                 if (li) {
-                    customPromptError.textContent = ''; // Clear error on selection
-                    customPromptInput.value = li.dataset.colorName;
-                    customPromptOk.focus(); // Guide user to the next step
+                    triggerHaptic();
+                    await applyTheme(`custom:${li.dataset.colorName}`);
                 }
-            });
-
-            // Also clear the error when the user starts typing a new value
-            customPromptInput.addEventListener('input', () => {
-                customPromptError.textContent = '';
             });
         }
 
@@ -1884,14 +1804,15 @@
             if (themeIdentifier.startsWith('custom:')) {
                 const colorName = themeIdentifier.split(':')[1];
                 const primaryRgb = colorNameToRgb(colorName);
+                // This should always succeed if coming from the list.
                 if (!primaryRgb) {
-                    customPromptError.textContent = `'${colorName}' is not a recognized name. Try a hex code.`;
-                    return false;
+                    await showAlert(`'${colorName}' is not a valid color.`);
+                    return;
                 }
                 themeColors = generatePaletteFromRgb(primaryRgb);
                 if (!themeColors) {
-                    customPromptError.textContent = "This color is too dark. Please choose a lighter color.";
-                    return false;
+                    await showAlert("This color is too dark. Please choose a lighter color.");
+                    return;
                 }
                 friendlyName = colorName;
             } else {
@@ -1899,10 +1820,7 @@
                 friendlyName = defaultTheme.name;
             }
 
-            if (!themeColors) return true; // Should not happen, but don't block the loop.
-
-            // If we've reached here, the color is valid, so clear any previous error messages.
-            customPromptError.textContent = '';
+            if (!themeColors) return;
 
             for (const [key, value] of Object.entries(themeColors)) {
                 document.documentElement.style.setProperty(key, value);
@@ -1916,39 +1834,17 @@
                     await window.rabbit.core.say({ text: `Theme set to ${friendlyName}` });
                 }
             } catch (e) { console.error("Say feedback failed:", e); }
-            return true;
         }
 
-        async function openThemeEditor() {
-            let success = false;
-            // Clear any errors from a previous session before starting.
-            if (customPromptError) customPromptError.textContent = '';
-
-            while (!success) {
-                const result = await showCustomPrompt("Enter a color, hex, or select one:");
-
-                if (result === 'reset') {
-                    await applyTheme('rabbit');
-                    success = true; // Exit loop after resetting
-                } else if (result && result.trim()) {
-                    let colorInput = result.trim();
-                    let colorToApply = colorInput;
-
-                    // More robust hex detection: strip an optional '#' and then validate.
-                    const potentialHex = colorInput.startsWith('#') ? colorInput.substring(1) : colorInput;
-                    if (/^[0-9a-f]{3}([0-9a-f]{3})?$/i.test(potentialHex)) {
-                        colorToApply = '#' + potentialHex;
-                    }
-
-                    // Try to apply the theme. If it succeeds, the loop will exit.
-                    // If it fails, the error message is set by applyTheme, and the loop continues.
-                    success = await applyTheme(`custom:${colorToApply}`);
-                } else {
-                    // User cancelled, so we exit the loop.
-                    success = true;
-                }
-            }
+        function openThemeEditor() {
+            themePromptOverlay.style.display = 'flex';
+            themeColorList.scrollTop = 0;
+            themeColorList.focus();
         }
+
+        themePromptClose.addEventListener('click', () => themePromptOverlay.style.display = 'none');
+        themePromptReset.addEventListener('click', async () => { await applyTheme('rabbit'); themePromptOverlay.style.display = 'none'; });
+
 
         // --- Delete Logic ---
         function openDeleteDialog() {
@@ -2125,7 +2021,7 @@
         themeBtn.addEventListener('click', openThemeEditor);
 
         // --- Initial Load ---
-        setupColorPicker();
+        setupThemePicker();
         // Apply the initial theme
         applyTheme(currentThemeName);
         
