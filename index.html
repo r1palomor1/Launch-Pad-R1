@@ -405,6 +405,9 @@
             margin: 0;
             max-height: 65vh; /* Increased to show more items */
             overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--bg-color); /* Match delete list for consistency */
         }
         .favorite-list-item {
             display: flex;
@@ -432,25 +435,50 @@
             text-align: center; color: var(--icon-color); padding: 10px; font-weight: normal;
         }
 
+        /* --- Theme Color List Styles --- */
+        .theme-color-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 25vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--bg-color);
+            /* Transitions for smooth collapse when keyboard is active */
+            transition: opacity 0.2s ease-in-out, height 0.2s ease-in-out, margin 0.2s ease-in-out, padding 0.2s ease-in-out, border 0.2s ease-in-out;
+            overflow: hidden;
+        }
+        .theme-color-item {
+            padding: 8px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            user-select: none;
+        }
+        .theme-color-item:last-child {
+            border-bottom: none;
+        }
+        .theme-color-item:hover {
+            background-color: #2c2c2c;
+        }
+
         /* --- Custom Scrollbar for Lists --- */
         .delete-links-list::-webkit-scrollbar,
-        .favorites-list::-webkit-scrollbar {
+        .favorites-list::-webkit-scrollbar,
+        .theme-color-list::-webkit-scrollbar {
             width: 6px;
         }
         .delete-links-list::-webkit-scrollbar-track,
-        .favorites-list::-webkit-scrollbar-track {
+        .favorites-list::-webkit-scrollbar-track,
+        .theme-color-list::-webkit-scrollbar-track {
             background: transparent;
         }
         .delete-links-list::-webkit-scrollbar-thumb,
-        .favorites-list::-webkit-scrollbar-thumb {
+        .favorites-list::-webkit-scrollbar-thumb,
+        .theme-color-list::-webkit-scrollbar-thumb {
             background-color: var(--icon-color);
             border-radius: 3px;
-        }
-        .delete-links-list::-webkit-scrollbar-thumb {
             border: 2px solid var(--bg-color); /* Match list background for padding effect */
-        }
-        .favorites-list::-webkit-scrollbar-thumb {
-            border: 2px solid var(--item-bg); /* Match dialog background for padding effect */
         }
 
         .actions-bar {
@@ -586,24 +614,12 @@
             display: flex;
             gap: 10px;
         }
-        .custom-prompt-dialog select {
-            width: 100%;
-            padding: 6px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            background-color: var(--item-bg);
-            color: var(--font-color);
-            font-size: 0.95em;
-            /* Transitions for smooth collapse when keyboard is active */
-            transition: opacity 0.2s ease-in-out, height 0.2s ease-in-out, margin 0.2s ease-in-out, padding 0.2s ease-in-out, border 0.2s ease-in-out;
-            overflow: hidden;
-        }
         /* When keyboard is active, shrink the dialog and hide the select dropdown to save space */
         .custom-prompt-overlay.input-focused .custom-prompt-dialog {
             padding: 10px;
             gap: 5px;
         }
-        .custom-prompt-overlay.input-focused #customPromptSelect {
+        .custom-prompt-overlay.input-focused .theme-color-list {
             opacity: 0;
             height: 0; padding-top: 0; padding-bottom: 0; margin: 0; border: none;
         }
@@ -659,7 +675,7 @@
         <div class="custom-prompt-dialog">
             <p id="customPromptMessage" class="custom-prompt-title"></p>
             <p id="customPromptError" class="custom-prompt-error"></p>
-            <select id="customPromptSelect"></select>
+            <ul id="customPromptColorList" class="theme-color-list"></ul>
             <input type="text" id="customPromptInput" placeholder="Or type a name/hex here">
             <div class="custom-prompt-actions">
                 <button id="customPromptReset" class="secondary">Rabbit Me!</button>
@@ -723,7 +739,7 @@
         const deleteAllBtn = document.getElementById('deleteAllBtn');
         const customPromptOverlay = document.getElementById('customPromptOverlay');
         const customPromptMessage = document.getElementById('customPromptMessage');
-        const customPromptSelect = document.getElementById('customPromptSelect');
+        const customPromptColorList = document.getElementById('customPromptColorList');
         const customPromptInput = document.getElementById('customPromptInput');
         const customPromptOk = document.getElementById('customPromptOk');
         const customPromptCancel = document.getElementById('customPromptCancel');
@@ -1646,8 +1662,8 @@
             return new Promise((resolve) => {
                 customPromptMessage.textContent = message;
                 customPromptInput.value = '';
-                customPromptSelect.value = ''; // Reset dropdown
                 customPromptOverlay.style.display = 'flex';
+                customPromptColorList.scrollTop = 0;
                 // Do not auto-focus input to prevent keyboard from appearing immediately.
 
                 let resolved = false; // Prevent multiple resolutions
@@ -1680,19 +1696,23 @@
         const CSS_COLOR_NAMES = ['AliceBlue', 'AntiqueWhite', 'Aqua', 'Aquamarine', 'Azure', 'Beige', 'Bisque', 'Black', 'BlanchedAlmond', 'Blue', 'BlueViolet', 'Brown', 'BurlyWood', 'CadetBlue', 'Chartreuse', 'Chocolate', 'Coral', 'CornflowerBlue', 'Cornsilk', 'Crimson', 'Cyan', 'DarkBlue', 'DarkCyan', 'DarkGoldenRod', 'DarkGray', 'DarkGreen', 'DarkKhaki', 'DarkMagenta', 'DarkOliveGreen', 'DarkOrange', 'DarkOrchid', 'DarkRed', 'DarkSalmon', 'DarkSeaGreen', 'DarkSlateBlue', 'DarkSlateGray', 'DarkTurquoise', 'DarkViolet', 'DeepPink', 'DeepSkyBlue', 'DimGray', 'DodgerBlue', 'FireBrick', 'FloralWhite', 'ForestGreen', 'Fuchsia', 'Gainsboro', 'GhostWhite', 'Gold', 'GoldenRod', 'Gray', 'Green', 'GreenYellow', 'HoneyDew', 'HotPink', 'IndianRed', 'Indigo', 'Ivory', 'Khaki', 'Lavender', 'LavenderBlush', 'LawnGreen', 'LemonChiffon', 'LightBlue', 'LightCoral', 'LightCyan', 'LightGoldenRodYellow', 'LightGray', 'LightGreen', 'LightPink', 'LightSalmon', 'LightSeaGreen', 'LightSkyBlue', 'LightSlateGray', 'LightSteelBlue', 'LightYellow', 'Lime', 'LimeGreen', 'Linen', 'Magenta', 'Maroon', 'MediumAquaMarine', 'MediumBlue', 'MediumOrchid', 'MediumPurple', 'MediumSeaGreen', 'MediumSlateBlue', 'MediumSpringGreen', 'MediumTurquoise', 'MediumVioletRed', 'MidnightBlue', 'MintCream', 'MistyRose', 'Moccasin', 'NavajoWhite', 'Navy', 'OldLace', 'Olive', 'OliveDrab', 'Orange', 'OrangeRed', 'Orchid', 'PaleGoldenRod', 'PaleGreen', 'PaleTurquoise', 'PaleVioletRed', 'PapayaWhip', 'PeachPuff', 'Peru', 'Pink', 'Plum', 'PowderBlue', 'Purple', 'RebeccaPurple', 'Red', 'RosyBrown', 'RoyalBlue', 'SaddleBrown', 'Salmon', 'SandyBrown', 'SeaGreen', 'SeaShell', 'Sienna', 'Silver', 'SkyBlue', 'SlateBlue', 'SlateGray', 'Snow', 'SpringGreen', 'SteelBlue', 'Tan', 'Teal', 'Thistle', 'Tomato', 'Turquoise', 'Violet', 'Wheat', 'White', 'WhiteSmoke', 'Yellow', 'YellowGreen'].sort();
 
         function setupColorPicker() {
-            const select = customPromptSelect;
-            select.innerHTML = '<option value="">Select a color...</option>';
+            const list = customPromptColorList;
+            list.innerHTML = '';
+            const fragment = document.createDocumentFragment();
             CSS_COLOR_NAMES.forEach(name => {
-                const option = document.createElement('option');
-                option.value = name;
-                option.textContent = name;
-                select.appendChild(option);
+                const li = document.createElement('li');
+                li.className = 'theme-color-item';
+                li.textContent = name;
+                li.dataset.colorName = name;
+                fragment.appendChild(li);
             });
+            list.appendChild(fragment);
 
-            select.addEventListener('change', () => {
-                customPromptError.textContent = ''; // Clear error on selection
-                if (select.value) {
-                    customPromptInput.value = select.value;
+            list.addEventListener('click', (e) => {
+                const li = e.target.closest('.theme-color-item');
+                if (li) {
+                    customPromptError.textContent = ''; // Clear error on selection
+                    customPromptInput.value = li.dataset.colorName;
                     customPromptOk.focus(); // Guide user to the next step
                 }
             });
