@@ -648,6 +648,25 @@
             display: flex;
             gap: 10px;
         }
+        /* When keyboard is active, move dialog up to avoid overlap */
+        .custom-prompt-overlay.input-focused {
+            padding-top: 2px;
+        }
+        .custom-prompt-overlay.input-focused .custom-prompt-dialog {
+            padding: 10px;
+            gap: 5px;
+        }
+        .custom-prompt-error {
+            color: #e74c3c; /* A noticeable red */
+            font-size: 0.9em;
+            text-align: center;
+            margin: 0;
+            min-height: 1.2em; /* Reserve space to prevent layout shift */
+        }
+        .custom-prompt-error:empty {
+            /* Hide the element completely when there is no error message to show */
+            min-height: 0;
+        }
     </style>
 </head>
 <body>
@@ -690,13 +709,18 @@
         <ul id="linksList"></ul>
     </div>
     
-    <div id="themePromptOverlay" class="custom-prompt-overlay" style="display: none;">
+    <div id="themeDialogOverlay" class="custom-prompt-overlay" style="display: none;">
         <div class="custom-prompt-dialog">
             <p class="custom-prompt-title">Change Theme</p>
+            <p id="themeDialogError" class="custom-prompt-error"></p>
             <ul id="themeColorList" class="theme-color-list scrollable-list-dialog" tabindex="-1"></ul>
+            <input type="text" id="themeDialogInput" placeholder="Or type a name/hex here">
             <div class="custom-prompt-actions">
-                <button id="themePromptReset" class="secondary">Rabbit Me!</button>
-                <button id="themePromptClose" class="secondary">Close</button>
+                <button id="themeDialogReset" class="secondary">Rabbit Me!</button>
+                <div class="custom-prompt-actions-right">
+                    <button id="themeDialogCancel" class="secondary">Cancel</button>
+                    <button id="themeDialogOk">OK</button>
+                </div>
             </div>
         </div>
     </div>
@@ -752,10 +776,13 @@
         const cancelSearchBtn = document.getElementById('cancelSearchBtn');
         const themeBtn = document.getElementById('themeBtn');
         const deleteAllBtn = document.getElementById('deleteAllBtn');
-        const themePromptOverlay = document.getElementById('themePromptOverlay');
+        const themeDialogOverlay = document.getElementById('themeDialogOverlay');
+        const themeDialogError = document.getElementById('themeDialogError');
         const themeColorList = document.getElementById('themeColorList');
-        const themePromptReset = document.getElementById('themePromptReset');
-        const themePromptClose = document.getElementById('themePromptClose');
+        const themeDialogInput = document.getElementById('themeDialogInput');
+        const themeDialogOk = document.getElementById('themeDialogOk');
+        const themeDialogCancel = document.getElementById('themeDialogCancel');
+        const themeDialogReset = document.getElementById('themeDialogReset');
         const deletePromptOverlay = document.getElementById('deletePromptOverlay');
         const deleteLinksList = document.getElementById('deleteLinksList');
         const deletePromptCancel = document.getElementById('deletePromptCancel');
@@ -1723,7 +1750,9 @@
                 const li = e.target.closest('.theme-color-item');
                 if (li) {
                     triggerHaptic();
-                    await applyTheme(`custom:${li.dataset.colorName}`);
+                    themeDialogInput.value = li.dataset.colorName;
+                    themeDialogError.textContent = ''; // Clear any error
+                    themeDialogInput.focus(); // Move focus to input
                 }
             });
         }
@@ -1800,27 +1829,31 @@
         async function applyTheme(themeIdentifier) {
             let themeColors;
             let friendlyName;
+            let error = null;
 
             if (themeIdentifier.startsWith('custom:')) {
                 const colorName = themeIdentifier.split(':')[1];
                 const primaryRgb = colorNameToRgb(colorName);
-                // This should always succeed if coming from the list.
                 if (!primaryRgb) {
-                    await showAlert(`'${colorName}' is not a valid color.`);
-                    return;
+                    error = `'${colorName}' is not a valid color.`;
+                } else {
+                    themeColors = generatePaletteFromRgb(primaryRgb);
+                    if (!themeColors) {
+                        error = "This color is too dark. Please choose a lighter color.";
+                    } else {
+                        friendlyName = colorName;
+                    }
                 }
-                themeColors = generatePaletteFromRgb(primaryRgb);
-                if (!themeColors) {
-                    await showAlert("This color is too dark. Please choose a lighter color.");
-                    return;
-                }
-                friendlyName = colorName;
             } else {
                 themeColors = defaultTheme.colors;
                 friendlyName = defaultTheme.name;
             }
 
-            if (!themeColors) return;
+            if (error) {
+                return { success: false, error: error };
+            }
+
+            if (!themeColors) return { success: true }; // Should not happen if no error
 
             for (const [key, value] of Object.entries(themeColors)) {
                 document.documentElement.style.setProperty(key, value);
@@ -1834,16 +1867,68 @@
                     await window.rabbit.core.say({ text: `Theme set to ${friendlyName}` });
                 }
             } catch (e) { console.error("Say feedback failed:", e); }
+            
+            return { success: true };
         }
 
-        function openThemeEditor() {
-            themePromptOverlay.style.display = 'flex';
-            themeColorList.scrollTop = 0;
-            themeColorList.focus();
+        // Add listeners to adjust layout when keyboard is likely visible
+        themeDialogInput.addEventListener('focus', () => {
+            themeDialogOverlay.classList.add('input-focused');
+        });
+        themeDialogInput.addEventListener('blur', () => {
+            themeDialogOverlay.classList.remove('input-focused');
+        });
+
+        function showThemeDialog() {
+            return new Promise((resolve) => {
+                themeDialogInput.value = '';
+                themeDialogError.textContent = '';
+                themeDialogOverlay.style.display = 'flex';
+                themeColorList.scrollTop = 0;
+                
+                let resolved = false;
+                const closeDialog = (value) => {
+                    if (resolved) return;
+                    resolved = true;
+                    themeDialogOverlay.style.display = 'none';
+                    // Cleanup listeners
+                    themeDialogOk.onclick = null;
+                    themeDialogCancel.onclick = null;
+                    themeDialogOverlay.onclick = null;
+                    themeDialogReset.onclick = null;
+                    themeDialogInput.onkeypress = null;
+                    resolve(value);
+                };
+
+                themeDialogOk.onclick = () => closeDialog(themeDialogInput.value);
+                themeDialogCancel.onclick = () => closeDialog(null);
+                themeDialogOverlay.onclick = (e) => {
+                    if (e.target.id === 'themeDialogOverlay') closeDialog(null);
+                };
+                themeDialogReset.onclick = () => closeDialog('reset');
+                themeDialogInput.onkeypress = (e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); closeDialog(themeDialogInput.value); }
+                };
+            });
         }
 
-        themePromptClose.addEventListener('click', () => themePromptOverlay.style.display = 'none');
-        themePromptReset.addEventListener('click', async () => { await applyTheme('rabbit'); themePromptOverlay.style.display = 'none'; });
+        async function openThemeEditor() {
+            let done = false;
+            while (!done) {
+                const result = await showThemeDialog();
+
+                if (result === 'reset') {
+                    await applyTheme('rabbit');
+                    done = true;
+                } else if (result && result.trim()) {
+                    const applyResult = await applyTheme(`custom:${result.trim()}`);
+                    done = applyResult.success;
+                    if (!done) themeDialogError.textContent = applyResult.error;
+                } else {
+                    done = true; // User cancelled or entered nothing
+                }
+            }
+        }
 
 
         // --- Delete Logic ---
