@@ -39,12 +39,12 @@
         header {
             position: relative;
             /* Define a fixed height for the header area: safe area + content space */
-            height: calc(var(--rabbit-safe-area-inset-top, 20px) + 40px);
-            margin-bottom: 8px;
+            height: calc(var(--rabbit-safe-area-inset-top, 20px) + 38px);
+            margin-bottom: 4px;
         }
         header img {
             position: absolute;
-            height: 35px; /* A balanced height for the logo */
+            height: 32px; /* A balanced height for the logo */
             object-fit: contain;
             /* Center the logo horizontally and vertically */
             left: 50%;
@@ -78,7 +78,7 @@
         .search-section {
             display: flex;
             gap: 4px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .search-input-wrapper {
             position: relative;
@@ -344,16 +344,6 @@
             /* Basic styling for radio buttons */
             accent-color: var(--primary-color);
         }
-        .delete-links-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: 45vh; /* Increased height for better visibility */
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            background-color: var(--bg-color); /* Darker background for contrast */
-        }
         .delete-link-item {
             display: flex;
             align-items: center;
@@ -400,7 +390,9 @@
         }
 
         /* --- Common Dialog List Styles --- */
-        .scrollable-list-dialog {
+        .favorites-list,
+        .delete-links-list,
+        .theme-color-list {
             list-style: none;
             padding: 0;
             margin: 0;
@@ -500,7 +492,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         .list-actions {
             display: flex;
