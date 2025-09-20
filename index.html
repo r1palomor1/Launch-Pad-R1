@@ -1401,11 +1401,7 @@
             searchInput.value = '';
             renderLinks(); // Render the full, updated list
 
-            try {
-                if (window.rabbit && window.rabbit.core) {
-                    window.rabbit.core.say({ text: `Added ${linkData.description}` });
-                }
-            } catch (e) { console.error("Say feedback failed:", e); }
+            await sayOnRabbit(`Added ${linkData.description}`);
             return true;
         }
 
@@ -1748,11 +1744,8 @@
 
         quickLaunchBtn.addEventListener('click', async () => {
             if (favoriteLinkIds.size === 0) {
-                if (window.rabbit && window.rabbit.core) {
-                    await window.rabbit.core.say({ text: "No favorite link set." });
-                } else { 
-                    await showAlert("No favorite link set. Click the star on a link to set it as a favorite."); 
-                }
+                await sayOnRabbit("No favorite link set.");
+                await showAlert("No favorite link set. Click the star on a link to set it as a favorite.");
                 return;
             }
             triggerHaptic();
@@ -1911,11 +1904,7 @@
             localStorage.setItem('launchPadR1Theme', themeIdentifier);
 
             // Provide feedback
-            try {
-                if (window.rabbit && window.rabbit.core) {
-                    await window.rabbit.core.say({ text: `Theme set to ${friendlyName}` });
-                }
-            } catch (e) { console.error("Say feedback failed:", e); }
+            await sayOnRabbit(`Theme set to ${friendlyName}`);
             
             return { success: true };
         }
@@ -2150,50 +2139,54 @@
         }
 
         deleteAllBtn.addEventListener('click', async () => {
-            const result = await openDeleteDialog();
-            if (!result || (result.mode === 'selected' && result.ids.length === 0)) {
-                return; // User cancelled or selected nothing
-            }
-
-            let confirmMessage = '';
-            let linksToDelete = new Set();
-            const totalLinks = links.length;
-
-            if (result.mode === 'all') {
-                confirmMessage = `Are you sure you want to delete all ${totalLinks} link(s)?`;
-                links.forEach(link => linksToDelete.add(link.id));
-            } else if (result.mode === 'keep-favs') {
-                const toDeleteCount = links.filter(l => !favoriteLinkIds.has(l.id)).length;
-                if (toDeleteCount === 0) {
-                    await showAlert("No links to delete (all links are favorites).");
-                    return;
+            let keepLooping = true;
+            while (keepLooping) {
+                const result = await openDeleteDialog();
+                if (!result || (result.mode === 'selected' && result.ids.length === 0)) {
+                    keepLooping = false; // User cancelled the selection dialog or selected nothing, so exit.
+                    continue;
                 }
-                confirmMessage = `Are you sure you want to delete ${toDeleteCount} non-favorite link(s)?`;
-                links.forEach(link => {
-                    if (!favoriteLinkIds.has(link.id)) {
-                        linksToDelete.add(link.id);
-                    }
-                });
-            } else if (result.mode === 'selected') {
-                confirmMessage = `Are you sure you want to delete ${result.ids.length} selected link(s)?`;
-                result.ids.forEach(id => linksToDelete.add(id));
-            }
 
-            const confirmed = await showConfirm(confirmMessage);
-            if (confirmed) {
-                links = links.filter(link => !linksToDelete.has(link.id));
-                // The set of favorites is the intersection of old favorites and the ones we didn't delete.
-                const remainingLinkIds = new Set(links.map(l => l.id));
-                favoriteLinkIds = new Set([...favoriteLinkIds].filter(id => remainingLinkIds.has(id)));
+                let confirmMessage = '';
+                let linksToDelete = new Set();
+                const totalLinks = links.length;
 
-                saveLinks();
-                renderLinks();
-                scrollToTop();
-                try {
-                    if (window.rabbit && window.rabbit.core) {
-                        window.rabbit.core.say({ text: "Links deleted." });
+                if (result.mode === 'all') {
+                    confirmMessage = `Are you sure you want to delete all ${totalLinks} link(s)?`;
+                    links.forEach(link => linksToDelete.add(link.id));
+                } else if (result.mode === 'keep-favs') {
+                    const toDeleteCount = links.filter(l => !favoriteLinkIds.has(l.id)).length;
+                    if (toDeleteCount === 0) {
+                        await showAlert("No links to delete (all links are favorites).");
+                        // Don't exit the loop, let the user choose another option.
+                        continue;
                     }
-                } catch (e) { console.error("Say feedback failed:", e); }
+                    confirmMessage = `Are you sure you want to delete ${toDeleteCount} non-favorite link(s)?`;
+                    links.forEach(link => {
+                        if (!favoriteLinkIds.has(link.id)) {
+                            linksToDelete.add(link.id);
+                        }
+                    });
+                } else if (result.mode === 'selected') {
+                    confirmMessage = `Are you sure you want to delete ${result.ids.length} selected link(s)?`;
+                    result.ids.forEach(id => linksToDelete.add(id));
+                }
+
+                const confirmed = await showConfirm(confirmMessage);
+                if (confirmed) {
+                    links = links.filter(link => !linksToDelete.has(link.id));
+                    // The set of favorites is the intersection of old favorites and the ones we didn't delete.
+                    const remainingLinkIds = new Set(links.map(l => l.id));
+                    favoriteLinkIds = new Set([...favoriteLinkIds].filter(id => remainingLinkIds.has(id)));
+
+                    saveLinks();
+                    renderLinks();
+                    scrollToTop();
+                    await sayOnRabbit("Links deleted.");
+                    
+                    keepLooping = false; // Deletion successful, exit loop.
+                }
+                // If user cancels confirmation, loop continues and re-opens the delete dialog.
             }
         });
 
