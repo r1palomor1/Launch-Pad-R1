@@ -336,8 +336,7 @@
         .delete-options {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 10px; /* Spacing between radio buttons */
         }
         .delete-options label {
             display: flex;
@@ -525,35 +524,42 @@
             /* Align to top to avoid keyboard overlap on small screens */
             align-items: flex-start;
             z-index: 1000;
-            padding: 15px 8px 8px; /* Reduced top padding to bring dialog higher */
+            padding: 10px 8px 8px; /* Further reduced top padding to bring dialog higher */
             transition: padding-top 0.2s ease-in-out; /* Smooth transition for focus */
         }
         .custom-prompt-overlay.input-focused {
             padding-top: 2px; /* Move dialog almost to the top edge to ensure buttons are visible */
         }
         .custom-prompt-dialog {
-            background-color: var(--item-bg);
-            padding: 15px;
+            background-color: var(--item-bg); 
+            padding: 12px; /* Reduced padding */
             border-radius: 8px;
             border: 1px solid var(--border-color);
             width: 100%;
             max-width: 320px;
             display: flex;
             flex-direction: column;
-            gap: 8px; /* Reduced gap to save vertical space */
+            gap: 10px; /* Consistent gap between elements */
             transition: padding 0.2s ease-in-out, gap 0.2s ease-in-out; /* Smooth transition */
         }
-        .custom-prompt-dialog p {
+        .custom-prompt-dialog .custom-prompt-title {
             margin: 0;
             font-weight: bold;
             text-align: center;
+        }
+        #genericPromptMessage {
+            text-align: center;
+            line-height: 1.5;
+            font-weight: normal;
+            /* Add a small top margin to prevent text from being clipped at the top of the dialog.
+               Bottom margin is handled by the parent's flex-gap. */
+            margin: 4px 0 0;
         }
         .custom-prompt-actions {
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 10px;
-            margin-top: 5px; /* Add a bit of extra space above the buttons */
         }
         .custom-prompt-actions-right {
             display: flex;
@@ -635,7 +641,7 @@
 
     <div id="customPromptOverlay" class="custom-prompt-overlay" style="display: none;">
         <div class="custom-prompt-dialog">
-            <p id="customPromptMessage"></p>
+            <p id="customPromptMessage" class="custom-prompt-title"></p>
             <p id="customPromptError" class="custom-prompt-error"></p>
             <select id="customPromptSelect"></select>
             <input type="text" id="customPromptInput" placeholder="Or type a name/hex here">
@@ -668,7 +674,7 @@
 
     <div id="favoritesPromptOverlay" class="custom-prompt-overlay" style="display: none;">
         <div class="custom-prompt-dialog">
-            <p>Favorites</p>
+            <p class="custom-prompt-title">Favorites</p>
             <ul id="favoritesList" class="favorites-list">
                 <!-- Favorite links will be populated here by JS -->
             </ul>
@@ -680,7 +686,7 @@
 
     <div id="genericPromptOverlay" class="custom-prompt-overlay" style="display: none;">
         <div class="custom-prompt-dialog">
-            <p id="genericPromptMessage" style="text-align: center; line-height: 1.5; margin-bottom: 10px; font-weight: normal;"></p>
+            <p id="genericPromptMessage"></p>
             <div id="genericPromptActions" class="custom-prompt-actions">
                 <!-- Buttons are dynamically added here by JS -->
             </div>
@@ -1911,6 +1917,7 @@
                 selectedIds.clear();
                 renderDeleteList();
                 deletePromptOverlay.style.display = 'flex';
+                deleteLinksList.scrollTop = 0; // Ensure list starts at the top
 
                 updateButtonState(); // Set initial button state
 
