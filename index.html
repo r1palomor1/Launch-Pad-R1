@@ -354,7 +354,7 @@
             list-style: none;
             padding: 0;
             margin: 0;
-            max-height: 25vh; /* Use viewport height to be responsive */
+            max-height: 45vh; /* Increased height for better visibility */
             overflow-y: auto;
             border: 1px solid var(--border-color);
             border-radius: 4px;
@@ -651,7 +651,6 @@
 
     <div id="deletePromptOverlay" class="custom-prompt-overlay" style="display: none;">
         <div class="custom-prompt-dialog">
-            <p>Delete Links</p>
             <div class="delete-options">
                 <label><input type="radio" name="delete-mode" value="all"> Delete All Links</label>
                 <label><input type="radio" name="delete-mode" value="keep-favs"> Delete All Except Favorite</label>
@@ -675,6 +674,15 @@
             </ul>
             <div class="custom-prompt-actions">
                 <button id="favoritesPromptClose" class="secondary" style="width: 100%;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="genericPromptOverlay" class="custom-prompt-overlay" style="display: none;">
+        <div class="custom-prompt-dialog">
+            <p id="genericPromptMessage" style="text-align: center; line-height: 1.5; margin-bottom: 10px; font-weight: normal;"></p>
+            <div id="genericPromptActions" class="custom-prompt-actions">
+                <!-- Buttons are dynamically added here by JS -->
             </div>
         </div>
     </div>
@@ -707,6 +715,9 @@
         const favoritesPromptOverlay = document.getElementById('favoritesPromptOverlay');
         const favoritesList = document.getElementById('favoritesList');
         const favoritesPromptClose = document.getElementById('favoritesPromptClose');
+        const genericPromptOverlay = document.getElementById('genericPromptOverlay');
+        const genericPromptMessage = document.getElementById('genericPromptMessage');
+        const genericPromptActions = document.getElementById('genericPromptActions');
 
         let suggestionRequestCount = 0;
         const GENERIC_FAVICON_SRC = 'data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23888\'%3e%3cpath d=\'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z\'/%3e%3c/svg%3e';
@@ -728,7 +739,7 @@
                 }
             } catch (error) {
                 console.error("Error launching URL on Rabbit:", error);
-                alert("Failed to launch URL.");
+                await showAlert("Failed to launch URL.");
             }
         }
 
@@ -754,6 +765,50 @@
                 clearTimeout(timeout);
                 timeout = setTimeout(() => func.apply(this, args), delay);
             };
+        }
+
+        // --- Generic Alert/Confirm Dialogs ---
+        function showGenericPrompt({ message, buttons }) {
+            return new Promise(resolve => {
+                genericPromptMessage.textContent = message;
+                genericPromptActions.innerHTML = ''; // Clear old buttons
+
+                // Ensure buttons are added in a specific order for layout (e.g., Cancel on left)
+                const sortedButtons = buttons.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+                sortedButtons.forEach(btnConfig => {
+                    const button = document.createElement('button');
+                    button.textContent = btnConfig.text;
+                    if (btnConfig.class) {
+                        button.className = btnConfig.class;
+                    }
+                    button.onclick = () => {
+                        genericPromptOverlay.style.display = 'none';
+                        resolve(btnConfig.value);
+                    };
+                    genericPromptActions.appendChild(button);
+                });
+
+                genericPromptActions.style.justifyContent = buttons.length === 1 ? 'center' : 'space-between';
+                genericPromptOverlay.style.display = 'flex';
+            });
+        }
+
+        async function showAlert(message) {
+            return showGenericPrompt({
+                message,
+                buttons: [ { text: 'OK', value: true, class: '' } ]
+            });
+        }
+
+        async function showConfirm(message) {
+            return showGenericPrompt({
+                message,
+                buttons: [
+                    { text: 'Cancel', value: false, class: 'secondary', order: 1 },
+                    { text: 'OK', value: true, class: '', order: 2 }
+                ]
+            });
         }
         // Categories are sorted alphabetically, with 'Other' at the end for better usability.
         const categories = ['Education', 'Entertainment', 'Finance', 'Music', 'News', 'Shopping', 'Social', 'Sports', 'Tools', 'Travel', 'Other'];
@@ -1151,7 +1206,7 @@
             // Temporarily remove the favicon during edit to maximize space
             li.innerHTML = createFormHTML(link, true);
 
-            li.querySelector('.save-btn').addEventListener('click', () => {
+            li.querySelector('.save-btn').addEventListener('click', async () => {
                 const newDescription = li.querySelector('.edit-description').value.trim();
                 const newUrl = li.querySelector('.edit-url').value.trim();
                 const newCategory = li.querySelector('.edit-category').value;
@@ -1165,7 +1220,7 @@
                     saveLinks();
                     searchHandler(searchInput.value); // Re-apply filter to show the change
                 } else {
-                    alert('Description and URL cannot be empty.');
+                    await showAlert('Description and URL cannot be empty.');
                 }
             });
             li.querySelector('.cancel-btn').addEventListener('click', () => {
@@ -1173,7 +1228,7 @@
             });
         }
 
-        function showAddForm(prefillData = {}) {
+        async function showAddForm(prefillData = {}) {
             // Prevent adding another new item if one is already being added
             const existingNewInput = document.querySelector('.new-description');
             if (existingNewInput) {
@@ -1208,11 +1263,11 @@
                 li.querySelector('.new-description').focus();
             }
 
-            const saveHandler = () => {
+            const saveHandler = async () => {
                 const description = li.querySelector('.new-description').value.trim();
                 const url = li.querySelector('.new-url').value.trim();
                 const category = li.querySelector('.new-category').value;
-                addNewLink({ description, url, category });
+                await addNewLink({ description, url, category });
             };
 
             li.querySelector('.save-new-btn').addEventListener('click', saveHandler);
@@ -1222,7 +1277,7 @@
             });
         }
 
-        function handleAddFromQuery(description, url) {
+        async function handleAddFromQuery(description, url) {
             if (!description) return;
 
             // Clear suggestions from the list before showing the form.
@@ -1244,12 +1299,12 @@
                 const finalDescription = description.split('.')[0].replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\b\w/g, l => l.toUpperCase());
                 prefillData = { description: finalDescription, url: finalUrl, category: 'Other' };
             }
-            showAddForm(prefillData);
+            await showAddForm(prefillData);
         }
 
-        function addNewLink(linkData) {
+        async function addNewLink(linkData) {
             if (!linkData || !linkData.description || !linkData.url || linkData.url === 'https://') {
-                alert('Please provide a description and a full URL.');
+                await showAlert('Please provide a description and a full URL.');
                 return false;
             }
             links.push({ ...linkData, id: `link-${Date.now()}` });
@@ -1562,8 +1617,10 @@
         quickLaunchBtn.addEventListener('click', async () => {
             if (favoriteLinkIds.size === 0) {
                 if (window.rabbit && window.rabbit.core) {
-                    window.rabbit.core.say({ text: "No favorite link set." });
-                } else { alert("No favorite link set. Click the star on a link to set it as a favorite."); }
+                    await window.rabbit.core.say({ text: "No favorite link set." });
+                } else { 
+                    await showAlert("No favorite link set. Click the star on a link to set it as a favorite."); 
+                }
                 return;
             }
             triggerHaptic();
@@ -1795,7 +1852,9 @@
             function renderDeleteList() {
                 deleteLinksList.innerHTML = '';
                 const fragment = document.createDocumentFragment();
-                links.forEach(link => {
+                // Create a sorted copy of the links array for consistent ordering.
+                const sortedLinks = [...links].sort((a, b) => a.description.localeCompare(b.description));
+                sortedLinks.forEach(link => {
                     const li = document.createElement('li');
                     li.className = 'delete-link-item';
                     li.dataset.id = link.id;
@@ -1835,12 +1894,25 @@
                 renderDeleteList();
             }
 
+            function updateButtonState() {
+                const mode = document.querySelector('input[name="delete-mode"]:checked').value;
+                if (mode === 'selected') {
+                    deletePromptOk.disabled = selectedIds.size === 0;
+                } else {
+                    // For 'all' and 'keep-favs', the button should always be enabled.
+                    // The logic later handles cases where 'keep-favs' results in 0 deletions.
+                    deletePromptOk.disabled = false;
+                }
+            }
+
             return new Promise((resolve) => {
                 // Reset to default state
                 document.querySelector('input[name="delete-mode"][value="selected"]').checked = true;
                 selectedIds.clear();
                 renderDeleteList();
                 deletePromptOverlay.style.display = 'flex';
+
+                updateButtonState(); // Set initial button state
 
                 const handleItemClick = (e) => {
                     const li = e.target.closest('.delete-link-item');
@@ -1856,10 +1928,12 @@
                         selectedIds.add(id);
                     }
                     renderDeleteList(); // Re-render to show the change
+                    updateButtonState();
                 };
 
                 const handleModeChange = () => {
                     updateSelectionFromMode();
+                    updateButtonState();
                 };
 
                 // Attach event listeners
@@ -1904,7 +1978,7 @@
             } else if (result.mode === 'keep-favs') {
                 const toDeleteCount = links.filter(l => !favoriteLinkIds.has(l.id)).length;
                 if (toDeleteCount === 0) {
-                    alert("No links to delete (all links are favorites).");
+                    await showAlert("No links to delete (all links are favorites).");
                     return;
                 }
                 confirmMessage = `Are you sure you want to delete ${toDeleteCount} non-favorite link(s)?`;
@@ -1918,7 +1992,8 @@
                 result.ids.forEach(id => linksToDelete.add(id));
             }
 
-            if (confirm(confirmMessage)) {
+            const confirmed = await showConfirm(confirmMessage);
+            if (confirmed) {
                 links = links.filter(link => !linksToDelete.has(link.id));
                 // The set of favorites is the intersection of old favorites and the ones we didn't delete.
                 const remainingLinkIds = new Set(links.map(l => l.id));
