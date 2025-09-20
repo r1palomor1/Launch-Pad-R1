@@ -435,6 +435,19 @@
         .custom-prompt-dialog .no-favorites-message {
             text-align: center; color: var(--icon-color); padding: 10px; font-weight: normal;
         }
+        .remove-favorite-btn {
+            flex-shrink: 0;
+            cursor: pointer;
+            color: var(--icon-color);
+            padding: 4px; /* Easy tap target */
+        }
+        .remove-favorite-btn:hover {
+            color: #e74c3c; /* Red for remove action */
+        }
+        .remove-favorite-btn svg {
+            width: 16px;
+            height: 16px;
+        }
 
         /* --- Theme Color List Styles --- */
         .theme-color-list {
@@ -1595,49 +1608,64 @@
 
         // --- Quick Launch Event Listener ---
         function openFavoritesDialog() {
-            return new Promise((resolve) => {
-                favoritesList.innerHTML = ''; // Clear previous list
-                const favoriteLinks = links.filter(l => favoriteLinkIds.has(l.id));
-
-                // Sort the favorites alphabetically for easier scanning.
-                favoriteLinks.sort((a, b) => a.description.localeCompare(b.description));
+            function renderFavoritesList() {
+                favoritesList.innerHTML = '';
+                const favoriteLinks = links.filter(l => favoriteLinkIds.has(l.id))
+                                           .sort((a, b) => a.description.localeCompare(b.description));
 
                 if (favoriteLinks.length === 0) {
                     favoritesList.innerHTML = `<p class="no-favorites-message">No favorites set yet.<br>Click the star on any link to add it here.</p>`;
+                    // If the last favorite was removed, update the main quick launch button state
+                    quickLaunchBtn.classList.remove('active');
                 } else {
                     const fragment = document.createDocumentFragment();
                     favoriteLinks.forEach(link => {
                         const li = document.createElement('li');
                         li.className = 'favorite-list-item';
+                        li.dataset.id = link.id;
                         li.dataset.url = link.url;
                         li.dataset.name = link.description;
                         li.innerHTML = `
                             <img src="https://www.google.com/s2/favicons?sz=64&domain_url=${getHostname(link.url)}" class="link-favicon" alt="Favicon" onerror="this.onerror=null; this.src='${GENERIC_FAVICON_SRC}'; this.style.padding='3px';">
                             <span class="favorite-list-item-description">${link.description}</span>
+                            <span class="remove-favorite-btn" title="Remove from favorites">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z"></path></svg>
+                            </span>
                         `;
                         fragment.appendChild(li);
                     });
                     favoritesList.appendChild(fragment);
                 }
+            }
 
-                favoritesPromptOverlay.style.display = 'flex';
+            renderFavoritesList();
+            favoritesPromptOverlay.style.display = 'flex';
 
-                const closeDialog = () => {
-                    favoritesPromptOverlay.style.display = 'none';
-                    favoritesList.onclick = null;
-                    favoritesPromptClose.onclick = null;
-                    resolve();
-                };
+            const closeDialog = () => {
+                favoritesPromptOverlay.style.display = 'none';
+                favoritesList.onclick = null;
+                favoritesPromptClose.onclick = null;
+            };
 
-                favoritesList.onclick = (e) => {
+            favoritesList.onclick = (e) => {
+                const removeBtn = e.target.closest('.remove-favorite-btn');
+                if (removeBtn) {
+                    const li = removeBtn.closest('.favorite-list-item');
+                    const idToRemove = li.dataset.id;
+                    favoriteLinkIds.delete(idToRemove);
+                    saveLinks();
+                    triggerHaptic();
+                    renderFavoritesList(); // Re-render the popup list
+                    renderLinks(); // Re-render the main list in the background
+                } else {
                     const li = e.target.closest('.favorite-list-item');
                     if (li) {
                         closeDialog();
                         launchUrlOnRabbit(li.dataset.url, li.dataset.name);
                     }
-                };
-                favoritesPromptClose.onclick = closeDialog;
-            });
+                }
+            };
+            favoritesPromptClose.onclick = closeDialog;
         }
 
         quickLaunchBtn.addEventListener('click', async () => {
@@ -1650,7 +1678,7 @@
                 return;
             }
             triggerHaptic();
-            await openFavoritesDialog();
+            openFavoritesDialog(); // No need to await this as it manages its own lifecycle
         });
 
         // --- Theming & Custom Prompt ---
