@@ -447,6 +447,7 @@
         .remove-favorite-btn svg {
             width: 16px;
             height: 16px;
+            display: block;
         }
 
         /* --- Theme Color List Styles --- */
@@ -1716,7 +1717,11 @@
                 customPromptOk.onclick = () => closePrompt(customPromptInput.value);
                 customPromptCancel.onclick = () => closePrompt(null);
                 customPromptOverlay.onclick = (e) => {
-                    if (e.target === customPromptOverlay) closePrompt(null);
+                    // Close only if the click is on the overlay itself (which has the ID), not on any of its children.
+                    // This is more robust against issues where layout shifts during a click.
+                    if (e.target.id === 'customPromptOverlay') {
+                        closePrompt(null);
+                    }
                 };
                 customPromptReset.onclick = () => closePrompt('reset');
                 customPromptInput.onkeypress = (e) => {
