@@ -615,12 +615,7 @@
         <div class="actions-bar">
             <div class="list-actions">
                 <div class="view-controls">
-                    <span id="viewListBtn" class="view-btn" title="List View">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 4H21V6H3V4ZM3 11H21V13H3V11ZM3 18H21V20H3V18Z" /></svg>
-                    </span>
-                    <span id="viewGroupBtn" class="view-btn" title="Group View">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 3h8v8H3V3zM13 3h8v8h-8V3zM3 13h8v8H3v-8zM13 13h8v8h-8v-8z"/></svg>
-                    </span>
+                    <span id="toggleViewBtn" class="view-btn"></span>
                 </div>
                 <a href="#" id="toggleAllLink" style="display: none;"></a>
                 <button id="quickLaunchBtn" title="Launch Favorite">
@@ -700,8 +695,7 @@
         const clearSearchBtn = document.getElementById('clearSearchBtn');
         const searchBtn = document.getElementById('searchBtn');
         const linksList = document.getElementById('linksList');
-        const viewListBtn = document.getElementById('viewListBtn');
-        const viewGroupBtn = document.getElementById('viewGroupBtn');
+        const toggleViewBtn = document.getElementById('toggleViewBtn');
         const quickLaunchBtn = document.getElementById('quickLaunchBtn');
         const toggleAllLink = document.getElementById('toggleAllLink');
         const themeBtn = document.getElementById('themeBtn');
@@ -907,10 +901,17 @@
         }
 
         function renderLinks(linksToRender = links) {
-            // Set active icon
-            viewListBtn.classList.toggle('active', currentView === 'list');
-            viewGroupBtn.classList.toggle('active', currentView === 'group');
-            // Update the quick launch button to show if any favorites are set
+            // Update the view toggle button to show the icon for the *other* view.
+            if (currentView === 'list') {
+                // Currently in list view, so show the icon to switch to group view.
+                toggleViewBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 3h8v8H3V3zM13 3h8v8h-8V3zM3 13h8v8H3v-8zM13 13h8v8h-8v-8z"/></svg>`;
+                toggleViewBtn.title = 'Group View';
+            } else { // group view
+                // Currently in group view, so show the icon to switch to list view.
+                toggleViewBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 4H21V6H3V4ZM3 11H21V13H3V11ZM3 18H21V20H3V18Z" /></svg>`;
+                toggleViewBtn.title = 'List View';
+            }
+
             quickLaunchBtn.classList.toggle('active', favoriteLinkIds.size > 0);
 
             // Clear the list and prepare a document fragment for efficient rendering.
@@ -1557,9 +1558,10 @@
             searchInput.focus();
             triggerHaptic(); // Give feedback on clear
         });
-
-        viewListBtn.addEventListener('click', () => setView('list'));
-        viewGroupBtn.addEventListener('click', () => setView('group'));
+        
+        toggleViewBtn.addEventListener('click', () => {
+            setView(currentView === 'list' ? 'group' : 'list');
+        });
 
         toggleAllLink.addEventListener('click', (e) => {
             e.preventDefault();
