@@ -399,16 +399,26 @@
             font-weight: bold;
         }
 
-        /* --- Favorites Prompt Styles --- */
-        .favorites-list {
+        /* --- Common Dialog List Styles --- */
+        .scrollable-list-dialog {
             list-style: none;
             padding: 0;
             margin: 0;
-            max-height: 65vh; /* Increased to show more items */
             overflow-y: auto;
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            background-color: var(--bg-color); /* Match delete list for consistency */
+            background-color: var(--bg-color);
+        }
+
+        /* --- Favorites Prompt Styles --- */
+        .favorites-list {
+            max-height: 65vh; /* Increased to show more items */
+        }
+        .delete-links-list {
+            max-height: 45vh; /* Increased height for better visibility */
+        }
+        .theme-color-list {
+            max-height: 40vh; /* Increased height to show more colors */
         }
         .favorite-list-item {
             display: flex;
@@ -450,19 +460,6 @@
             display: block;
         }
 
-        /* --- Theme Color List Styles --- */
-        .theme-color-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: 40vh; /* Increased height to show more colors */
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            background-color: var(--bg-color);
-            /* Transitions for smooth collapse when keyboard is active */
-            transition: opacity 0.2s ease-in-out, height 0.2s ease-in-out, margin 0.2s ease-in-out, padding 0.2s ease-in-out, border 0.2s ease-in-out;
-        }
         .theme-color-item {
             padding: 8px;
             cursor: pointer;
@@ -476,29 +473,25 @@
         .theme-color-item:hover {
             background-color: #2c2c2c;
         }
+        .theme-color-list {
+             /* Transitions for smooth collapse when keyboard is active */
+            transition: opacity 0.2s ease-in-out, height 0.2s ease-in-out, margin 0.2s ease-in-out, padding 0.2s ease-in-out, border 0.2s ease-in-out;
+        }
 
         /* --- Custom Scrollbar for Lists --- */
-        .delete-links-list::-webkit-scrollbar,
-        .favorites-list::-webkit-scrollbar,
-        .theme-color-list::-webkit-scrollbar {
+        .scrollable-list-dialog::-webkit-scrollbar {
             width: 6px;
         }
-        .delete-links-list::-webkit-scrollbar-track,
-        .favorites-list::-webkit-scrollbar-track,
-        .theme-color-list::-webkit-scrollbar-track {
+        .scrollable-list-dialog::-webkit-scrollbar-track {
             background: transparent;
         }
-        .delete-links-list::-webkit-scrollbar-thumb,
-        .favorites-list::-webkit-scrollbar-thumb,
-        .theme-color-list::-webkit-scrollbar-thumb {
+        .scrollable-list-dialog::-webkit-scrollbar-thumb {
             background-color: var(--icon-color);
             border-radius: 3px;
             border: 2px solid var(--bg-color); /* Match list background for padding effect */
         }
 
-        .delete-links-list:focus,
-        .favorites-list:focus,
-        .theme-color-list:focus {
+        .scrollable-list-dialog:focus {
             outline: 1px solid var(--primary-color);
             outline-offset: 1px;
         }
@@ -700,7 +693,7 @@
         <div class="custom-prompt-dialog">
             <p id="customPromptMessage" class="custom-prompt-title"></p>
             <p id="customPromptError" class="custom-prompt-error"></p>
-            <ul id="customPromptColorList" class="theme-color-list" tabindex="-1"></ul>
+            <ul id="customPromptColorList" class="theme-color-list scrollable-list-dialog" tabindex="-1"></ul>
             <input type="text" id="customPromptInput" placeholder="Or type a name/hex here">
             <div class="custom-prompt-actions">
                 <button id="customPromptReset" class="secondary">Rabbit Me!</button>
@@ -719,7 +712,7 @@
                 <label><input type="radio" name="delete-mode" value="keep-favs"> Delete All Except Favorite</label>
                 <label><input type="radio" name="delete-mode" value="selected" checked> Select Links to Delete:</label>
             </div>
-            <ul id="deleteLinksList" class="delete-links-list" tabindex="-1">
+            <ul id="deleteLinksList" class="delete-links-list scrollable-list-dialog" tabindex="-1">
                 <!-- Links will be populated here by JS -->
             </ul>
             <div class="custom-prompt-actions">
@@ -732,7 +725,7 @@
     <div id="favoritesPromptOverlay" class="custom-prompt-overlay" style="display: none;">
         <div class="custom-prompt-dialog">
             <p class="custom-prompt-title">Favorites</p>
-            <ul id="favoritesList" class="favorites-list" tabindex="-1">
+            <ul id="favoritesList" class="favorites-list scrollable-list-dialog" tabindex="-1">
                 <!-- Favorite links will be populated here by JS -->
             </ul>
             <div class="custom-prompt-actions">
