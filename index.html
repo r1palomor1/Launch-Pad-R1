@@ -1810,13 +1810,15 @@
                 if (li) {
                     triggerHaptic();
                     const colorName = li.dataset.colorName;
-                    // Apply the theme immediately when a color is picked from the list.
-                    // The dialog remains open for the user to try other colors or close it.
+
+                    // Populate the input box and apply the theme for a live preview.
+                    themeDialogInput.value = colorName;
+                    themeDialogInput.dispatchEvent(new Event('input')); // Show clear button
+
                     const applyResult = await applyTheme(`custom:${colorName}`);
                     if (!applyResult.success) {
                         themeDialogError.textContent = applyResult.error;
                     } else {
-                        // Clear any previous error message on success.
                         themeDialogError.textContent = '';
                     }
                 }
@@ -1997,19 +1999,33 @@
 
             themeDialogOk.addEventListener('click', async () => {
                 const colorInput = themeDialogInput.value.trim();
-                if (colorInput) {
-                    triggerHaptic();
-                    const applyResult = await applyTheme(`custom:${colorInput}`);
-                    if (!applyResult.success) {
-                        themeDialogError.textContent = applyResult.error;
-                    } else {
-                        // On successful application, clear error and keep dialog open for preview.
-                        themeDialogError.textContent = '';
-                    }
-                } else {
-                    // If the input is empty, "OK" simply closes the dialog,
-                    // keeping any theme that was live-previewed from the list.
+                const currentAppliedCustomColor = currentThemeName.startsWith('custom:') ? currentThemeName.split(':')[1] : null;
+
+                // If the input is empty, close the dialog. This confirms any theme
+                // that was live-previewed from the list.
+                if (!colorInput) {
                     closeDialog();
+                    return;
+                }
+
+                // If the input value matches the already applied custom theme, this is a
+                // confirmation click. Close the dialog.
+                if (currentAppliedCustomColor && colorInput.toLowerCase() === currentAppliedCustomColor.toLowerCase()) {
+                    closeDialog();
+                    return;
+                }
+
+                // Otherwise, this is a new color to preview.
+                triggerHaptic();
+                const applyResult = await applyTheme(`custom:${colorInput}`);
+                if (applyResult.success) {
+                    // On success, clear any error and blur the input to hide the keyboard
+                    // and show the full dialog again for preview.
+                    themeDialogError.textContent = '';
+                    themeDialogInput.blur();
+                } else {
+                    // On failure, show the error and keep the input focused for correction.
+                    themeDialogError.textContent = applyResult.error;
                 }
             });
 
