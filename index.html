@@ -488,7 +488,7 @@
         }
         .theme-color-list {
              /* Transitions for smooth collapse when keyboard is active */
-            transition: opacity 0.2s ease-in-out, height 0.2s ease-in-out, margin 0.2s ease-in-out, padding 0.2s ease-in-out, border 0.2s ease-in-out;
+            transition: opacity 0.2s ease-in-out, max-height 0.3s ease-in-out, margin 0.3s ease-in-out, padding 0.3s ease-in-out, border 0.3s ease-in-out;
         }
 
         /* --- Custom Scrollbar for Lists --- */
@@ -658,7 +658,14 @@
         }
         .custom-prompt-overlay.input-focused .theme-color-list {
             /* Hide the list when typing to save space */
-            display: none;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-top: 0;
+            margin-bottom: 0;
+            border-width: 0;
         }
         .custom-prompt-error {
             color: #e74c3c; /* A noticeable red */
@@ -1889,7 +1896,13 @@
             themeDialogOverlay.classList.add('input-focused');
         });
         themeDialogInput.addEventListener('blur', () => {
-            themeDialogOverlay.classList.remove('input-focused');
+            // Use a small delay. If focus moves to another element inside the dialog (like a button),
+            // we don't want to remove the class. We only remove it if focus has truly left the dialog.
+            setTimeout(() => {
+                if (!themeDialogOverlay.contains(document.activeElement)) {
+                    themeDialogOverlay.classList.remove('input-focused');
+                }
+            }, 150);
         });
 
         function showThemeDialog() {
@@ -1898,6 +1911,9 @@
                 themeDialogError.textContent = '';
                 themeDialogOverlay.style.display = 'flex';
                 themeColorList.scrollTop = 0;
+                
+                // When the dialog is shown, ensure the focused class is not present initially.
+                themeDialogOverlay.classList.remove('input-focused');
                 
                 let resolved = false;
                 const closeDialog = (value) => {
