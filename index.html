@@ -51,6 +51,7 @@
             left: 50%;
             top: 50%;
             transform: translate(-50%, -50%);
+            cursor: pointer;
         }
         header #themeBtn {
             position: absolute;
@@ -701,7 +702,7 @@
 <body>
     <div id="mainView" class="main-view">
         <header>
-            <img src="launchpad-logo.png" alt="Launch Pad R1 Logo">
+            <img id="logoImg" src="launchpad-logo.png" alt="Launch Pad R1 Logo" title="Go to Home">
             <button id="themeBtn" title="Change Theme">Theme!</button>
         </header>
         <div class="search-section">
@@ -799,6 +800,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         const mainView = document.getElementById('mainView');
         const searchInput = document.getElementById('searchInput');
+        const logoImg = document.getElementById('logoImg');
         const clearSearchBtn = document.getElementById('clearSearchBtn');
         const searchBtn = document.getElementById('searchBtn');
         const linksList = document.getElementById('linksList');
@@ -870,6 +872,27 @@
          */
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        /**
+         * Resets the application to its default landing page state.
+         * Closes dialogs, clears search, and re-renders the main list.
+         */
+        function goHome() {
+            // Close any open dialogs
+            themeDialogOverlay.style.display = 'none';
+            deletePromptOverlay.style.display = 'none';
+            favoritesPromptOverlay.style.display = 'none';
+            genericPromptOverlay.style.display = 'none';
+
+            // Reset search state and exit input mode
+            searchInput.value = '';
+            clearSearchBtn.style.display = 'none';
+            mainView.classList.remove('input-mode-active');
+            
+            // Re-render the full list and scroll to top
+            renderLinks();
+            scrollToTop();
         }
 
         /**
@@ -2203,6 +2226,8 @@
         });
 
         themeBtn.addEventListener('click', openThemeEditor);
+
+        logoImg.addEventListener('click', goHome);
 
         // --- Initial Load ---
         setupThemePicker();
