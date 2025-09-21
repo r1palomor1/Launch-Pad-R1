@@ -840,7 +840,9 @@
         async function launchUrlOnRabbit(url, name) {
             try {
                 if (window.rabbit && window.rabbit.core) {
-                    await window.rabbit.core.say({ text: `Launching ${name}` });
+                    // Voice feedback for URL launching has been intentionally removed to prioritize
+                    // launch speed, as the `launchUrl` command is high-priority and takes
+                    // precedence over other actions like `say`.
                     await window.rabbit.core.launchUrl({ url: url });
                 } else {
                     console.log(`[Browser Mode] Launching: ${name} at ${url}`);
