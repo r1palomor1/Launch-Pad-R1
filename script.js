@@ -502,23 +502,13 @@ linksList.addEventListener('click', async (e) => {
         }
     } else if (target.closest('.edit-btn')) {
         if (li.classList.contains('confirm-delete')) {
-            // This is now the 'Cancel' button
-            // To prevent a visual glitch where the restored pencil icon immediately
-            // appears in a "hover" state, we briefly hide the button, reset its
-            // content, and then make it visible again. This forces the browser
-            // to re-evaluate its hover state from scratch.
-            const editBtn = li.querySelector('.edit-btn');
-            if (editBtn) {
-                editBtn.style.visibility = 'hidden';
-            }
-
+            // This is the 'Cancel' button.
+            // To fix the visual glitch where the restored pencil icon immediately
+            // appears in a "hover" state, we explicitly blur the button. This
+            // forces the browser to remove the hover state before the icon is swapped.
+            const editBtn = target.closest('.edit-btn');
+            if (editBtn) editBtn.blur();
             resetDeleteConfirmationState(li);
-
-            // After resetting the state, make the button visible again in the next
-            // event loop tick.
-            setTimeout(() => {
-                if (editBtn) editBtn.style.visibility = 'visible';
-            }, 0);
         } else {
             const index = links.findIndex(l => l.id === id);
             if (index !== -1) editLink(li, index);
