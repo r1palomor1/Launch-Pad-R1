@@ -491,6 +491,17 @@ linksList.addEventListener('click', async (e) => {
     } else if (target.closest('.edit-btn')) {
         if (li.classList.contains('confirm-delete')) {
             // This is now the 'Cancel' button
+            const linkActions = li.querySelector('.link-actions');
+            if (linkActions) {
+                // Temporarily disable pointer events on the actions container.
+                // This prevents a visual glitch where the restored pencil icon
+                // immediately appears in a "hover" state because the mouse is
+                // still over the element when the icon is swapped.
+                linkActions.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    linkActions.style.pointerEvents = 'auto';
+                }, 50); // A short delay is sufficient for the browser to process the change.
+            }
             resetDeleteConfirmationState(li);
         } else {
             const index = links.findIndex(l => l.id === id);
