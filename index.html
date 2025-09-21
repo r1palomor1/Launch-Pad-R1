@@ -1386,6 +1386,7 @@
                 linksList.innerHTML = `<div class="search-prompt">Search your links or add from the web.</div>`;
                 clearSearchBtn.style.display = 'none';
                 cancelSearchBtn.style.display = 'flex';
+                searchInput.focus(); // Re-focus the search input to restore the correct UI state.
             });
         }
 
