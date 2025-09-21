@@ -1,0 +1,698 @@
+:root {
+    --bg-color: #0d0d0d;
+    --font-color: #e0e0e0;
+    --primary-color: #ff7043; /* Rabbit R1 Orange */
+    --border-color: #2a2a2a;
+    --item-bg: #1c1c1c;
+    --icon-color: #7a7a7a; /* Slightly darker inactive color */
+    --font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --selection-bg-color: rgba(255, 112, 67, 0.15); /* A tint of the primary color */
+    --selection-border-color: var(--primary-color);
+    --checkbox-border-color: #555;
+    --button-font-color: #FFFFFF; /* Default to white, will be updated by theme */
+    --checkbox-checked-bg: var(--primary-color);
+}
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--font-color);
+    font-size: 14px; /* Base font size for smaller display */
+    margin: 0;
+}
+.main-view {
+    width: 100%;
+    max-width: 480px;
+    min-width: 240px;
+    margin: 0 auto;
+    /* Top padding is now handled by the header to fill the safe area with the background */
+    padding: 0 8px 8px;
+}
+header {
+    position: relative;
+    /* Define a fixed height for the header area: safe area + content space */
+    height: calc(var(--rabbit-safe-area-inset-top, 20px) + 38px);
+    margin-bottom: 4px;
+}
+header img {
+    position: absolute;
+    height: 32px; /* A balanced height for the logo */
+    object-fit: contain;
+    /* Center the logo horizontally and vertically */
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+}
+header #themeBtn {
+    position: absolute;
+    right: 0;
+    /* Vertically center the button */
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 0.9em;
+    width: auto;
+    height: auto;
+    padding: 8px;
+}
+header #themeBtn:hover {
+    background: var(--item-bg);
+    filter: brightness(1.15);
+}
+/* In input mode, show the search and cancel buttons */
+.main-view.input-mode-active .search-section #searchBtn,
+.main-view.input-mode-active .search-section #cancelSearchBtn {
+    display: flex;
+    align-items: center; /* Vertically align with input */
+}
+/* When an input is active, hide the action bar to reduce clutter */
+.main-view.input-mode-active header,
+.main-view.input-mode-active .actions-bar {
+    display: none;
+}
+.search-section {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+.search-input-wrapper {
+    position: relative;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+}
+.search-input-wrapper input {
+    width: 100%;
+    /* Add padding to the right so text doesn't go under the 'X' button */
+    padding-right: 30px;
+}
+/* Common style for clear buttons in input fields */
+#clearSearchBtn, #clearThemeInputBtn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--icon-color);
+}
+#clearSearchBtn:hover, #clearThemeInputBtn:hover {
+    color: var(--font-color);
+    filter: none;
+}
+#clearSearchBtn svg, #clearThemeInputBtn svg {
+    width: 20px;
+    height: 20px;
+}
+#searchBtn, #quickLaunchBtn, #deleteAllBtn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+/* Hide the web search button by default on the main view */
+#searchBtn {
+    display: none;
+}
+#quickLaunchBtn svg, #deleteAllBtn svg {
+    width: 18px;
+    height: 18px;
+    fill: var(--icon-color);
+}
+#searchBtn svg {
+    width: 16px; /* Smaller icon for search */
+    height: 16px;
+    fill: var(--icon-color);
+}
+input[type="text"] {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--item-bg);
+    color: var(--font-color);
+    font-size: 1em;
+    min-width: 0; /* Fix for flexbox overflow */
+}
+input[type="text"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+button {
+    padding: 8px 8px;
+    border: none;
+    background-color: var(--primary-color);
+    color: var(--button-font-color);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    flex-shrink: 0; /* Prevent buttons from shrinking in flex containers */
+}
+button:hover {
+    filter: brightness(1.15);
+}
+/* Override default hover for transparent icon buttons and give them a new one */
+#searchBtn:hover, #quickLaunchBtn:hover, #deleteAllBtn:hover {
+    filter: none;
+}
+#deleteAllBtn:hover svg {
+    fill: #e74c3c; /* A dangerous red */
+}
+#searchBtn:hover svg, #quickLaunchBtn:hover svg, .view-btn:hover svg {
+    fill: var(--primary-color);
+}
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    filter: none;
+}
+/* Secondary button style for non-primary actions like 'Cancel' */
+body button.secondary {
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+}
+body button.secondary:hover {
+    background-color: var(--selection-bg-color);
+    filter: none; /* Override the default button hover */
+}
+/* Special class for the 'Rabbit Me!' button to always use the default orange */
+button.rabbit-default {
+    background-color: #ff7043;
+    color: #FFFFFF;
+    border: 1px solid transparent;
+}
+button.rabbit-default:hover {
+    filter: brightness(1.15);
+}
+/* The cancel button is only shown in input mode */
+#cancelSearchBtn {
+    display: none;
+    padding: 4px 10px; /* More compact padding */
+    font-size: 0.9em; /* Smaller font */
+}
+#linksList {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+.link-item {
+    background-color: var(--item-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+.add-suggestion-item {
+    cursor: pointer;
+}
+.add-suggestion-item:hover {
+    background-color: #252525;
+}
+.web-search-item {
+    justify-content: center;
+    cursor: pointer;
+}
+.web-search-item:hover {
+    background-color: #2c2c2c;
+    border-color: var(--primary-color);
+}
+.search-prompt {
+    text-align: center;
+    color: var(--icon-color);
+    padding: 20px; /* Reduced padding to keep it visible with keyboard */
+    font-size: 1em;
+    line-height: 1.5;
+    opacity: 0.8;
+    user-select: none; /* Prevent text selection on this prompt */
+}
+.link-display {
+    flex-grow: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+.link-favicon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    background-color: #333;
+    border-radius: 4px;
+    object-fit: cover;
+}
+.link-info {
+    flex-grow: 1;
+    overflow: hidden; 
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.link-description {
+    flex-grow: 1; /* Allow description to take available space */
+    font-weight: bold;
+    font-size: 0.9em;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.link-actions {
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+/* For the horizontal icons in the normal link view */
+.link-display > .link-actions {
+    flex-direction: row;
+    gap: 6px;
+}
+.link-actions span {
+    cursor: pointer;
+    font-size: 1.1em;
+    color: var(--icon-color);
+}
+.link-actions span:hover { color: var(--primary-color); }
+.link-actions svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+.favorite-btn.is-favorite {
+    color: #FFD700; /* Gold, for high visibility across all themes */
+}
+.favorite-indicator {
+    color: #E6C300; /* A slightly less bright gold */
+    font-size: 0.85em; /* Make it a bit smaller than the header text */
+    /* The star character can sometimes sit high, this helps align it */
+    display: inline-block;
+    transform: translateY(-1px);
+}
+.category-header {
+    font-size: 1em;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-top: 15px;
+    margin-bottom: 8px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border-color);
+}
+#linksList > h3:first-of-type {
+    margin-top: 0;
+}
+.link-info input, .link-info select {
+    width: 100%;
+    margin-top: 5px;
+    padding: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--item-bg);
+    color: var(--font-color);
+    font-size: 0.95em;
+}
+.link-info > *:first-child {
+    margin-top: 0;
+}
+.form-actions {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 8px;
+    margin-top: 4px; /* Add a little space above the buttons */
+}
+/* Styles for the two-step delete confirmation */
+.link-item.confirm-delete {
+    background-color: #4d2a2a; /* A subtle red tint */
+    border-color: #e74c3c;
+}
+.link-item.confirm-delete .link-actions .delete-btn {
+    color: #e74c3c; /* Make the icon red */
+}
+/* Hide other actions during delete confirmation */
+.link-item.confirm-delete .link-actions .edit-btn,
+.link-item.confirm-delete .link-actions .favorite-btn {
+    display: none;
+}
+
+/* --- Delete Prompt Styles --- */
+.delete-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Spacing between radio buttons */
+}
+.delete-options label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 1em;
+}
+.delete-options input[type="radio"] {
+    /* Basic styling for radio buttons */
+    accent-color: var(--primary-color);
+}
+.delete-link-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    user-select: none;
+}
+.delete-link-item:last-child {
+    border-bottom: none;
+}
+.delete-link-item:hover {
+    background-color: #2c2c2c;
+}
+.delete-link-item .delete-checkbox {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.delete-link-item .delete-checkbox svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+.delete-checkbox .icon-checkbox-unchecked {
+    color: var(--checkbox-border-color);
+}
+.delete-checkbox .icon-checkbox-checked {
+    color: var(--primary-color);
+}
+.delete-checkbox .icon-favorite {
+    color: #FFD700; /* Gold */
+}
+.delete-link-item-description {
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: bold;
+}
+
+/* --- Common Dialog List Styles --- */
+.favorites-list,
+.delete-links-list,
+.theme-color-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--bg-color);
+}
+
+/* --- Favorites Prompt Styles --- */
+.favorites-list {
+    max-height: 65vh; /* Increased to show more items */
+}
+.delete-links-list {
+    max-height: 45vh; /* Increased height for better visibility */
+}
+.theme-color-list {
+    max-height: 46vh; /* Increased height to show more colors */
+}
+.favorite-list-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    user-select: none;
+}
+.favorite-list-item:last-child {
+    border-bottom: none;
+}
+.favorite-list-item:hover {
+    background-color: #2c2c2c;
+}
+.favorite-list-item-description {
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: bold;
+}
+.custom-prompt-dialog .no-favorites-message {
+    text-align: center; color: var(--icon-color); padding: 10px; font-weight: normal;
+}
+.remove-favorite-btn {
+    flex-shrink: 0;
+    cursor: pointer;
+    color: var(--icon-color);
+    padding: 4px; /* Easy tap target */
+}
+.remove-favorite-btn:hover {
+    color: #e74c3c; /* Red for remove action */
+}
+.remove-favorite-btn svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+.theme-color-item {
+    padding: 8px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    user-select: none;
+    font-weight: bold;
+}
+.theme-color-item:last-child {
+    border-bottom: none;
+}
+.theme-color-item:hover {
+    background-color: #2c2c2c;
+}
+.theme-color-list {
+     /* Transitions for smooth collapse when keyboard is active */
+    transition: opacity 0.15s ease-out, max-height 0.15s ease-out, margin 0.15s ease-out, padding 0.15s ease-out, border 0.15s ease-out;
+}
+
+/* --- Custom Scrollbar for Lists --- */
+.favorites-list::-webkit-scrollbar,
+.delete-links-list::-webkit-scrollbar,
+.theme-color-list::-webkit-scrollbar {
+    width: 6px;
+}
+.favorites-list::-webkit-scrollbar-track,
+.delete-links-list::-webkit-scrollbar-track,
+.theme-color-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.favorites-list::-webkit-scrollbar-thumb,
+.delete-links-list::-webkit-scrollbar-thumb,
+.theme-color-list::-webkit-scrollbar-thumb {
+    background-color: var(--icon-color);
+    border-radius: 3px;
+    border: 2px solid var(--bg-color); /* Match list background for padding effect */
+}
+
+.scrollable-list-dialog:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 1px;
+}
+
+.actions-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px; /* Reduced to gain space */
+}
+.list-actions {
+    display: flex;
+    align-items: center;
+    /* A larger gap to visually separate view controls from the quick launch button */
+    gap: 20px; 
+}
+#toggleAllLink {
+    color: var(--icon-color);
+    text-decoration: none;
+    font-size: 0.9em;
+}
+#toggleAllLink:hover {
+    color: var(--primary-color);
+}
+.app-actions {
+    display: flex;
+    gap: 8px;
+}
+.view-controls {
+    display: flex;
+    gap: 10px;
+}
+.view-btn {
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.view-btn svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    fill: var(--icon-color);
+}
+.view-btn.active svg {
+    fill: var(--primary-color);
+}
+#quickLaunchBtn.active svg {
+    /* A noticeable but not overly bright gold to make it stand out */
+    fill: #E6C300; 
+}
+/* Group View Styles */
+.category-header.collapsible {
+    cursor: pointer;
+    position: relative;
+    padding-right: 20px; /* Space for arrow */
+}
+.category-header.collapsible::after {
+    content: '▶';
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%) rotate(0deg);
+    font-size: 0.8em;
+    transition: transform 0.2s ease;
+}
+.category-header.collapsible.expanded::after {
+    transform: translateY(-50%) rotate(90deg);
+}
+.links-container {
+    display: none;
+    padding-top: 5px;
+}
+.links-container.expanded {
+    display: block;
+}
+/* Custom Prompt Styles */
+.custom-prompt-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    /* Align to top to avoid keyboard overlap on small screens */
+    align-items: flex-start;
+    z-index: 1000;
+    padding: 10px 8px 8px; /* Further reduced top padding to bring dialog higher */
+    transition: padding-top 0.2s ease-in-out; /* Smooth transition for focus */
+}
+.custom-prompt-overlay.input-focused {
+    padding-top: 2px; /* Move dialog almost to the top edge to ensure buttons are visible */
+}
+.custom-prompt-dialog {
+    background-color: var(--item-bg); 
+    padding: 8px; /* Squeezed padding */
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    width: 100%;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column; 
+    gap: 4px; /* Squeezed gap */
+    transition: padding 0.2s ease-in-out, gap 0.2s ease-in-out; /* Smooth transition */
+}
+.custom-prompt-dialog .custom-prompt-title {
+    margin: 0;
+    font-weight: bold;
+    text-align: center;
+}
+#genericPromptMessage {
+    text-align: center;
+    line-height: 1.5;
+    font-weight: normal;
+    /* Add a small top margin to prevent text from being clipped at the top of the dialog.
+       Bottom margin is handled by the parent's flex-gap. */
+    margin: 4px 0 0;
+}
+.custom-prompt-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+.custom-prompt-actions button {
+    /* Make dialog buttons slightly smaller */
+    padding: 6px 10px;
+    font-size: 0.9em;
+}
+.custom-prompt-actions-right {
+    display: flex;
+    gap: 10px;
+}
+/* When keyboard is active, move dialog up to avoid overlap */
+.custom-prompt-overlay.input-focused {
+    padding-top: 2px;
+}
+.custom-prompt-overlay.input-focused .custom-prompt-dialog {
+    padding: 10px;
+    gap: 5px;
+}
+.custom-prompt-overlay.input-focused .theme-color-list {
+    /* Hide the list when typing to save space */
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    border-width: 0;
+}
+.custom-prompt-error {
+    color: #e74c3c; /* A noticeable red */
+    font-size: 0.9em;
+    text-align: center;
+    margin: 0;
+    min-height: 1.2em; /* Reserve space to prevent layout shift */
+}
+.custom-prompt-error:empty {
+    /* Hide the element completely when there is no error message to show */
+    min-height: 0;
+}
+.dialog-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.dialog-input-wrapper input {
+    width: 100%;
+    padding-right: 30px; /* Space for clear button */
+}
