@@ -652,35 +652,30 @@ button.rabbit-default:hover {
     align-items: center;
     gap: 10px;
 }
-.theme-mode-toggle {
-    display: flex;
-    background-color: var(--bg-color);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    overflow: hidden;
-    flex-shrink: 0;
-}
-.mode-toggle-btn {
-    /* Reset button styles */
+.dialog-icon-btn {
     background: transparent;
     border: none;
-    padding: 4px 10px;
-    font-size: 0.9em;
-    color: var(--icon-color);
     cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
+    padding: 0;
+    width: 30px; /* A good tap target size */
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
-.mode-toggle-btn:first-child {
-    border-right: 1px solid var(--border-color);
+.dialog-icon-btn svg {
+    width: 22px; /* A clear, visible icon size */
+    height: 22px;
+    fill: var(--icon-color);
 }
-.mode-toggle-btn.active {
-    background-color: var(--primary-color);
-    color: var(--button-font-color);
+.dialog-icon-btn:hover svg {
+    fill: var(--primary-color);
 }
 .custom-prompt-actions button {
-    /* Make dialog buttons slightly smaller */
-    padding: 6px 10px;
-    font-size: 0.9em;
+    /* Make dialog buttons more compact */
+    padding: 5px 8px;
+    font-size: 0.85em;
 }
 .custom-prompt-actions-right {
     display: flex;
