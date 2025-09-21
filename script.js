@@ -448,6 +448,18 @@ function handleLaunchLink(li, idToLaunch) {
 linksList.addEventListener('click', async (e) => {
     const target = e.target;
 
+    // If the user clicks on the description field of a *new* link form,
+    // automatically move the cursor to the end. This is helpful for trimming
+    // long, auto-suggested descriptions.
+    if (target.matches('input.new-description')) {
+        // Defer this action to run after the browser's default click behavior.
+        setTimeout(() => {
+            const len = target.value.length;
+            target.setSelectionRange(len, len);
+        }, 0);
+        return; // This click is handled, no further action needed.
+    }
+
     // Cancel any pending delete if user clicks outside of the confirming item.
     const activeConfirmation = document.querySelector('.link-item.confirm-delete');
     if (activeConfirmation && !activeConfirmation.contains(target.closest('.link-item'))) {
@@ -491,18 +503,22 @@ linksList.addEventListener('click', async (e) => {
     } else if (target.closest('.edit-btn')) {
         if (li.classList.contains('confirm-delete')) {
             // This is now the 'Cancel' button
-            const linkActions = li.querySelector('.link-actions');
-            if (linkActions) {
-                // Temporarily disable pointer events on the actions container.
-                // This prevents a visual glitch where the restored pencil icon
-                // immediately appears in a "hover" state because the mouse is
-                // still over the element when the icon is swapped.
-                linkActions.style.pointerEvents = 'none';
-                setTimeout(() => {
-                    linkActions.style.pointerEvents = 'auto';
-                }, 50); // A short delay is sufficient for the browser to process the change.
+            // To prevent a visual glitch where the restored pencil icon immediately
+            // appears in a "hover" state, we briefly hide the button, reset its
+            // content, and then make it visible again. This forces the browser
+            // to re-evaluate its hover state from scratch.
+            const editBtn = li.querySelector('.edit-btn');
+            if (editBtn) {
+                editBtn.style.visibility = 'hidden';
             }
+
             resetDeleteConfirmationState(li);
+
+            // After resetting the state, make the button visible again in the next
+            // event loop tick.
+            setTimeout(() => {
+                if (editBtn) editBtn.style.visibility = 'visible';
+            }, 0);
         } else {
             const index = links.findIndex(l => l.id === id);
             if (index !== -1) editLink(li, index);
@@ -599,18 +615,19 @@ async function showAddForm(prefillData = {}) {
     li.innerHTML = createFormHTML(prefillData, false);
     linksList.appendChild(li);
 
-    // Scroll to the new item and focus the description input
+    const descriptionInput = li.querySelector('.new-description');
+
+    // Scroll to the new item.
     li.scrollIntoView({ behavior: 'smooth' });
-    // Focus the most relevant input based on what's pre-filled
-    if (prefillData.description && prefillData.url && prefillData.url !== 'https://') {
-        // If both are pre-filled (quick-add), focus category for quick change.
+
+    // When adding from a suggestion (which has a pre-filled description), focus
+    // the category first. This is the most important field to change from its
+    // default of 'Other'. The user can then edit the description if needed.
+    if (prefillData.description) {
         li.querySelector('.new-category').focus();
-    } else if (prefillData.description) {
-        // If only description is pre-filled (complex query), focus URL for entry.
-        li.querySelector('.new-url').focus();
     } else {
-        // If nothing is pre-filled (manual add), focus description.
-        li.querySelector('.new-description').focus();
+        // If adding a new link manually (no pre-fill), focus the description field.
+        descriptionInput.focus();
     }
 
     const saveHandler = async () => {
