@@ -19,6 +19,8 @@ const clearThemeInputBtn = document.getElementById('clearThemeInputBtn');
 const themeDialogOk = document.getElementById('themeDialogOk');
 const themeDialogCancel = document.getElementById('themeDialogCancel');
 const themeDialogReset = document.getElementById('themeDialogReset');
+const themeModeLight = document.getElementById('themeModeLight');
+const themeModeDark = document.getElementById('themeModeDark');
 const deletePromptOverlay = document.getElementById('deletePromptOverlay');
 const deleteLinksList = document.getElementById('deleteLinksList');
 const deletePromptCancel = document.getElementById('deletePromptCancel');
@@ -204,6 +206,7 @@ if (localStorage.getItem('launchPadR1FavoriteLinkIndex') || localStorage.getItem
 let currentView = localStorage.getItem('launchPadR1View') || 'list';
 let collapsedCategories = JSON.parse(localStorage.getItem('launchPadR1CollapsedCategories')) || [];
 let currentThemeName = localStorage.getItem('launchPadR1Theme') || 'rabbit';
+let currentLuminanceMode = localStorage.getItem('launchPadR1LuminanceMode') || 'dark';
 
 // Simple migration for old data without categories
 links.forEach(link => {
@@ -1080,7 +1083,27 @@ function setupThemePicker() {
     });
 }
 
-const defaultTheme = { name: 'Rabbit', colors: { '--primary-color': '#ff7043', '--bg-color': '#0d0d0d', '--item-bg': '#1c1c1c', '--border-color': '#2a2a2a', '--icon-color': '#7a7a7a', '--button-font-color': '#FFFFFF' } };
+const defaultTheme = {
+    name: 'Rabbit',
+    dark: {
+        '--primary-color': '#ff7043',
+        '--bg-color': '#0d0d0d',
+        '--item-bg': '#1c1c1c',
+        '--border-color': '#2a2a2a',
+        '--font-color': '#e0e0e0',
+        '--icon-color': '#7a7a7a',
+        '--button-font-color': '#FFFFFF'
+    },
+    light: {
+        '--primary-color': '#ff7043',
+        '--bg-color': '#f9f9f9',
+        '--item-bg': '#ffffff',
+        '--border-color': '#e0e0e0',
+        '--font-color': '#1c1c1c',
+        '--icon-color': '#5c5c5c',
+        '--button-font-color': '#FFFFFF'
+    }
+};
 
 function colorNameToRgb(name) {
     const el = document.createElement('div');
@@ -1136,7 +1159,7 @@ function hslToRgb(h, s, l) {
     return `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
 }
 
-function generatePaletteFromRgb(rgb) {
+function generatePaletteFromRgb(rgb, mode = 'dark') {
     const [r, g, b] = rgb;
     if (r < 30 && g < 30 && b < 30) return null;
     const [h, s, l] = rgbToHsl(r, g, b);
@@ -1145,11 +1168,25 @@ function generatePaletteFromRgb(rgb) {
     const luminance = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
     const buttonTextColor = luminance > 0.5 ? '#000000' : '#FFFFFF';
 
+    if (mode === 'light') {
+        return {
+            '--primary-color': `rgb(${r}, ${g}, ${b})`,
+            '--bg-color': hslToRgb(h, s * 0.2, 0.98),
+            '--item-bg': '#ffffff',
+            '--border-color': hslToRgb(h, s * 0.1, 0.88),
+            '--font-color': hslToRgb(h, s * 0.6, 0.1),
+            '--icon-color': hslToRgb(h, s * 0.3, 0.45),
+            '--button-font-color': buttonTextColor
+        };
+    }
+
+    // Default to dark mode
     return {
         '--primary-color': `rgb(${r}, ${g}, ${b})`,
         '--bg-color': hslToRgb(h, s * 0.5, 0.07),
         '--item-bg': hslToRgb(h, s * 0.6, 0.12),
         '--border-color': hslToRgb(h, s * 0.6, 0.18),
+        '--font-color': '#e0e0e0', // Keep font color consistent for dark mode
         '--icon-color': hslToRgb(h, s * 0.3, 0.5),
         '--button-font-color': buttonTextColor
     };
@@ -1166,15 +1203,15 @@ async function applyTheme(themeIdentifier) {
         if (!primaryRgb) {
             error = `'${colorName}' is not a valid color.`;
         } else {
-            themeColors = generatePaletteFromRgb(primaryRgb);
+            themeColors = generatePaletteFromRgb(primaryRgb, currentLuminanceMode);
             if (!themeColors) {
                 error = "This color is too dark. Please choose a lighter color.";
             } else {
                 friendlyName = colorName;
             }
         }
-    } else {
-        themeColors = defaultTheme.colors;
+    } else { // Default 'rabbit' theme
+        themeColors = defaultTheme[currentLuminanceMode];
         friendlyName = defaultTheme.name;
     }
 
@@ -1223,8 +1260,66 @@ function openThemeEditor() {
     // Set the title color to the current theme's primary color when opening.
     themeDialogTitle.style.color = getComputedStyle(document.documentElement).getPropertyValue('--primary-color');
     
+    // Update the light/dark mode toggle to reflect the current state
+    updateModeToggleUI();
+
     // When the dialog is shown, ensure the focused class is not present initially.
     themeDialogOverlay.classList.remove('input-focused');
+}
+
+function updateModeToggleUI() {
+    if (currentLuminanceMode === 'light') {
+        themeModeLight.classList.add('active');
+        themeModeDark.classList.remove('active');
+    } else {
+        themeModeDark.classList.add('active');
+        themeModeLight.classList.remove('active');
+    }
+}
+
+async function setLuminanceMode(mode) {
+    if (mode === currentLuminanceMode) return;
+    triggerHaptic();
+    currentLuminanceMode = mode;
+    localStorage.setItem('launchPadR1LuminanceMode', mode);
+    updateModeToggleUI();
+    // Re-apply the current theme with the new mode
+    await applyTheme(currentThemeName);
+}
+
+function filterThemeList(query) {
+    const lowerCaseQuery = query.trim().toLowerCase();
+    const listItems = themeColorList.querySelectorAll('.theme-color-item');
+    let visibleCount = 0;
+
+    // Remove any existing "no matches" message
+    const noMatchesEl = themeColorList.querySelector('.no-matches-message');
+    if (noMatchesEl) noMatchesEl.remove();
+
+    // If query is empty, show all and return
+    if (!lowerCaseQuery) {
+        listItems.forEach(item => item.style.display = 'block');
+        return;
+    }
+
+    const searchString = lowerCaseQuery.replace(/\s+/g, '');
+
+    listItems.forEach(item => {
+        const colorName = item.dataset.colorName.toLowerCase();
+        if (colorName.includes(searchString)) {
+            item.style.display = 'block';
+            visibleCount++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+
+    if (visibleCount === 0 && listItems.length > 0) {
+        const li = document.createElement('li');
+        li.className = 'no-matches-message';
+        li.textContent = `No matches for "${query}"`;
+        themeColorList.appendChild(li);
+    }
 }
 
 function setupThemeDialogListeners() {
@@ -1239,6 +1334,8 @@ function setupThemeDialogListeners() {
         if (themeDialogError.textContent) {
             themeDialogError.textContent = '';
         }
+        // New: filter the list as user types
+        filterThemeList(colorInput);
     });
 
     clearThemeInputBtn.addEventListener('click', () => {
@@ -1250,25 +1347,27 @@ function setupThemeDialogListeners() {
 
     themeDialogOk.addEventListener('click', async () => {
         const colorInput = themeDialogInput.value.trim();
-        const currentAppliedCustomColor = currentThemeName.startsWith('custom:') ? currentThemeName.split(':')[1] : null;
-
         // If the input is empty, close the dialog. This confirms any theme
         // that was live-previewed from the list.
         if (!colorInput) {
             closeDialog();
             return;
         }
+        
+        // Process the input to handle names with spaces, like "Dark Blue" -> "DarkBlue"
+        const processedColor = colorInput.replace(/\s+/g, '');
+        const currentAppliedCustomColor = currentThemeName.startsWith('custom:') ? currentThemeName.split(':')[1] : null;
 
-        // If the input value matches the already applied custom theme, this is a
-        // confirmation click. Close the dialog.
-        if (currentAppliedCustomColor && colorInput.toLowerCase() === currentAppliedCustomColor.toLowerCase()) {
+        // If the processed input value matches the already applied custom theme,
+        // this is a confirmation click. Close the dialog.
+        if (currentAppliedCustomColor && processedColor.toLowerCase() === currentAppliedCustomColor.toLowerCase()) {
             closeDialog();
             return;
         }
 
         // Otherwise, this is a new color to preview.
         triggerHaptic();
-        const applyResult = await applyTheme(`custom:${colorInput}`);
+        const applyResult = await applyTheme(`custom:${processedColor}`);
         if (applyResult.success) {
             // On success, clear any error and blur the input to hide the keyboard
             // and show the full dialog again for preview.
@@ -1276,8 +1375,9 @@ function setupThemeDialogListeners() {
             themeDialogInput.blur(); // Hide keyboard
             themeDialogOverlay.classList.remove('input-focused'); // Explicitly show full dialog
         } else {
-            // On failure, show the error and keep the input focused for correction.
-            themeDialogError.textContent = applyResult.error;
+            // On failure, show the error, but use the user's original input
+            // in the message for clarity.
+            themeDialogError.textContent = applyResult.error.replace(`'${processedColor}'`, `'${colorInput}'`);
         }
     });
 
@@ -1298,9 +1398,15 @@ function setupThemeDialogListeners() {
 
     themeDialogReset.addEventListener('click', async () => {
         triggerHaptic();
+        // Reset mode to dark as well
+        currentLuminanceMode = 'dark';
+        localStorage.setItem('launchPadR1LuminanceMode', 'dark');
         await applyTheme('rabbit');
         closeDialog(); // Reset and close
     });
+
+    themeModeLight.addEventListener('click', () => setLuminanceMode('light'));
+    themeModeDark.addEventListener('click', () => setLuminanceMode('dark'));
 }
 
 

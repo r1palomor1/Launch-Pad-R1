@@ -494,6 +494,11 @@ button.rabbit-default:hover {
 .theme-color-item:hover {
     background-color: #2c2c2c;
 }
+.theme-color-list .no-matches-message {
+    text-align: center; color: var(--icon-color); padding: 10px; font-weight: normal;
+    /* This is not a list item, so it shouldn't have hover effects */
+    cursor: default;
+}
 .theme-color-list {
      /* Transitions for smooth collapse when keyboard is active */
     transition: opacity 0.15s ease-out, max-height 0.15s ease-out, margin 0.15s ease-out, padding 0.15s ease-out, border 0.15s ease-out;
@@ -646,6 +651,31 @@ button.rabbit-default:hover {
     justify-content: space-between;
     align-items: center;
     gap: 10px;
+}
+.theme-mode-toggle {
+    display: flex;
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.mode-toggle-btn {
+    /* Reset button styles */
+    background: transparent;
+    border: none;
+    padding: 4px 10px;
+    font-size: 0.9em;
+    color: var(--icon-color);
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+.mode-toggle-btn:first-child {
+    border-right: 1px solid var(--border-color);
+}
+.mode-toggle-btn.active {
+    background-color: var(--primary-color);
+    color: var(--button-font-color);
 }
 .custom-prompt-actions button {
     /* Make dialog buttons slightly smaller */
