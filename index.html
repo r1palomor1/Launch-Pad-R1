@@ -1380,7 +1380,8 @@
             li.querySelector('.save-new-btn').addEventListener('click', saveHandler);
             li.querySelector('.cancel-btn').addEventListener('click', () => {
                 li.remove();
-                searchHandler(''); // Re-render full list, clearing the search
+                // Re-run the search with the current query to restore the previous search results view.
+                searchHandler(searchInput.value);
             });
         }
 
