@@ -384,7 +384,11 @@ function resetDeleteConfirmationState(item) {
     if (deleteBtn && item.dataset.originalDeleteSvg) {
         deleteBtn.querySelector('svg').innerHTML = item.dataset.originalDeleteSvg;
         deleteBtn.setAttribute('title', 'Delete');
-        deleteBtn.style.color = ''; // Reset color
+    }
+    const editBtn = item.querySelector('.edit-btn');
+    if (editBtn && item.dataset.originalEditSvg) {
+        editBtn.querySelector('svg').innerHTML = item.dataset.originalEditSvg;
+        editBtn.setAttribute('title', 'Edit');
     }
 }
 
@@ -469,14 +473,29 @@ linksList.addEventListener('click', async (e) => {
             // Enter confirmation state
             li.classList.add('confirm-delete');
             const deleteBtn = target.closest('.delete-btn');
-            const svgEl = deleteBtn.querySelector('svg');
-            li.dataset.originalDeleteSvg = svgEl.innerHTML;
-            svgEl.innerHTML = '<path d="M9.9997 15.1709L19.1921 5.97852L20.6063 7.39273L9.9997 18.0003L3.63574 11.6364L5.04996 10.2222L9.9997 15.1709Z"></path>'; // Checkmark
+            const deleteSvgEl = deleteBtn.querySelector('svg');
+            li.dataset.originalDeleteSvg = deleteSvgEl.innerHTML;
+            deleteSvgEl.innerHTML = '<path d="M9.9997 15.1709L19.1921 5.97852L20.6063 7.39273L9.9997 18.0003L3.63574 11.6364L5.04996 10.2222L9.9997 15.1709Z"></path>'; // Checkmark
             deleteBtn.setAttribute('title', 'Confirm Delete');
+
+            // Transform the edit button into a cancel button
+            const editBtn = li.querySelector('.edit-btn');
+            if (editBtn) {
+                const editSvgEl = editBtn.querySelector('svg');
+                li.dataset.originalEditSvg = editSvgEl.innerHTML;
+                // Use the 'X' icon from the clear search button
+                editSvgEl.innerHTML = '<path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z"></path>';
+                editBtn.setAttribute('title', 'Cancel Delete');
+            }
         }
     } else if (target.closest('.edit-btn')) {
-        const index = links.findIndex(l => l.id === id);
-        if (index !== -1) editLink(li, index);
+        if (li.classList.contains('confirm-delete')) {
+            // This is now the 'Cancel' button
+            resetDeleteConfirmationState(li);
+        } else {
+            const index = links.findIndex(l => l.id === id);
+            if (index !== -1) editLink(li, index);
+        }
     } else if (target.closest('.favorite-btn')) {
         if (favoriteLinkIds.has(id)) {
             favoriteLinkIds.delete(id);

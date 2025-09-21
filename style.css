@@ -349,10 +349,9 @@ button.rabbit-default:hover {
     border-color: #e74c3c;
 }
 .link-item.confirm-delete .link-actions .delete-btn {
-    color: #e74c3c; /* Make the icon red */
+    color: #e74c3c; /* Make the confirm icon red */
 }
-/* Hide other actions during delete confirmation */
-.link-item.confirm-delete .link-actions .edit-btn,
+/* Hide favorite action during delete confirmation */
 .link-item.confirm-delete .link-actions .favorite-btn {
     display: none;
 }
