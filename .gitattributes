@@ -1,7 +1,13 @@
-* text=auto
+# Set default behavior to automatically handle text files and enforce LF line endings.
+# This ensures consistent line endings across different operating systems (Windows, macOS, Linux)
+# and resolves the "CRLF will be replaced by LF" warning.
+* text=auto eol=lf
 
-# Enforce Unix-style (LF) line endings for web files
-*.html text eol=lf
-*.css text eol=lf
-*.js text eol=lf
-*.json text eol=lf
+# Explicitly declare text files to be normalized.
+*.html text
+*.css  text
+*.js   text
+*.json text
+
+# Declare image files as binary to prevent Git from modifying them.
+*.png  binary
