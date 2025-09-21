@@ -410,31 +410,33 @@ function handleCategoryToggle(headerElement) {
     updateToggleAllLinkState();
 }
 
-function handleDeleteLink(index) {
-    const deletedLink = links[index];
-    if (!deletedLink) return;
+function handleDeleteLink(idToDelete) {
+    const index = links.findIndex(l => l.id === idToDelete);
+    if (index === -1) return;
 
-    links.splice(index, 1);
+    const [deletedLink] = links.splice(index, 1);
     // If the deleted link was a favorite, remove it from the set.
-    if (favoriteLinkIds.has(deletedLink.id)) {
-        favoriteLinkIds.delete(deletedLink.id);
-    }
+    favoriteLinkIds.delete(deletedLink.id);
     saveLinks();
     // Re-render based on current search to reflect the deletion
     searchHandler(searchInput.value);
 }
 
-function handleLaunchLink(li, index) {
+function handleLaunchLink(li, idToLaunch) {
     // If the item is in edit mode (has an edit input), do not launch.
     if (li.querySelector('.edit-description')) {
         return;
     }
+
+    const link = links.find(l => l.id === idToLaunch);
+    if (!link) return;
+
     // If item is awaiting delete confirmation, cancel it instead of launching.
     if (li.classList.contains('confirm-delete')) {
         resetDeleteConfirmationState(li);
         return;
     }
-    const link = links[index];
+
     triggerHaptic();
     launchUrlOnRabbit(link.url, link.description);
 }
@@ -459,12 +461,10 @@ linksList.addEventListener('click', async (e) => {
 
     if (!li) return;
     const id = li.dataset.id;
-    const index = links.findIndex(l => l.id === id);
-    if (index === -1) return; // Link not found, maybe from a stale render
 
     if (target.closest('.delete-btn')) {
         if (li.classList.contains('confirm-delete')) {
-            handleDeleteLink(index); // This will now just delete, no confirm
+            handleDeleteLink(id);
         } else {
             // Enter confirmation state
             li.classList.add('confirm-delete');
@@ -475,7 +475,8 @@ linksList.addEventListener('click', async (e) => {
             deleteBtn.setAttribute('title', 'Confirm Delete');
         }
     } else if (target.closest('.edit-btn')) {
-        editLink(li, index);
+        const index = links.findIndex(l => l.id === id);
+        if (index !== -1) editLink(li, index);
     } else if (target.closest('.favorite-btn')) {
         if (favoriteLinkIds.has(id)) {
             favoriteLinkIds.delete(id);
@@ -486,7 +487,7 @@ linksList.addEventListener('click', async (e) => {
         saveLinks();
         searchHandler(searchInput.value); // Re-render to show the new favorite state
     } else if (target.closest('.link-display') || target.closest('.link-favicon')) {
-        handleLaunchLink(li, index);
+        handleLaunchLink(li, id);
     }
 });
 
