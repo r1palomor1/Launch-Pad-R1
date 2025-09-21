@@ -1632,17 +1632,27 @@
 
         mainView.addEventListener('focusout', (e) => {
             if (e.target.matches('input[type="text"], select')) {
-                // Use a small delay. If focus moves to another input, the 'input-mode-active'
-                // class will still be present. If it moves to a button or outside, we check.
+                // Use a small delay to allow focus to shift to another input.
                 setTimeout(() => {
                     const activeEl = document.activeElement;
-                    // If the new active element is not an input/select inside our main view, then we can hide the bars.
-                    if (!mainView.contains(activeEl) || !activeEl.matches('input[type="text"], select')) {
+                    const isSearchInputEmpty = searchInput.value.trim() === '';
+                    // Check if an inline add/edit form is currently active.
+                    const isEditingOrAdding = !!document.querySelector('.edit-description, .new-description');
+
+                    // We should exit "input mode" (and show the header/actions) only if:
+                    // 1. We are NOT in the middle of adding or editing a link.
+                    // 2. The main search input is empty.
+                    // 3. Focus has moved to something that is NOT another input field (e.g., a button or the body).
+                    const shouldExitInputMode = !isEditingOrAdding && isSearchInputEmpty && 
+                                                (!mainView.contains(activeEl) || !activeEl.matches('input[type="text"], select'));
+
+                    if (shouldExitInputMode) {
                         mainView.classList.remove('input-mode-active');
                     }
 
-                    // If the search input was blurred and is now empty, restore the full list.
-                    if (e.target.id === 'searchInput' && e.target.value.trim() === '') {
+                    // If the search input was the one that lost focus AND it's now empty,
+                    // we should re-render the full list of links.
+                    if (e.target.id === 'searchInput' && isSearchInputEmpty) {
                         searchHandler('');
                     }
                 }, 150);
