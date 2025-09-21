@@ -1380,8 +1380,12 @@
             li.querySelector('.save-new-btn').addEventListener('click', saveHandler);
             li.querySelector('.cancel-btn').addEventListener('click', () => {
                 li.remove();
-                // Re-run the search with the current query to restore the previous search results view.
-                searchHandler(searchInput.value);
+                // Reset the search state completely. If the user cancels adding,
+                // the assumption is they want to start a new search.
+                searchInput.value = '';
+                linksList.innerHTML = `<div class="search-prompt">Search your links or add from the web.</div>`;
+                clearSearchBtn.style.display = 'none';
+                cancelSearchBtn.style.display = 'flex';
             });
         }
 
