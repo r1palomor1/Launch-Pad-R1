@@ -650,6 +650,7 @@ button.rabbit-default:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
 }
 .dialog-icon-btn {
     background: transparent;
@@ -678,7 +679,7 @@ button.rabbit-default:hover {
 }
 .custom-prompt-actions-left {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
     gap: 8px;
 }
 .custom-prompt-actions-right {
