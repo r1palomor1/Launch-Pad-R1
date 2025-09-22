@@ -462,12 +462,20 @@ linksList.addEventListener('click', async (e) => {
     // automatically move the cursor to the end. This is helpful for trimming
     // long, auto-suggested descriptions.
     if (target.matches('input.new-description')) {
-        // Defer this action to run after the browser's default click behavior.
-        setTimeout(() => {
-            const len = target.value.length;
-            target.setSelectionRange(len, len);
-        }, 0);
-        return; // This click is handled, no further action needed.
+        // On the very first click, move the cursor to the end of the text.
+        // This makes it easy to shorten long, auto-suggested descriptions.
+        // We set a flag so that subsequent clicks behave normally, allowing the
+        // user to edit the middle of the text.
+        if (!target.dataset.hasBeenInteracted) {
+            target.dataset.hasBeenInteracted = 'true';
+            setTimeout(() => {
+                const len = target.value.length;
+                target.setSelectionRange(len, len);
+            }, 0);
+        }
+        // This click is on an input field within a form, not on a link to be
+        // launched or edited, so we stop further processing of this event.
+        return;
     }
 
     // Cancel any pending delete if user clicks outside of the confirming item.
