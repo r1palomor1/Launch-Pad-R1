@@ -637,7 +637,7 @@ async function handleAddFromQuery(description, url) {
     const hasSpaces = description.includes(' ');
 
     if (hasSpaces) {
-        // For complex queries, just pre-fill the description.
+        // For complex queries, just pre-fill the description
         prefillData = { description: description.replace(/\b\w/g, l => l.toUpperCase()), url: url || 'https://' };
     } else {
         // For simple queries, pre-fill both description and a guessed URL.
@@ -649,6 +649,7 @@ async function handleAddFromQuery(description, url) {
         const finalDescription = description.split('.')[0].replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\b\w/g, l => l.toUpperCase());
         prefillData = { description: finalDescription, url: finalUrl, category: 'Other' };
     }
+    prefillData.url = normalizeUrl(prefillData.url);
     await showAddForm(prefillData);
 }
 
@@ -657,6 +658,10 @@ async function addNewLink(linkData) {
     if (!linkData || !linkData.description || !normalizedUrl) {
         await showAlert('Please provide a description and a full URL.');
         return false;
+    }
+    // Double check the URL
+    if (!normalizeUrl(linkData.url)) {
+        return await showAlert('URL is invalid.  Please provide a full URL.');
     }
     // Add the new link to the array. It will be sorted alphabetically on the next render.
     links.push({ ...linkData, url: normalizedUrl, id: `link-${Date.now()}` });
