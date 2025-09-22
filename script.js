@@ -168,6 +168,25 @@ async function sayOnRabbit(message) {
     } catch (e) { console.error("Say feedback failed:", e); }
 }
 
+/**
+ * Ensures a URL has a protocol (https://) for consistent launching.
+ * @param {string} url The URL to normalize.
+ * @returns {string} The normalized URL, or an empty string if invalid.
+ */
+function normalizeUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    let trimmedUrl = url.trim();
+    // Basic security check and prevent empty/placeholder URLs
+    if (trimmedUrl === '' || trimmedUrl.toLowerCase().startsWith('javascript:') || trimmedUrl === 'https://') {
+        return '';
+    }
+    // Add protocol if it's missing
+    if (!/^(https?:\/\/)/i.test(trimmedUrl)) {
+        trimmedUrl = `https://${trimmedUrl}`;
+    }
+    return trimmedUrl;
+}
+
 // Categories are sorted alphabetically, with 'Other' at the end for better usability.
 const categories = ['Education', 'Entertainment', 'Finance', 'Music', 'News', 'Shopping', 'Social', 'Sports', 'Tools', 'Travel', 'Other'];
 
@@ -591,17 +610,20 @@ function editLink(li, index) {
         const newDescription = li.querySelector('.edit-description').value.trim();
         const newUrl = li.querySelector('.edit-url').value.trim();
         const newCategory = li.querySelector('.edit-category').value;
-        if (newDescription && newUrl) {
+
+        const normalizedUrl = normalizeUrl(newUrl);
+
+        if (newDescription && normalizedUrl) {
             links[index] = { // Preserve the ID
                 ...links[index],
                 description: newDescription,
-                url: newUrl,
+                url: normalizedUrl,
                 category: newCategory
             }; 
             saveLinks();
             searchHandler(searchInput.value); // Re-apply filter to show the change
         } else {
-            await showAlert('Description and URL cannot be empty.');
+            await showAlert('Description and URL cannot be empty or invalid.');
         }
     });
     li.querySelector('.cancel-btn').addEventListener('click', () => {
@@ -691,11 +713,12 @@ async function handleAddFromQuery(description, url) {
 }
 
 async function addNewLink(linkData) {
-    if (!linkData || !linkData.description || !linkData.url || linkData.url === 'https://') {
+    const normalizedUrl = normalizeUrl(linkData.url);
+    if (!linkData || !linkData.description || !normalizedUrl) {
         await showAlert('Please provide a description and a full URL.');
         return false;
     }
-    links.push({ ...linkData, id: `link-${Date.now()}` });
+    links.push({ ...linkData, url: normalizedUrl, id: `link-${Date.now()}` });
     saveLinks();
 
     // --- Enhancement: Expand the category of the newly added link ---
