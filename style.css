@@ -229,6 +229,21 @@ button.rabbit-default:hover {
 .add-suggestion-item {
     cursor: pointer;
 }
+/* --- Drag and Drop Styles --- */
+.link-item.dragging {
+    opacity: 0.5;
+    background-color: #333;
+}
+.link-item.drag-over-indicator {
+    border-top: 2px solid var(--primary-color);
+}
+.link-item.drop-disabled {
+    opacity: 0.4;
+    /* The drop indicator should not appear on disabled items */
+}
+.add-suggestion-item {
+    cursor: pointer;
+}
 .add-suggestion-item:hover {
     background-color: var(--item-bg-hover);
 }
@@ -344,18 +359,6 @@ button.rabbit-default:hover {
     justify-content: flex-end; /* Align buttons to the right */
     gap: 8px;
     margin-top: 4px; /* Add a little space above the buttons */
-}
-/* Styles for the two-step delete confirmation */
-.link-item.confirm-delete {
-    background-color: #4d2a2a; /* A subtle red tint */
-    border-color: #e74c3c;
-}
-.link-item.confirm-delete .link-actions .delete-btn {
-    color: #e74c3c; /* Make the confirm icon red */
-}
-/* Hide favorite action during delete confirmation */
-.link-item.confirm-delete .link-actions .favorite-btn {
-    display: none;
 }
 
 /* --- Delete Prompt Styles --- */

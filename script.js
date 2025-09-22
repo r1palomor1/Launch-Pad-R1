@@ -204,10 +204,27 @@ links.forEach((link, index) => {
         link.id = `link-${Date.now()}-${index}`;
         needsSave = true;
     }
+    // Migration to add an 'order' property for drag-and-drop sorting.
+    // We just ensure the property exists. The alphabetization migration will set it correctly.
+    if (typeof link.order === 'undefined') {
+        link.order = null; // Default to alpha sort
+        needsSave = true;
+    }
 });
 if (needsSave) {
     // If we migrated any links to add IDs, save the changes immediately.
     localStorage.setItem('launchPadR1Links', JSON.stringify(links));
+}
+
+// One-time reset to the new hybrid sorting model for existing users.
+// This ensures the baseline order is alphabetical before any manual sorting.
+const alphabetizedFlag = 'launchPadR1Alphabetized_v3'; // Use a new flag
+if (!localStorage.getItem(alphabetizedFlag)) {
+    console.log('Performing one-time reset to hybrid alphabetical/manual sorting.');
+    // For all links, reset their order to null to enable default alphabetical sorting.
+    links.forEach(link => { link.order = null; });
+    localStorage.setItem('launchPadR1Links', JSON.stringify(links));
+    localStorage.setItem(alphabetizedFlag, 'true');
 }
 
 // Migration from old index-based favorite to new ID-based favorite.
@@ -294,9 +311,20 @@ function renderLinks(linksToRender = links) {
         return acc;
     }, {});
 
-    // Sort links within each category alphabetically by description
+    // Sort links within each category using the new hybrid model
     for (const category in groupedLinks) {
-        groupedLinks[category].sort((a, b) => a.description.localeCompare(b.description));
+        const MAX_ORDER = Number.MAX_SAFE_INTEGER;
+        groupedLinks[category].sort((a, b) => {
+            // Use MAX_SAFE_INTEGER for null/undefined order to push them to the end of numeric sort
+            const aOrder = typeof a.order === 'number' ? a.order : MAX_ORDER;
+            const bOrder = typeof b.order === 'number' ? b.order : MAX_ORDER;
+
+            if (aOrder !== bOrder) {
+                return aOrder - bOrder; // Sort by manual order first
+            }
+            // If orders are the same (i.e., both are un-ordered), sort alphabetically
+            return a.description.localeCompare(b.description);
+        });
     }
 
     const sortedCategories = Object.keys(groupedLinks).sort((a, b) => {
@@ -372,6 +400,7 @@ function renderLinkItem(link, sourceArray = links) {
     const li = document.createElement('li');
     li.className = 'link-item';
     li.dataset.id = link.id;
+    li.draggable = true; // Make the item draggable
 
     const isFavorite = favoriteLinkIds.has(link.id);
 
@@ -405,22 +434,6 @@ function saveLinks() {
     localStorage.setItem('launchPadR1Links', JSON.stringify(links));
     localStorage.setItem('launchPadR1FavoriteLinkIds', JSON.stringify(Array.from(favoriteLinkIds)));
 }
-
-function resetDeleteConfirmationState(item) {
-    if (!item) return;
-    item.classList.remove('confirm-delete');
-    const deleteBtn = item.querySelector('.delete-btn');
-    if (deleteBtn && item.dataset.originalDeleteSvg) {
-        deleteBtn.querySelector('svg').innerHTML = item.dataset.originalDeleteSvg;
-        deleteBtn.setAttribute('title', 'Delete');
-    }
-    const editBtn = item.querySelector('.edit-btn');
-    if (editBtn && item.dataset.originalEditSvg) {
-        editBtn.querySelector('svg').innerHTML = item.dataset.originalEditSvg;
-        editBtn.setAttribute('title', 'Edit');
-    }
-}
-
 
 function handleCategoryToggle(headerElement) {
     const linksContainer = headerElement.nextElementSibling;
@@ -464,12 +477,6 @@ function handleLaunchLink(li, idToLaunch) {
     const link = links.find(l => l.id === idToLaunch);
     if (!link) return;
 
-    // If item is awaiting delete confirmation, cancel it instead of launching.
-    if (li.classList.contains('confirm-delete')) {
-        resetDeleteConfirmationState(li);
-        return;
-    }
-
     triggerHaptic();
     launchUrlOnRabbit(link.url, link.description);
 }
@@ -497,12 +504,6 @@ linksList.addEventListener('click', async (e) => {
         return;
     }
 
-    // Cancel any pending delete if user clicks outside of the confirming item.
-    const activeConfirmation = document.querySelector('.link-item.confirm-delete');
-    if (activeConfirmation && !activeConfirmation.contains(target.closest('.link-item'))) {
-        resetDeleteConfirmationState(activeConfirmation);
-    }
-
     const li = target.closest('.link-item');
 
     // Handle category collapse/expand in 'group' view
@@ -516,47 +517,16 @@ linksList.addEventListener('click', async (e) => {
     const id = li.dataset.id;
 
     if (target.closest('.delete-btn')) {
-        if (li.classList.contains('confirm-delete')) {
-            handleDeleteLink(id);
-        } else {
-            // Enter confirmation state
-            li.classList.add('confirm-delete');
-            const deleteBtn = target.closest('.delete-btn');
-            const deleteSvgEl = deleteBtn.querySelector('svg');
-            li.dataset.originalDeleteSvg = deleteSvgEl.innerHTML;
-            deleteSvgEl.innerHTML = '<path d="M9.9997 15.1709L19.1921 5.97852L20.6063 7.39273L9.9997 18.0003L3.63574 11.6364L5.04996 10.2222L9.9997 15.1709Z"></path>'; // Checkmark
-            deleteBtn.setAttribute('title', 'Confirm Delete');
-
-            // Transform the edit button into a cancel button
-            const editBtn = li.querySelector('.edit-btn');
-            if (editBtn) {
-                const editSvgEl = editBtn.querySelector('svg');
-                li.dataset.originalEditSvg = editSvgEl.innerHTML;
-                // Use the 'X' icon from the clear search button
-                editSvgEl.innerHTML = '<path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z"></path>';
-                editBtn.setAttribute('title', 'Cancel Delete');
+        const link = links.find(l => l.id === id);
+        if (link) {
+            const confirmed = await showConfirm(`Are you sure you want to delete "${link.description}"?`);
+            if (confirmed) {
+                handleDeleteLink(id);
             }
         }
     } else if (target.closest('.edit-btn')) {
-        if (li.classList.contains('confirm-delete')) {
-            // This is the 'Cancel' button. To robustly fix the "bright pencil"
-            // glitch, we hide the button, reset its state, and then show it
-            // again in the next animation frame. This forces the browser to
-            // re-evaluate the hover state from a clean slate.
-            const editBtn = li.querySelector('.edit-btn');
-            if (editBtn) {
-                editBtn.style.display = 'none';
-            }
-            resetDeleteConfirmationState(li);
-            requestAnimationFrame(() => {
-                if (editBtn) {
-                    editBtn.style.display = 'block';
-                }
-            });
-        } else {
-            const index = links.findIndex(l => l.id === id);
-            if (index !== -1) editLink(li, index);
-        }
+        const index = links.findIndex(l => l.id === id);
+        if (index !== -1) editLink(li, index);
     } else if (target.closest('.favorite-btn')) {
         if (favoriteLinkIds.has(id)) {
             favoriteLinkIds.delete(id);
@@ -569,6 +539,106 @@ linksList.addEventListener('click', async (e) => {
     } else if (target.closest('.link-display') || target.closest('.link-favicon')) {
         handleLaunchLink(li, id);
     }
+});
+
+let draggedItemId = null;
+
+linksList.addEventListener('dragstart', (e) => {
+    const li = e.target.closest('.link-item');
+    if (li) {
+        draggedItemId = li.dataset.id;
+        const draggedCategory = li.dataset.category;
+
+        // Add a class to the dragged item itself for visual feedback.
+        setTimeout(() => li.classList.add('dragging'), 0);
+
+        // Visually disable drop targets in other categories for clarity.
+        const allItems = linksList.querySelectorAll('.link-item');
+        allItems.forEach(itemLi => {
+            if (itemLi.dataset.category !== draggedCategory) {
+                itemLi.classList.add('drop-disabled');
+            }
+        });
+
+        // Set data to enable dragging in some browsers/OSes
+        e.dataTransfer.setData('text/plain', draggedItemId);
+        e.dataTransfer.effectAllowed = 'move';
+    }
+});
+
+linksList.addEventListener('dragend', (e) => {
+    const li = e.target.closest('.link-item');
+    if (li) {
+        li.classList.remove('dragging');
+    }
+    // Clean up all drag-related visual states from all items.
+    document.querySelectorAll('.link-item').forEach(el => {
+        el.classList.remove('drag-over-indicator', 'drop-disabled');
+    });
+    draggedItemId = null;
+});
+
+linksList.addEventListener('dragover', (e) => {
+    e.preventDefault(); // This is necessary to allow a drop
+    const targetLi = e.target.closest('.link-item');
+    // Only show the drop indicator on valid, non-disabled targets.
+    if (targetLi && targetLi.dataset.id !== draggedItemId && !targetLi.classList.contains('drop-disabled')) {
+        // Remove indicator from other items
+        document.querySelectorAll('.drag-over-indicator').forEach(el => el.classList.remove('drag-over-indicator'));
+        // Add indicator to the current target
+        targetLi.classList.add('drag-over-indicator');
+    }
+});
+
+linksList.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const dropTargetLi = e.target.closest('.link-item');
+
+    if (!dropTargetLi || !draggedItemId || dropTargetLi.dataset.id === draggedItemId) {
+        return;
+    }
+
+    const draggedLink = links.find(l => l.id === draggedItemId);
+    const targetLink = links.find(l => l.id === dropTargetLi.dataset.id);
+
+    // Disallow dropping between categories
+    if (!draggedLink || !targetLink || draggedLink.category !== targetLink.category) {
+        return;
+    }
+
+    // Get all manually sorted links in the category, in their current order.
+    const manualLinks = links
+        .filter(l => l.category === draggedLink.category && typeof l.order === 'number')
+        .sort((a, b) => a.order - b.order);
+
+    // Determine the target order number for the dragged link.
+    let newOrder;
+    if (typeof targetLink.order === 'number') {
+        // If the target is manually sorted, we will insert at its position.
+        newOrder = targetLink.order;
+    } else {
+        // If the target is alphabetically sorted, the dragged link becomes the new last manual item.
+        newOrder = manualLinks.length;
+    }
+
+    // Remove the dragged link from the manual list if it was already there, to avoid duplication.
+    const oldManualIndex = manualLinks.findIndex(l => l.id === draggedLink.id);
+    if (oldManualIndex !== -1) {
+        manualLinks.splice(oldManualIndex, 1);
+    }
+
+    // Make space for the new item by incrementing the order of subsequent items.
+    manualLinks.forEach(link => {
+        if (link.order >= newOrder) {
+            link.order++;
+        }
+    });
+
+    // Assign the new order to the dragged link, marking it as manually sorted.
+    draggedLink.order = newOrder;
+
+    saveLinks();
+    renderLinks(); // Re-render with the new order
 });
 
 /**
@@ -718,7 +788,8 @@ async function addNewLink(linkData) {
         await showAlert('Please provide a description and a full URL.');
         return false;
     }
-    links.push({ ...linkData, url: normalizedUrl, id: `link-${Date.now()}` });
+    // Add with a null order so it will be sorted alphabetically by default.
+    links.push({ ...linkData, url: normalizedUrl, id: `link-${Date.now()}`, order: null });
     saveLinks();
 
     // --- Enhancement: Expand the category of the newly added link ---
