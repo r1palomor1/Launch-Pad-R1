@@ -229,21 +229,6 @@ button.rabbit-default:hover {
 .add-suggestion-item {
     cursor: pointer;
 }
-/* --- Drag and Drop Styles --- */
-.link-item.dragging {
-    opacity: 0.5;
-    background-color: #333;
-}
-.link-item.drag-over-indicator {
-    border-top: 2px solid var(--primary-color);
-}
-.link-item.drop-disabled {
-    opacity: 0.4;
-    /* The drop indicator should not appear on disabled items */
-}
-.add-suggestion-item {
-    cursor: pointer;
-}
 .add-suggestion-item:hover {
     background-color: var(--item-bg-hover);
 }
@@ -569,6 +554,9 @@ button.rabbit-default:hover {
     gap: 10px;
 }
 .view-btn {
+    background: transparent;
+    border: none;
+    padding: 0;
     cursor: pointer;
     width: 28px;
     height: 28px;

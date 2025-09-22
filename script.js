@@ -204,34 +204,12 @@ links.forEach((link, index) => {
         link.id = `link-${Date.now()}-${index}`;
         needsSave = true;
     }
-    // Migration to add an 'order' property for drag-and-drop sorting.
-    // We just ensure the property exists. The alphabetization migration will set it correctly.
-    if (typeof link.order === 'undefined') {
-        link.order = null; // Default to alpha sort
-        needsSave = true;
-    }
 });
-if (needsSave) {
-    // If we migrated any links to add IDs, save the changes immediately.
-    localStorage.setItem('launchPadR1Links', JSON.stringify(links));
-}
-
-// One-time reset to the new hybrid sorting model for existing users.
-// This ensures the baseline order is alphabetical before any manual sorting.
-const alphabetizedFlag = 'launchPadR1Alphabetized_v3'; // Use a new flag
-if (!localStorage.getItem(alphabetizedFlag)) {
-    console.log('Performing one-time reset to hybrid alphabetical/manual sorting.');
-    // For all links, reset their order to null to enable default alphabetical sorting.
-    links.forEach(link => { link.order = null; });
-    localStorage.setItem('launchPadR1Links', JSON.stringify(links));
-    localStorage.setItem(alphabetizedFlag, 'true');
-}
 
 // Migration from old index-based favorite to new ID-based favorite.
 const oldFavoriteIndex = parseInt(localStorage.getItem('launchPadR1FavoriteLinkIndex') || '-1', 10);
 const oldFavoriteLinkId = localStorage.getItem('launchPadR1FavoriteLinkId');
 let favoriteLinkIds = new Set(JSON.parse(localStorage.getItem('launchPadR1FavoriteLinkIds')) || []);
-
 // --- Migration from single favorite to multiple favorites ---
 if (oldFavoriteLinkId && favoriteLinkIds.size === 0) {
     favoriteLinkIds.add(oldFavoriteLinkId);
@@ -244,6 +222,12 @@ if (oldFavoriteLinkId && favoriteLinkIds.size === 0) {
 if (localStorage.getItem('launchPadR1FavoriteLinkIndex') || localStorage.getItem('launchPadR1FavoriteLinkId')) {
     localStorage.removeItem('launchPadR1FavoriteLinkIndex');
     localStorage.removeItem('launchPadR1FavoriteLinkId');
+}
+
+// After all other migrations, if any changes were needed, perform a single save.
+if (needsSave) {
+    // If we migrated any links, save the changes immediately.
+    localStorage.setItem('launchPadR1Links', JSON.stringify(links));
 }
 
 let currentView = localStorage.getItem('launchPadR1View') || 'list';
@@ -312,20 +296,8 @@ function renderLinks(linksToRender = links) {
     }, {});
 
     // Sort links within each category using the new hybrid model
-    for (const category in groupedLinks) {
-        const MAX_ORDER = Number.MAX_SAFE_INTEGER;
-        groupedLinks[category].sort((a, b) => {
-            // Use MAX_SAFE_INTEGER for null/undefined order to push them to the end of numeric sort
-            const aOrder = typeof a.order === 'number' ? a.order : MAX_ORDER;
-            const bOrder = typeof b.order === 'number' ? b.order : MAX_ORDER;
-
-            if (aOrder !== bOrder) {
-                return aOrder - bOrder; // Sort by manual order first
-            }
-            // If orders are the same (i.e., both are un-ordered), sort alphabetically
-            return a.description.localeCompare(b.description);
-        });
-    }
+    // Sort links within each category alphabetically by description.
+    for (const category in groupedLinks) { groupedLinks[category].sort((a, b) => a.description.localeCompare(b.description)); }
 
     const sortedCategories = Object.keys(groupedLinks).sort((a, b) => {
         if (a === 'Other') return 1;
@@ -400,8 +372,6 @@ function renderLinkItem(link, sourceArray = links) {
     const li = document.createElement('li');
     li.className = 'link-item';
     li.dataset.id = link.id;
-    li.draggable = true; // Make the item draggable
-
     const isFavorite = favoriteLinkIds.has(link.id);
 
     li.innerHTML = `
@@ -539,106 +509,6 @@ linksList.addEventListener('click', async (e) => {
     } else if (target.closest('.link-display') || target.closest('.link-favicon')) {
         handleLaunchLink(li, id);
     }
-});
-
-let draggedItemId = null;
-
-linksList.addEventListener('dragstart', (e) => {
-    const li = e.target.closest('.link-item');
-    if (li) {
-        draggedItemId = li.dataset.id;
-        const draggedCategory = li.dataset.category;
-
-        // Add a class to the dragged item itself for visual feedback.
-        setTimeout(() => li.classList.add('dragging'), 0);
-
-        // Visually disable drop targets in other categories for clarity.
-        const allItems = linksList.querySelectorAll('.link-item');
-        allItems.forEach(itemLi => {
-            if (itemLi.dataset.category !== draggedCategory) {
-                itemLi.classList.add('drop-disabled');
-            }
-        });
-
-        // Set data to enable dragging in some browsers/OSes
-        e.dataTransfer.setData('text/plain', draggedItemId);
-        e.dataTransfer.effectAllowed = 'move';
-    }
-});
-
-linksList.addEventListener('dragend', (e) => {
-    const li = e.target.closest('.link-item');
-    if (li) {
-        li.classList.remove('dragging');
-    }
-    // Clean up all drag-related visual states from all items.
-    document.querySelectorAll('.link-item').forEach(el => {
-        el.classList.remove('drag-over-indicator', 'drop-disabled');
-    });
-    draggedItemId = null;
-});
-
-linksList.addEventListener('dragover', (e) => {
-    e.preventDefault(); // This is necessary to allow a drop
-    const targetLi = e.target.closest('.link-item');
-    // Only show the drop indicator on valid, non-disabled targets.
-    if (targetLi && targetLi.dataset.id !== draggedItemId && !targetLi.classList.contains('drop-disabled')) {
-        // Remove indicator from other items
-        document.querySelectorAll('.drag-over-indicator').forEach(el => el.classList.remove('drag-over-indicator'));
-        // Add indicator to the current target
-        targetLi.classList.add('drag-over-indicator');
-    }
-});
-
-linksList.addEventListener('drop', (e) => {
-    e.preventDefault();
-    const dropTargetLi = e.target.closest('.link-item');
-
-    if (!dropTargetLi || !draggedItemId || dropTargetLi.dataset.id === draggedItemId) {
-        return;
-    }
-
-    const draggedLink = links.find(l => l.id === draggedItemId);
-    const targetLink = links.find(l => l.id === dropTargetLi.dataset.id);
-
-    // Disallow dropping between categories
-    if (!draggedLink || !targetLink || draggedLink.category !== targetLink.category) {
-        return;
-    }
-
-    // Get all manually sorted links in the category, in their current order.
-    const manualLinks = links
-        .filter(l => l.category === draggedLink.category && typeof l.order === 'number')
-        .sort((a, b) => a.order - b.order);
-
-    // Determine the target order number for the dragged link.
-    let newOrder;
-    if (typeof targetLink.order === 'number') {
-        // If the target is manually sorted, we will insert at its position.
-        newOrder = targetLink.order;
-    } else {
-        // If the target is alphabetically sorted, the dragged link becomes the new last manual item.
-        newOrder = manualLinks.length;
-    }
-
-    // Remove the dragged link from the manual list if it was already there, to avoid duplication.
-    const oldManualIndex = manualLinks.findIndex(l => l.id === draggedLink.id);
-    if (oldManualIndex !== -1) {
-        manualLinks.splice(oldManualIndex, 1);
-    }
-
-    // Make space for the new item by incrementing the order of subsequent items.
-    manualLinks.forEach(link => {
-        if (link.order >= newOrder) {
-            link.order++;
-        }
-    });
-
-    // Assign the new order to the dragged link, marking it as manually sorted.
-    draggedLink.order = newOrder;
-
-    saveLinks();
-    renderLinks(); // Re-render with the new order
 });
 
 /**
@@ -788,8 +658,8 @@ async function addNewLink(linkData) {
         await showAlert('Please provide a description and a full URL.');
         return false;
     }
-    // Add with a null order so it will be sorted alphabetically by default.
-    links.push({ ...linkData, url: normalizedUrl, id: `link-${Date.now()}`, order: null });
+    // Add the new link to the array. It will be sorted alphabetically on the next render.
+    links.push({ ...linkData, url: normalizedUrl, id: `link-${Date.now()}` });
     saveLinks();
 
     // --- Enhancement: Expand the category of the newly added link ---
