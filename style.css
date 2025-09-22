@@ -441,7 +441,7 @@ button.rabbit-default:hover {
     max-height: 45vh; /* Increased height for better visibility */
 }
 .theme-color-list {
-    max-height: 32vh; /* Adjusted to accommodate the preview pane */
+    max-height: 46vh; /* Increased height to show more colors */
 }
 .favorite-list-item {
     display: flex;
@@ -721,50 +721,4 @@ button.rabbit-default:hover {
 .dialog-input-wrapper input {
     width: 100%;
     padding-right: 30px; /* Space for clear button */
-}
-
-/* --- Theme Preview Pane --- */
-.preview-label {
-    font-size: 0.8em;
-    color: var(--icon-color);
-    text-align: center;
-    margin: 4px 0 2px 0;
-    font-weight: bold;
-    text-transform: uppercase;
-    user-select: none;
-}
-#themePreviewPane {
-    background-color: var(--bg-color);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 8px;
-    margin: 4px 0; /* Give it some vertical space */
-    transition: background-color 0.2s, border-color 0.2s; /* Smooth theme transitions */
-    user-select: none;
-}
-.preview-header {
-    color: var(--primary-color);
-    font-size: 0.9em;
-    font-weight: bold;
-    margin: 0 0 8px 0;
-    padding-bottom: 4px;
-    border-bottom: 1px solid var(--border-color);
-    transition: color 0.2s, border-color 0.2s;
-}
-.preview-item {
-    background-color: var(--item-bg);
-    border-radius: 4px;
-    padding: 6px 8px;
-    color: var(--font-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.9em;
-    transition: background-color 0.2s, color 0.2s;
-}
-.preview-icon svg {
-    width: 14px;
-    height: 14px;
-    fill: var(--icon-color);
-    transition: fill 0.2s;
 }
