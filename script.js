@@ -1284,6 +1284,10 @@ function openThemeEditor() {
 
     // When the dialog is shown, ensure the focused class is not present initially.
     themeDialogOverlay.classList.remove('input-focused');
+
+    // Explicitly reset the filter and clear button state when opening.
+    filterThemeList('');
+    clearThemeInputBtn.style.display = 'none';
 }
 
 function updateModeToggleUI() {
