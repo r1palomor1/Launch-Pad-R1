@@ -46,6 +46,7 @@ const GENERIC_FAVICON_SRC = 'data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org
  */
 async function launchUrlOnRabbit(url, name) {
     try {
+        linksList.innerHTML = `<div class="search-prompt">Launching ${name}...</div>`;
         if (window.rabbit && window.rabbit.core) {
             // Voice feedback for URL launching has been intentionally removed to prioritize
             // launch speed, as the `launchUrl` command is high-priority and takes
@@ -199,6 +200,23 @@ let links = JSON.parse(localStorage.getItem('launchPadR1Links')) || [
 // --- Migration & State Initialization ---
 // Migration to add unique IDs to links for robust favoriting/editing.
 let needsSave = false;
+
+// One-time migration to fix any improperly formatted URLs in existing data.
+const urlMigrationFlag = 'launchPadR1UrlNormalized_v1';
+if (!localStorage.getItem(urlMigrationFlag)) {
+    console.log('Performing one-time URL normalization for all existing links.');
+    links.forEach(link => {
+        const originalUrl = link.url;
+        const normalizedUrl = normalizeUrl(originalUrl);
+        // Only update if the URL changed and the new one is valid.
+        if (originalUrl !== normalizedUrl && normalizedUrl) {
+            link.url = normalizedUrl;
+            needsSave = true; // Signal that a save is needed.
+        }
+    });
+    localStorage.setItem(urlMigrationFlag, 'true');
+}
+
 links.forEach((link, index) => {
     if (!link.id) {
         link.id = `link-${Date.now()}-${index}`;
@@ -1425,6 +1443,7 @@ function setupThemeDialogListeners() {
         const colorInput = themeDialogInput.value.trim();
         // If the input is empty, close the dialog. This confirms any theme
         // that was live-previewed from the list.
+
         if (!colorInput) {
             closeDialog();
             return;
@@ -1438,6 +1457,7 @@ function setupThemeDialogListeners() {
         // this is a confirmation click. Close the dialog.
         if (currentAppliedCustomColor && processedColor.toLowerCase() === currentAppliedCustomColor.toLowerCase()) {
             closeDialog();
+
             return;
         }
 
@@ -1445,13 +1465,17 @@ function setupThemeDialogListeners() {
         triggerHaptic();
         const applyResult = await applyTheme(`custom:${processedColor}`);
         if (applyResult.success) {
+
             // On success, clear any error and blur the input to hide the keyboard
             // and show the full dialog again for preview.
+
             themeDialogError.textContent = '';
             themeDialogInput.blur(); // Hide keyboard
+
             themeDialogOverlay.classList.remove('input-focused'); // Explicitly show full dialog
         } else {
             // On failure, show the error, but use the user's original input
+
             // in the message for clarity.
             themeDialogError.textContent = applyResult.error.replace(`'${processedColor}'`, `'${colorInput}'`);
         }
