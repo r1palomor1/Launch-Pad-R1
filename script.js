@@ -1079,7 +1079,7 @@ function setupThemePicker() {
 
     list.addEventListener('click', async (e) => {
         const li = e.target.closest('.theme-color-item');
-        if (li) {
+        if (li && !li.classList.contains('disabled')) {
             triggerHaptic();
             const colorName = li.dataset.colorName;
 
@@ -1183,7 +1183,13 @@ function hslToRgb(h, s, l) {
 
 function generatePaletteFromRgb(rgb, mode = 'dark') {
     const [r, g, b] = rgb;
-    if (r < 30 && g < 30 && b < 30) return null;
+    // This check is only relevant for dark mode, where a very dark primary color
+    // would be invisible against the dark background. In light mode, dark colors are fine.
+    if (mode === 'dark' && r < 30 && g < 30 && b < 30) return null;
+
+    // Add a check for light mode, where a very light primary color would be
+    // invisible against the light background.
+    if (mode === 'light' && r > 240 && g > 240 && b > 240) return null;
     const [h, s, l] = rgbToHsl(r, g, b);
 
     // Calculate perceived brightness to determine button text color
@@ -1239,7 +1245,11 @@ async function applyTheme(themeIdentifier, silent = false) {
         } else {
             themeColors = generatePaletteFromRgb(primaryRgb, currentLuminanceMode);
             if (!themeColors) {
-                error = "This color is too dark. Please choose a lighter color.";
+                if (currentLuminanceMode === 'dark') {
+                    error = "This color is too dark. Please choose a lighter color.";
+                } else {
+                    error = "This color is too light. Please choose a darker color.";
+                }
             } else {
                 friendlyName = colorName;
             }
@@ -1301,6 +1311,7 @@ function openThemeEditor() {
     
     // Update the light/dark mode toggle to reflect the current state
     updateModeToggleUI();
+    updateThemeListDisabledState();
 
     // When the dialog is shown, ensure the focused class is not present initially.
     themeDialogOverlay.classList.remove('input-focused');
@@ -1308,6 +1319,20 @@ function openThemeEditor() {
     // Explicitly reset the filter and clear button state when opening.
     filterThemeList('');
     clearThemeInputBtn.style.display = 'none';
+}
+
+function updateThemeListDisabledState() {
+    const listItems = themeColorList.querySelectorAll('.theme-color-item');
+    listItems.forEach(item => {
+        const colorName = item.dataset.colorName;
+        const rgb = colorNameToRgb(colorName);
+        // A color is disabled if it's not a valid color name OR if generatePaletteFromRgb returns null for it.
+        if (!rgb || !generatePaletteFromRgb(rgb, currentLuminanceMode)) {
+            item.classList.add('disabled');
+        } else {
+            item.classList.remove('disabled');
+        }
+    });
 }
 
 function updateModeToggleUI() {
@@ -1325,6 +1350,7 @@ async function setLuminanceMode(mode, silent = false) {
     currentLuminanceMode = mode;
     localStorage.setItem('launchPadR1LuminanceMode', mode);
     updateModeToggleUI();
+    updateThemeListDisabledState();
     // Re-apply the current theme with the new mode
     await applyTheme(currentThemeName, silent);
 }

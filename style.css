@@ -496,6 +496,13 @@ button.rabbit-default:hover {
 .theme-color-item:hover {
     background-color: var(--item-bg-hover);
 }
+.theme-color-item.disabled {
+    color: var(--icon-color);
+    text-decoration: line-through;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+.theme-color-item.disabled:hover { background-color: var(--item-bg); }
 .theme-color-list .no-matches-message {
     text-align: center; color: var(--icon-color); padding: 10px; font-weight: normal;
     /* This is not a list item, so it shouldn't have hover effects */
