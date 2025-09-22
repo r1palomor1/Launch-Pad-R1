@@ -1100,6 +1100,22 @@ const defaultTheme = {
 };
 
 function colorNameToRgb(name) {
+    const s = name.trim();
+    // 1. Check for HEX format (e.g., #ff8800, #f80, ff8800)
+    const hexMatch = s.match(/^#?([a-f\d]{6}|[a-f\d]{3})$/i);
+    if (hexMatch) {
+        let hex = hexMatch[1];
+        if (hex.length === 3) {
+            hex = hex.split('').map(char => char + char).join('');
+        }
+        const bigint = parseInt(hex, 16);
+        const r = (bigint >> 16) & 255;
+        const g = (bigint >> 8) & 255;
+        const b = bigint & 255;
+        return [r, g, b];
+    }
+
+    // 2. Fallback to CSS color name resolution
     const el = document.createElement('div');
     // Set a known, unique color that is unlikely to be the result of a valid name.
     const magicColor = 'rgb(1, 2, 3)';
@@ -1107,7 +1123,7 @@ function colorNameToRgb(name) {
     document.body.appendChild(el);
 
     // Now, try to set the user's color.
-    el.style.color = name;
+    el.style.color = s; // Use the trimmed string
     const computedColor = window.getComputedStyle(el).color;
     
     document.body.removeChild(el);
