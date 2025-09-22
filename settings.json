@@ -1,0 +1,7 @@
+{
+    // These settings are recommended for this project to ensure consistency.
+    "files.eol": "\n", // Enforce Unix-style line endings (LF) to prevent Git warnings.
+    "files.insertFinalNewline": true, // Ensure files end with a newline.
+    "files.trimFinalNewlines": true, // Remove multiple blank lines at the end of files.
+    "editor.tabSize": 4
+}
