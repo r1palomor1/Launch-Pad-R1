@@ -650,23 +650,22 @@ button.rabbit-default:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 10px;
 }
 .dialog-icon-btn {
     background: transparent;
     border: none;
     cursor: pointer;
     padding: 0;
-    width: 30px; /* A good tap target size */
-    height: 30px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
 }
 .dialog-icon-btn svg {
-    width: 22px; /* A clear, visible icon size */
-    height: 22px;
+    width: 20px;
+    height: 20px;
     fill: var(--icon-color);
 }
 .dialog-icon-btn:hover svg {
@@ -677,9 +676,14 @@ button.rabbit-default:hover {
     padding: 5px 8px;
     font-size: 0.85em;
 }
+.custom-prompt-actions-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 .custom-prompt-actions-right {
     display: flex;
-    gap: 10px;
+    gap: 8px;
 }
 /* When keyboard is active, move dialog up to avoid overlap */
 .custom-prompt-overlay.input-focused {

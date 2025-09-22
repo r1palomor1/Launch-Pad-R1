@@ -1475,9 +1475,23 @@ function setupThemeDialogListeners() {
             themeDialogOverlay.classList.remove('input-focused'); // Explicitly show full dialog
         } else {
             // On failure, show the error, but use the user's original input
-
             // in the message for clarity.
-            themeDialogError.textContent = applyResult.error.replace(`'${processedColor}'`, `'${colorInput}'`);
+            // Check if the error is due to an invalid color and suggest pressing OK.
+            if (applyResult.error.includes('is not a valid color')) {
+                // Suggest similar colors based on the input.
+                const similarColors = CSS_COLOR_NAMES.filter(color =>
+                    color.toLowerCase().includes(colorInput.toLowerCase())
+                );
+
+                let suggestionMessage = applyResult.error.replace(`'${processedColor}'`, `'${colorInput}'`);
+                if (similarColors.length > 0) {
+                    suggestionMessage += `. Press OK to view suggested colors.`;
+                }
+                themeDialogError.textContent = suggestionMessage;
+            } else {
+                // For other errors, just display the original error message.
+                themeDialogError.textContent = applyResult.error.replace(`'${processedColor}'`, `'${colorInput}'`);
+            }
         }
     });
 
