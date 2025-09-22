@@ -441,7 +441,7 @@ button.rabbit-default:hover {
     max-height: 45vh; /* Increased height for better visibility */
 }
 .theme-color-list {
-    max-height: 46vh; /* Increased height to show more colors */
+    max-height: 32vh; /* Adjusted to accommodate the preview pane */
 }
 .favorite-list-item {
     display: flex;
@@ -724,6 +724,15 @@ button.rabbit-default:hover {
 }
 
 /* --- Theme Preview Pane --- */
+.preview-label {
+    font-size: 0.8em;
+    color: var(--icon-color);
+    text-align: center;
+    margin: 4px 0 2px 0;
+    font-weight: bold;
+    text-transform: uppercase;
+    user-select: none;
+}
 #themePreviewPane {
     background-color: var(--bg-color);
     border: 1px solid var(--border-color);
