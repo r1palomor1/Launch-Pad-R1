@@ -1105,8 +1105,10 @@ const defaultTheme = {
     name: 'Rabbit',
     dark: {
         '--primary-color': '#ff7043',
+        '--secondary-color': '#ff7043',
         '--bg-color': '#0d0d0d',
         '--item-bg': '#1c1c1c',
+        '--item-bg-hover': '#2c2c2c',
         '--border-color': '#2a2a2a',
         '--font-color': '#e0e0e0',
         '--icon-color': '#7a7a7a',
@@ -1114,8 +1116,10 @@ const defaultTheme = {
     },
     light: {
         '--primary-color': '#ff7043',
+        '--secondary-color': '#ff7043',
         '--bg-color': '#f9f9f9',
         '--item-bg': '#ffffff',
+        '--item-bg-hover': '#f0f0f0',
         '--border-color': '#e0e0e0',
         '--font-color': '#1c1c1c',
         '--icon-color': '#5c5c5c',
@@ -1186,11 +1190,18 @@ function generatePaletteFromRgb(rgb, mode = 'dark') {
     const luminance = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
     const buttonTextColor = luminance > 0.5 ? '#000000' : '#FFFFFF';
 
+    const primaryColor = `rgb(${r}, ${g}, ${b})`;
+
     if (mode === 'light') {
+        const fontColor = hslToRgb(h, s * 0.6, 0.1);
+        // If primary color is too light (low contrast with white bg), use the dark font color for secondary buttons.
+        const secondaryColor = luminance > 0.85 ? fontColor : primaryColor;
         return {
-            '--primary-color': `rgb(${r}, ${g}, ${b})`,
+            '--primary-color': primaryColor,
+            '--secondary-color': secondaryColor,
             '--bg-color': hslToRgb(h, s * 0.2, 0.98),
             '--item-bg': '#ffffff',
+            '--item-bg-hover': hslToRgb(h, s * 0.1, 0.95),
             '--border-color': hslToRgb(h, s * 0.1, 0.88),
             '--font-color': hslToRgb(h, s * 0.6, 0.1),
             '--icon-color': hslToRgb(h, s * 0.3, 0.45),
@@ -1199,12 +1210,17 @@ function generatePaletteFromRgb(rgb, mode = 'dark') {
     }
 
     // Default to dark mode
+    const fontColor = '#e0e0e0';
+    // If primary color is too dark (low contrast with dark bg), use the light font color for secondary buttons.
+    const secondaryColor = luminance < 0.15 ? fontColor : primaryColor;
     return {
-        '--primary-color': `rgb(${r}, ${g}, ${b})`,
+        '--primary-color': primaryColor,
+        '--secondary-color': secondaryColor,
         '--bg-color': hslToRgb(h, s * 0.5, 0.07),
         '--item-bg': hslToRgb(h, s * 0.6, 0.12),
+        '--item-bg-hover': hslToRgb(h, s * 0.6, 0.16),
         '--border-color': hslToRgb(h, s * 0.6, 0.18),
-        '--font-color': '#e0e0e0', // Keep font color consistent for dark mode
+        '--font-color': fontColor,
         '--icon-color': hslToRgb(h, s * 0.3, 0.5),
         '--button-font-color': buttonTextColor
     };
