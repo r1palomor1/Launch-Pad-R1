@@ -34,6 +34,7 @@ const genericPromptActions = document.getElementById('genericPromptActions');
 const SUN_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM11 1h2v3h-2V1zm0 19h2v3h-2v-3zM3.55 4.95l1.414-1.414L7.05 5.636 5.636 7.05 3.55 4.95zm12.728 12.728l1.414-1.414L19.778 18.364l-1.414 1.414-2.086-2.086zM1 11h3v2H1v-2zm19 0h3v2h-3v-2zM4.95 20.45l-1.414-1.414L5.636 17l1.414 1.414-2.086 2.036zM18.364 7.05l1.414-1.414L21.864 7.05l-1.414 1.414-2.086-2.086z"/></svg>`;
 const MOON_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 7a7 7 0 0 0 12 4.9v.1c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2h.1A6.979 6.979 0 0 0 10 7zm-6 5a8 8 0 0 0 8 8 .5.5 0 0 1 .5.5v.5a10 10 0 1 1 0-20 .5.5 0 0 1 .5.5V4a8 8 0 0 0-8 8z"/></svg>`;
 
+let originalThemeState = { theme: 'rabbit', mode: 'dark' };
 let suggestionRequestCount = 0;
 const GENERIC_FAVICON_SRC = 'data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23888\'%3e%3cpath d=\'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z\'/%3e%3c/svg%3e';
 
@@ -1205,7 +1206,7 @@ function generatePaletteFromRgb(rgb, mode = 'dark') {
     };
 }
 
-async function applyTheme(themeIdentifier) {
+async function applyTheme(themeIdentifier, silent = false) {
     let themeColors;
     let friendlyName;
     let error = null;
@@ -1245,8 +1246,10 @@ async function applyTheme(themeIdentifier) {
     localStorage.setItem('launchPadR1Theme', themeIdentifier);
 
     // Provide feedback
-    await sayOnRabbit(`Theme set to ${friendlyName}`);
-    
+    if (!silent) {
+        await sayOnRabbit(`Theme set to ${friendlyName}`);
+    }
+
     return { success: true };
 }
 
@@ -1265,6 +1268,9 @@ themeDialogInput.addEventListener('blur', () => {
 });
 
 function openThemeEditor() {
+    // Store the state when the dialog opens, so we can revert on cancel.
+    originalThemeState = { theme: currentThemeName, mode: currentLuminanceMode };
+
     themeDialogInput.value = '';
     themeDialogError.textContent = '';
     themeDialogOverlay.style.display = 'flex';
@@ -1290,13 +1296,13 @@ function updateModeToggleUI() {
     }
 }
 
-async function setLuminanceMode(mode) {
+async function setLuminanceMode(mode, silent = false) {
     if (mode === currentLuminanceMode) return;
     currentLuminanceMode = mode;
     localStorage.setItem('launchPadR1LuminanceMode', mode);
     updateModeToggleUI();
     // Re-apply the current theme with the new mode
-    await applyTheme(currentThemeName);
+    await applyTheme(currentThemeName, silent);
 }
 
 async function toggleLuminanceMode() {
@@ -1341,7 +1347,16 @@ function filterThemeList(query) {
 }
 
 function setupThemeDialogListeners() {
-    const closeDialog = () => {
+    const closeDialog = async (shouldRevert = false) => {
+        if (shouldRevert) {
+            // Check if a revert is actually needed to avoid unnecessary async calls.
+            if (currentLuminanceMode !== originalThemeState.mode || currentThemeName !== originalThemeState.theme) {
+                // Set the mode first (silently). This will re-apply the *current* theme with the *original* mode.
+                await setLuminanceMode(originalThemeState.mode, true);
+                // Now, specifically apply the *original* theme name, which might be different.
+                await applyTheme(originalThemeState.theme, true);
+            }
+        }
         themeDialogOverlay.style.display = 'none';
         scrollToTop();
     };
@@ -1406,11 +1421,11 @@ function setupThemeDialogListeners() {
         }
     });
 
-    themeDialogCancel.addEventListener('click', closeDialog);
+    themeDialogCancel.addEventListener('click', () => closeDialog(true));
 
     themeDialogOverlay.addEventListener('click', (e) => {
         if (e.target.id === 'themeDialogOverlay') {
-            closeDialog();
+            closeDialog(true);
         }
     });
 
