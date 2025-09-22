@@ -1083,15 +1083,19 @@ function setupThemePicker() {
             triggerHaptic();
             const colorName = li.dataset.colorName;
 
-            // Populate the input box and apply the theme for a live preview.
+            // When selecting from the list, we want to preview the theme without
+            // filtering the list itself. We manually update the input, clear button,
+            // and any existing error message.
             themeDialogInput.value = colorName;
-            themeDialogInput.dispatchEvent(new Event('input')); // Show clear button
+            clearThemeInputBtn.style.display = 'flex';
+            if (themeDialogError.textContent) {
+                themeDialogError.textContent = '';
+            }
 
             const applyResult = await applyTheme(`custom:${colorName}`);
             if (!applyResult.success) {
+                // If the theme application fails (e.g., too dark), show the new error.
                 themeDialogError.textContent = applyResult.error;
-            } else {
-                themeDialogError.textContent = '';
             }
         }
     });
