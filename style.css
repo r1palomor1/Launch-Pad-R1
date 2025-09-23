@@ -51,16 +51,18 @@ header {
     cursor: pointer;
 }
 .logo-text {
-    font-size: 1.5em; /* ~21px */
+    font-family: 'Exo 2', sans-serif;
+    font-size: 1.4em; /* ~20px */
     font-weight: bold;
     color: var(--font-color); /* Make it themeable */
+    letter-spacing: 0.5px; /* Add a little breathing room */
 }
 .logo-rocket {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     fill: var(--primary-color); /* Themeable rocket color */
-    transform: rotate(-45deg); /* Make it look like it's taking off */
     transition: fill 0.2s ease; /* Smooth color change on theme switch */
+    margin-bottom: 2px; /* Visually align with the new font */
 }
 .main-view.input-mode-active header,
 .main-view.input-mode-active .actions-bar {
