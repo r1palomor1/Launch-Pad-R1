@@ -42,7 +42,7 @@ header {
 }
 header img {
     position: absolute;
-    height: 36px; /* A balanced height for the logo */
+    height: 38px; /* A balanced height for the logo */
     object-fit: contain;
     /* Center the logo horizontally and vertically */
     left: 50%;
@@ -60,7 +60,7 @@ header #themeBtn {
     border: none;
     color: var(--primary-color);
     font-weight: bold;
-    font-size: 0.9em;
+    font-size: 0.8em;
     width: auto;
     height: auto;
     padding: 8px;
@@ -68,6 +68,21 @@ header #themeBtn {
 header #themeBtn:hover {
     background: var(--item-bg);
     filter: brightness(1.15);
+}
+.icon-previews {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.icon-previews span svg {
+    width: 24px; /* A good size for preview */
+    height: 24px;
+    display: block;
+    fill: var(--primary-color); /* Use the theme color so they are visible */
 }
 /* In input mode, show the search and cancel buttons */
 .main-view.input-mode-active .search-section #searchBtn,
