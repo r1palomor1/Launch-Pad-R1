@@ -58,12 +58,9 @@ header #themeBtn {
     transform: translateY(-50%);
     background: transparent;
     border: none;
-    color: var(--primary-color);
-    font-weight: bold;
-    font-size: 0.8em;
     width: auto;
     height: auto;
-    padding: 8px;
+    padding: 6px; /* Adjust padding for an icon button */
 }
 header #themeBtn:hover {
     background: var(--item-bg);
@@ -73,18 +70,9 @@ header #themeBtn:hover {
 .main-view.input-mode-active .actions-bar {
     display: none;
 }
-.icon-previews {
-    position: absolute;
-    left: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-.icon-previews span img {
-    width: 24px; /* A good size for preview */
-    height: 24px;
+header #themeBtn img {
+    width: 22px;
+    height: 22px;
     display: block;
 }
 .search-section {
