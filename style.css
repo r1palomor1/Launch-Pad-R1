@@ -55,10 +55,15 @@ header img {
 .main-view.input-mode-active .actions-bar {
     display: none;
 }
+.main-view.input-mode-active {
+    /* Add padding to account for the device's safe area (e.g., status bar) */
+    padding-top: var(--rabbit-safe-area-inset-top, 10px);
+}
 .search-section {
     display: flex;
     gap: 4px;
     margin-bottom: 4px; /* Reduced to bring content up */
+    align-items: center; /* Vertically center the input and buttons */
 }
 .search-input-wrapper {
     position: relative;
