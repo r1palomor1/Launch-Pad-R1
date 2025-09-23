@@ -1101,7 +1101,7 @@ const defaultTheme = {
     dark: {
         '--primary-color': '#ff7043',
         '--secondary-color': '#ff7043',
-        '--bg-color': '#0d0d0d',
+        '--bg-color': '#000000',
         '--item-bg': '#1c1c1c',
         '--item-bg-hover': '#2c2c2c',
         '--border-color': '#2a2a2a',
