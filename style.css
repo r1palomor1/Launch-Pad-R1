@@ -656,7 +656,6 @@ button.rabbit-default:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    justify-content: space-around;
 }
 .dialog-icon-btn {
     background: transparent;
@@ -690,7 +689,7 @@ button.rabbit-default:hover {
 }
 
 /* Make the "Rabbit Me!" button slightly more compact to help with spacing */
-.custom-prompt-actions .rabbit-default {
+.custom-prompt-actions button.rabbit-default {
     padding: 5px 6px;
 }
 .custom-prompt-actions-left {
