@@ -36,8 +36,8 @@ body {
 header {
     position: relative;
     /* Define a fixed height for the header area: safe area + content space */
-    height: calc(var(--rabbit-safe-area-inset-top, 20px) + 40px);
-    margin-bottom: 4px;
+    height: calc(var(--rabbit-safe-area-inset-top, 20px) + 36px);
+    margin-bottom: 2px;
     background-color: var(--header-bg-color);
 }
 header img {
