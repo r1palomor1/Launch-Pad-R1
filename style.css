@@ -34,23 +34,33 @@ body {
     padding: 0 8px 8px;
 }
 header {
-    position: relative;
-    /* Define a fixed height for the header area: safe area + content space */
-    /* Total height = safe area + logo height (44px) + bottom padding (4px) */
-    height: calc(var(--rabbit-safe-area-inset-top, 20px) + 48px);
-    margin-bottom: 0; /* Removed margin to bring search bar up */
+    /* Use flexbox for easy centering and precise padding control */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Height is now determined by content + padding */
+    padding-top: calc(var(--rabbit-safe-area-inset-top, 0px) + 2px); /* safe area + 2px gap above logo */
+    padding-bottom: 4px; /* 4px gap below logo */
     background-color: var(--header-bg-color);
+    margin-bottom: 0;
 }
-header img {
-    position: absolute;
-    width: 130px; height: 44px; /* A balanced height for the logo */
-    object-fit: contain;
-    left: 50%;
-    /* Position logo center = safe area + half logo height */
-    top: calc(var(--rabbit-safe-area-inset-top, 20px) + 22px);
-    transform: translate(-50%, -50%); /* The classic centering trick */
-
+#logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     cursor: pointer;
+}
+.logo-text {
+    font-size: 1.5em; /* ~21px */
+    font-weight: bold;
+    color: var(--font-color); /* Make it themeable */
+}
+.logo-rocket {
+    width: 24px;
+    height: 24px;
+    fill: var(--primary-color); /* Themeable rocket color */
+    transform: rotate(-45deg); /* Make it look like it's taking off */
+    transition: fill 0.2s ease; /* Smooth color change on theme switch */
 }
 .main-view.input-mode-active header,
 .main-view.input-mode-active .actions-bar {

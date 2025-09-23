@@ -1,6 +1,6 @@
 const mainView = document.getElementById('mainView');
 const searchInput = document.getElementById('searchInput');
-const logoImg = document.getElementById('logoImg');
+const logo = document.getElementById('logo');
 const clearSearchBtn = document.getElementById('clearSearchBtn');
 const searchBtn = document.getElementById('searchBtn');
 const linksList = document.getElementById('linksList');
@@ -1709,7 +1709,7 @@ deleteAllBtn.addEventListener('click', async () => {
 
 themeBtn.addEventListener('click', openThemeEditor);
 
-logoImg.addEventListener('click', goHome);
+logo.addEventListener('click', goHome);
 
 // --- Initial Load ---
 setupThemePicker();
