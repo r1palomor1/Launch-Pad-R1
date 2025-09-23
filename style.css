@@ -69,6 +69,10 @@ header #themeBtn:hover {
     background: var(--item-bg);
     filter: brightness(1.15);
 }
+.main-view.input-mode-active header,
+.main-view.input-mode-active .actions-bar {
+    display: none;
+}
 .icon-previews {
     position: absolute;
     left: 8px;
@@ -78,22 +82,10 @@ header #themeBtn:hover {
     gap: 8px;
     align-items: center;
 }
-.icon-previews span svg {
+.icon-previews span img {
     width: 24px; /* A good size for preview */
     height: 24px;
     display: block;
-    fill: var(--primary-color); /* Use the theme color so they are visible */
-}
-/* In input mode, show the search and cancel buttons */
-.main-view.input-mode-active .search-section #searchBtn,
-.main-view.input-mode-active .search-section #cancelSearchBtn {
-    display: flex;
-    align-items: center; /* Vertically align with input */
-}
-/* When an input is active, hide the action bar to reduce clutter */
-.main-view.input-mode-active header,
-.main-view.input-mode-active .actions-bar {
-    display: none;
 }
 .search-section {
     display: flex;
