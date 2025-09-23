@@ -83,7 +83,7 @@ header #themeBtn:hover {
     align-items: center;
 }
 .icon-previews span img {
-    width: 28px; /* A good size for preview */
+    width: 24px; /* A good size for preview */
     height: 24px;
     display: block;
 }
