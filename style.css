@@ -36,8 +36,8 @@ body {
 header {
     position: relative;
     /* Define a fixed height for the header area: safe area + content space */
-    /* Total height = safe area + top padding (4px) + logo height (44px) + bottom padding (4px) */
-    height: calc(var(--rabbit-safe-area-inset-top, 20px) + 52px);
+    /* Total height = safe area + logo height (44px) + bottom padding (4px) */
+    height: calc(var(--rabbit-safe-area-inset-top, 20px) + 48px);
     margin-bottom: 0; /* Removed margin to bring search bar up */
     background-color: var(--header-bg-color);
 }
@@ -46,8 +46,8 @@ header img {
     width: 130px; height: 44px; /* A balanced height for the logo */
     object-fit: contain;
     left: 50%;
-    /* Position logo center = safe area + top padding + half logo height */
-    top: calc(var(--rabbit-safe-area-inset-top, 20px) + 26px);
+    /* Position logo center = safe area + half logo height */
+    top: calc(var(--rabbit-safe-area-inset-top, 20px) + 22px);
     transform: translate(-50%, -50%); /* The classic centering trick */
 
     cursor: pointer;
