@@ -42,7 +42,7 @@ header {
 }
 header img {
     position: absolute;
-    height: 44px; /* A balanced height for the logo */
+    width: 130px; height: 44px; /* A balanced height for the logo */
     object-fit: contain;
     /* Center the logo horizontally and vertically */
     left: 50%;
@@ -54,12 +54,12 @@ header img {
 header #themeBtn {
     position: absolute;
     right: 0;
+
     /* Vertically center the button */
     top: 50%;
 
     transform: translateY(-50%);
     background: transparent;
-    border: none;
     width: auto;
     height: auto;
     padding: 6px; /* Adjust padding for an icon button */
