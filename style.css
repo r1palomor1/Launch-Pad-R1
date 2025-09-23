@@ -135,7 +135,8 @@ input[type="text"] {
     font-size: 1em;
     min-width: 0; /* Fix for flexbox overflow */
 }
-input[type="text"]:focus {
+input[type="text"]:focus,
+select:focus {
     outline: none;
     border-color: var(--primary-color);
 }
@@ -185,6 +186,11 @@ body button.secondary {
 body button.secondary:hover {
     background-color: var(--selection-bg-color);
     filter: none; /* Override the default button hover */
+}
+body button.secondary:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background-color: var(--selection-bg-color);
 }
 /* Special class for the 'Rabbit Me!' button to always use the default orange */
 button.rabbit-default {
@@ -516,8 +522,8 @@ button.rabbit-default:hover {
 }
 
 .scrollable-list-dialog:focus {
-    outline: 1px solid var(--primary-color);
-    outline-offset: 2px; /* A little more space looks better with a thin line */
+    outline: none; /* Remove the default outline to prevent double borders */
+    border-color: var(--primary-color); /* Change the border color on focus */
 }
 
 .actions-bar {
