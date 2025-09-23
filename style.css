@@ -42,12 +42,13 @@ header {
 }
 header img {
     position: absolute;
-    height: 40px; /* A balanced height for the logo */
+    height: 44px; /* A balanced height for the logo */
     object-fit: contain;
     /* Center the logo horizontally and vertically */
     left: 50%;
     top: 45%; /* Nudge the logo up to reduce perceived top margin */
     transform: translate(-50%, -50%);
+
     cursor: pointer;
 }
 header #themeBtn {
@@ -55,6 +56,7 @@ header #themeBtn {
     right: 0;
     /* Vertically center the button */
     top: 50%;
+
     transform: translateY(-50%);
     background: transparent;
     border: none;
