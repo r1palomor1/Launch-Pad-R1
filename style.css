@@ -684,7 +684,7 @@ button.rabbit-default:hover {
 .custom-prompt-actions-left {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
 }
 .custom-prompt-actions-right {
     display: flex;
