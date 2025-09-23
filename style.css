@@ -683,6 +683,12 @@ button.rabbit-default:hover {
     padding: 5px 8px;
     font-size: 0.85em;
 }
+/* To ensure visual consistency, primary buttons in dialogs get extra padding
+   to match the dimensions of secondary buttons which have a 1px border. */
+.custom-prompt-actions button:not(.secondary) {
+    padding: 6px 9px;
+}
+
 /* Make the "Rabbit Me!" button slightly more compact to help with spacing */
 .custom-prompt-actions .rabbit-default {
     padding: 5px 6px;
