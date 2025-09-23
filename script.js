@@ -1102,6 +1102,7 @@ const defaultTheme = {
         '--primary-color': '#ff7043',
         '--secondary-color': '#ff7043',
         '--bg-color': '#000000',
+        '--header-bg-color': '#000000',
         '--item-bg': '#1c1c1c',
         '--item-bg-hover': '#2c2c2c',
         '--border-color': '#2a2a2a',
@@ -1113,6 +1114,7 @@ const defaultTheme = {
         '--primary-color': '#ff7043',
         '--secondary-color': '#ff7043',
         '--bg-color': '#f9f9f9',
+        '--header-bg-color': '#f9f9f9',
         '--item-bg': '#ffffff',
         '--item-bg-hover': '#f0f0f0',
         '--border-color': '#e0e0e0',
@@ -1216,7 +1218,7 @@ function generatePaletteFromRgb(rgb, mode = 'dark') {
         return {
             '--primary-color': primaryColor,
             '--secondary-color': secondaryColor,
-            '--bg-color': hslToRgb(h, s * 0.2, 0.98),
+            '--header-bg-color': hslToRgb(h, s * 0.2, 0.98),
             '--item-bg': '#ffffff',
             '--item-bg-hover': hslToRgb(h, s * 0.1, 0.95),
             '--border-color': hslToRgb(h, s * 0.1, 0.88),
@@ -1233,7 +1235,7 @@ function generatePaletteFromRgb(rgb, mode = 'dark') {
     return {
         '--primary-color': primaryColor,
         '--secondary-color': secondaryColor,
-        '--bg-color': hslToRgb(h, s * 0.5, 0.07),
+        '--header-bg-color': '#000000',
         '--item-bg': hslToRgb(h, s * 0.6, 0.12),
         '--item-bg-hover': hslToRgb(h, s * 0.6, 0.16),
         '--border-color': hslToRgb(h, s * 0.6, 0.18),
@@ -1356,15 +1358,10 @@ function updateModeToggleUI() {
     }
 }
 
-function updateLogoForMode() {
-    logoImg.src = currentLuminanceMode === 'light' ? 'launchpad-logo-light.png' : 'launchpad-logo-dark.png';
-}
-
 async function setLuminanceMode(mode, silent = false) {
     if (mode === currentLuminanceMode) return;
     currentLuminanceMode = mode;
     localStorage.setItem('launchPadR1LuminanceMode', mode);
-    updateLogoForMode();
     updateModeToggleUI();
     updateThemeListDisabledState();
     // Re-apply the current theme with the new mode
@@ -1714,6 +1711,5 @@ setupThemePicker();
 setupThemeDialogListeners();
 // Apply the initial theme
 applyTheme(currentThemeName);
-updateLogoForMode();
 
 renderLinks();

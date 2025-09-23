@@ -1,6 +1,7 @@
 :root {
     --bg-color: #000000;
     --font-color: #e0e0e0;
+    --header-bg-color: var(--bg-color); /* Fallback to the body background */
     --primary-color: #ff7043; /* Rabbit R1 Orange */
     --secondary-color: var(--primary-color); /* For secondary buttons, defaults to primary */
     --border-color: #2a2a2a;
@@ -37,6 +38,7 @@ header {
     /* Define a fixed height for the header area: safe area + content space */
     height: calc(var(--rabbit-safe-area-inset-top, 20px) + 38px);
     margin-bottom: 4px;
+    background-color: var(--header-bg-color);
 }
 header img {
     position: absolute;
