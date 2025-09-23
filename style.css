@@ -42,7 +42,7 @@ header {
 }
 header img {
     position: absolute;
-    height: 32px; /* A balanced height for the logo */
+    height: 36px; /* A balanced height for the logo */
     object-fit: contain;
     /* Center the logo horizontally and vertically */
     left: 50%;
@@ -485,6 +485,10 @@ button.rabbit-default:hover {
 }
 .theme-color-item:hover {
     background-color: var(--item-bg-hover);
+}
+.theme-color-list .theme-color-item {
+    /* Ensure color names are readable in light mode */
+    color: var(--font-color);
 }
 .theme-color-item.disabled {
     color: var(--icon-color);

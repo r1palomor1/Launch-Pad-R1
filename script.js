@@ -1215,10 +1215,12 @@ function generatePaletteFromRgb(rgb, mode = 'dark') {
         const fontColor = hslToRgb(h, s * 0.6, 0.1);
         // If primary color is too light (low contrast with white bg), use the dark font color for secondary buttons.
         const secondaryColor = luminance > 0.85 ? fontColor : primaryColor;
+        const lightBgColor = hslToRgb(h, s * 0.2, 0.98);
         return {
             '--primary-color': primaryColor,
             '--secondary-color': secondaryColor,
-            '--header-bg-color': hslToRgb(h, s * 0.2, 0.98),
+            '--bg-color': lightBgColor,
+            '--header-bg-color': lightBgColor,
             '--item-bg': '#ffffff',
             '--item-bg-hover': hslToRgb(h, s * 0.1, 0.95),
             '--border-color': hslToRgb(h, s * 0.1, 0.88),
@@ -1232,10 +1234,12 @@ function generatePaletteFromRgb(rgb, mode = 'dark') {
     const fontColor = '#e0e0e0';
     // If primary color is too dark (low contrast with dark bg), use the light font color for secondary buttons.
     const secondaryColor = luminance < 0.15 ? fontColor : primaryColor;
+    const darkBgColor = hslToRgb(h, s * 0.5, 0.07);
     return {
         '--primary-color': primaryColor,
         '--secondary-color': secondaryColor,
-        '--header-bg-color': '#000000',
+        '--bg-color': darkBgColor,
+        '--header-bg-color': darkBgColor,
         '--item-bg': hslToRgb(h, s * 0.6, 0.12),
         '--item-bg-hover': hslToRgb(h, s * 0.6, 0.16),
         '--border-color': hslToRgb(h, s * 0.6, 0.18),
