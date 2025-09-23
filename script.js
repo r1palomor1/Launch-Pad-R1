@@ -1356,10 +1356,15 @@ function updateModeToggleUI() {
     }
 }
 
+function updateLogoForMode() {
+    logoImg.src = currentLuminanceMode === 'light' ? 'launchpad-logo-light.png' : 'launchpad-logo-dark.png';
+}
+
 async function setLuminanceMode(mode, silent = false) {
     if (mode === currentLuminanceMode) return;
     currentLuminanceMode = mode;
     localStorage.setItem('launchPadR1LuminanceMode', mode);
+    updateLogoForMode();
     updateModeToggleUI();
     updateThemeListDisabledState();
     // Re-apply the current theme with the new mode
@@ -1709,5 +1714,6 @@ setupThemePicker();
 setupThemeDialogListeners();
 // Apply the initial theme
 applyTheme(currentThemeName);
+updateLogoForMode();
 
 renderLinks();
