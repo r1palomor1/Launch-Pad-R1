@@ -36,7 +36,8 @@ body {
 header {
     position: relative;
     /* Define a fixed height for the header area: safe area + content space */
-    height: calc(var(--rabbit-safe-area-inset-top, 20px) + 32px); /* Further reduced height */
+    /* The content area height is set to match the logo's height for a snug fit. */
+    height: calc(var(--rabbit-safe-area-inset-top, 20px) + 44px);
     margin-bottom: 0; /* Removed margin to bring search bar up */
     background-color: var(--header-bg-color);
 }
@@ -44,10 +45,10 @@ header img {
     position: absolute;
     width: 130px; height: 44px; /* A balanced height for the logo */
     object-fit: contain;
-    /* Center the logo horizontally and vertically */
     left: 50%;
-    top: 45%; /* Nudge the logo up to reduce perceived top margin */
-    transform: translate(-50%, -50%);
+    /* Position the logo's center in the middle of the content area (below the safe area) */
+    top: calc(var(--rabbit-safe-area-inset-top, 20px) + 22px); /* safe_area + half_logo_height */
+    transform: translate(-50%, -50%); /* The classic centering trick */
 
     cursor: pointer;
 }
