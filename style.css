@@ -40,7 +40,7 @@ header {
     align-items: center;
     /* Height is now determined by content + padding */
     padding-top: calc(var(--rabbit-safe-area-inset-top, 0px) + 2px); /* safe area + 2px gap above logo */
-    padding-bottom: 4px; /* 4px gap below logo */
+    padding-bottom: 5px; /* Added 1px space above search bar */
     background-color: var(--header-bg-color);
     margin-bottom: 0;
 }
@@ -76,7 +76,7 @@ header {
 .search-section {
     display: flex;
     gap: 4px;
-    margin-bottom: 4px; /* Reduced to bring content up */
+    margin-bottom: 5px; /* Added 1px space below search bar */
     align-items: center; /* Vertically center the input and buttons */
 }
 .search-input-wrapper {
