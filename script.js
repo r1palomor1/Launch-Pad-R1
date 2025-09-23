@@ -1712,9 +1712,12 @@ themeBtn.addEventListener('click', openThemeEditor);
 logo.addEventListener('click', goHome);
 
 // --- Initial Load ---
-setupThemePicker();
-setupThemeDialogListeners();
-// Apply the initial theme
-applyTheme(currentThemeName);
-
-renderLinks();
+(async function() {
+    setupThemePicker();
+    setupThemeDialogListeners();
+    // Apply the initial theme silently and wait for it to complete
+    await applyTheme(currentThemeName, true);
+    // Update the UI for the mode toggle to match the loaded state
+    updateModeToggleUI();
+    renderLinks();
+})();
