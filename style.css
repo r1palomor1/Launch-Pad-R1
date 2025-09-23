@@ -36,8 +36,8 @@ body {
 header {
     position: relative;
     /* Define a fixed height for the header area: safe area + content space */
-    height: calc(var(--rabbit-safe-area-inset-top, 20px) + 36px);
-    margin-bottom: 2px;
+    height: calc(var(--rabbit-safe-area-inset-top, 20px) + 32px); /* Further reduced height */
+    margin-bottom: 0; /* Removed margin to bring search bar up */
     background-color: var(--header-bg-color);
 }
 header img {
@@ -127,7 +127,7 @@ header img {
 }
 input[type="text"] {
     flex-grow: 1;
-    padding: 6px 8px; /* Made thinner for a more compact look */
+    padding: 4px 8px; /* Thinner on landing page */
     border: 1px solid var(--border-color);
     border-radius: 8px;
     background-color: var(--item-bg);
@@ -138,6 +138,11 @@ input[type="text"] {
 input[type="text"]:focus {
     outline: none;
     border-color: var(--primary-color);
+}
+/* In input mode, the main search bar gets taller for better usability */
+.main-view.input-mode-active #searchInput {
+    padding-top: 8px;
+    padding-bottom: 8px;
 }
 button {
     padding: 8px 8px;
