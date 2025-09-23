@@ -46,7 +46,7 @@ header img {
     object-fit: contain;
     /* Center the logo horizontally and vertically */
     left: 50%;
-    top: 50%;
+    top: 45%; /* Nudge the logo up to reduce perceived top margin */
     transform: translate(-50%, -50%);
     cursor: pointer;
 }
