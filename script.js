@@ -189,7 +189,7 @@ function normalizeUrl(url) {
 }
 
 // Categories are sorted alphabetically, with 'Other' at the end for better usability.
-const categories = ['Education', 'Entertainment', 'Finance', 'Music', 'News', 'Shopping', 'Social', 'Sports', 'Tools', 'Travel', 'Other'];
+const categories = ['Education', 'Entertainment', 'Finance', 'Gaming', 'Health', 'Music', 'News', 'Personal', 'Reference', 'Shopping', 'Social', 'Sports', 'Tech', 'Tools', 'Travel', 'Work', 'Other'];
 
 let links = JSON.parse(localStorage.getItem('launchPadR1Links')) || [
     { description: 'Youtube', url: 'https://m.youtube.com', category: 'Entertainment' },
