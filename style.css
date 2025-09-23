@@ -51,31 +51,9 @@ header img {
 
     cursor: pointer;
 }
-header #themeBtn {
-    position: absolute;
-    right: 0;
-
-    /* Vertically center the button */
-    top: 50%;
-
-    transform: translateY(-50%);
-    background: transparent;
-    width: auto;
-    height: auto;
-    padding: 6px; /* Adjust padding for an icon button */
-}
-header #themeBtn:hover {
-    background: var(--item-bg);
-    filter: brightness(1.15);
-}
 .main-view.input-mode-active header,
 .main-view.input-mode-active .actions-bar {
     display: none;
-}
-header #themeBtn img {
-    width: 22px;
-    height: 22px;
-    display: block;
 }
 .search-section {
     display: flex;
@@ -118,7 +96,7 @@ header #themeBtn img {
     width: 20px;
     height: 20px;
 }
-#searchBtn, #quickLaunchBtn, #deleteAllBtn {
+#searchBtn, #quickLaunchBtn, #deleteAllBtn, #themeBtn {
     background: transparent;
     border: none;
     padding: 0;
@@ -141,6 +119,11 @@ header #themeBtn img {
     width: 16px; /* Smaller icon for search */
     height: 16px;
     fill: var(--icon-color);
+}
+.app-actions #themeBtn img {
+    width: 18px;
+    height: 18px;
+    display: block;
 }
 input[type="text"] {
     flex-grow: 1;
@@ -170,7 +153,7 @@ button:hover {
     filter: brightness(1.15);
 }
 /* Override default hover for transparent icon buttons and give them a new one */
-#searchBtn:hover, #quickLaunchBtn:hover, #deleteAllBtn:hover {
+#searchBtn:hover, #quickLaunchBtn:hover, #deleteAllBtn:hover, #themeBtn:hover {
     filter: none;
 }
 #deleteAllBtn:hover svg {
@@ -178,6 +161,10 @@ button:hover {
 }
 #searchBtn:hover svg, #quickLaunchBtn:hover svg, .view-btn:hover svg {
     fill: var(--primary-color);
+}
+/* For the theme button, which uses an <img>, we can't change fill. A background is a good alternative. */
+#themeBtn:hover {
+    background-color: var(--item-bg-hover);
 }
 button:disabled {
     opacity: 0.6;
