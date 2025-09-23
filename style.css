@@ -51,18 +51,19 @@ header {
     cursor: pointer;
 }
 .logo-text {
-    /* Use Apple's system font with good fallbacks */
-    font-family: 'SF Pro Rounded', 'SF Pro Text', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Exo 2', sans-serif;
     font-size: 1.4em; /* ~20px */
-    font-weight: 600; /* Semibold */
+    font-weight: 700; /* Bold */
     color: var(--font-color); /* Make it themeable */
+    letter-spacing: 0.5px;
 }
 .logo-rocket {
-    width: 24px;
-    height: 24px;
-    fill: var(--primary-color); /* Themeable rocket color */
-    transform: rotate(-45deg); /* Make it look like it's taking off */
+    width: 20px;
+    height: 20px;
+    fill: var(--primary-color); /* Themeable icon color */
+    transform: rotate(-20deg); /* A dynamic launch angle */
     transition: fill 0.2s ease; /* Smooth color change on theme switch */
+    margin-bottom: 2px; /* Visually align with the font */
 }
 .main-view.input-mode-active header,
 .main-view.input-mode-active .actions-bar {
