@@ -1322,6 +1322,7 @@ function openThemeEditor() {
     themeDialogError.textContent = '';
     themeDialogOverlay.style.display = 'flex';
     themeColorList.scrollTop = 0;
+    themeColorList.focus(); // Give the list focus when the dialog opens
     
     // Set the title color to the current theme's primary color when opening.
     themeDialogTitle.style.color = getComputedStyle(document.documentElement).getPropertyValue('--primary-color');

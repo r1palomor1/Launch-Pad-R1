@@ -58,7 +58,7 @@ header img {
 .search-section {
     display: flex;
     gap: 4px;
-    margin-bottom: 8px;
+    margin-bottom: 4px; /* Reduced to bring content up */
 }
 .search-input-wrapper {
     position: relative;
@@ -127,7 +127,7 @@ header img {
 }
 input[type="text"] {
     flex-grow: 1;
-    padding: 8px;
+    padding: 6px 8px; /* Made thinner for a more compact look */
     border: 1px solid var(--border-color);
     border-radius: 8px;
     background-color: var(--item-bg);
@@ -204,8 +204,8 @@ button.rabbit-default:hover {
 .link-item {
     background-color: var(--item-bg);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 10px;
+    border-radius: 8px; 
+    padding: 8px 10px; /* Reduced vertical padding */
     margin-bottom: 8px;
     display: flex;
     align-items: center;
@@ -511,8 +511,8 @@ button.rabbit-default:hover {
 }
 
 .scrollable-list-dialog:focus {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 1px;
+    outline: 1px solid var(--primary-color);
+    outline-offset: 2px; /* A little more space looks better with a thin line */
 }
 
 .actions-bar {
@@ -524,8 +524,8 @@ button.rabbit-default:hover {
 .list-actions {
     display: flex;
     align-items: center;
-    /* A larger gap to visually separate view controls from the quick launch button */
-    gap: 20px; 
+    /* A gap to visually separate view controls from the quick launch button */
+    gap: 8px; 
 }
 #toggleAllLink {
     color: var(--icon-color);
