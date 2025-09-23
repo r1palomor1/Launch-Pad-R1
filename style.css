@@ -83,8 +83,8 @@ header #themeBtn:hover {
     align-items: center;
 }
 .icon-previews span img {
-    width: 26px; /* A good size for preview */
-    height: 26px;
+    width: 28px; /* A good size for preview */
+    height: 24px;
     display: block;
 }
 .search-section {
