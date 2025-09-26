@@ -41,7 +41,7 @@ const GENERIC_FAVICON_SRC = 'data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org
 
 async function launchUrlOnRabbit(url, name) {
     try {
-        linksList.innerHTML = `<div class="search-prompt">Launching ${name}...</div>`;
+        // The line below was causing a UI flicker by clearing the screen before launch. It has been removed for a smoother transition.
         if (window.rabbit && window.rabbit.core) {
             await window.rabbit.core.launchUrl({ url: url });
         } else {
