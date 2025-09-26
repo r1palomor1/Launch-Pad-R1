@@ -90,20 +90,19 @@ function hslToRgb(h, s, l) {
 
 function applyModifierToHsl([h, s, l], modifier) {
     const modifiers = {
-        // [hueDelta, saturationMultiplier, lightnessMultiplier]
-        vibrant:    [0,    1.5,  1.0],
-        bold:       [0,    1.6,  1.05],
-        pastel:     [0,    0.6,  1.25],
-        muted:      [0,    0.3,  0.9],
-        neon:       [0,    2.2,  1.1],
-        glow:       [0,    1.8,  1.1], // Special handling in palette generator
-        metallic:   [0,    0.25, 0.8], // Special handling in palette generator
-        vintage:    [25,   0.6,  1.1],
+        vibrant:    [0,    1.8,  1.0],
+        bold:       [0,    2.0,  1.15],
+        pastel:     [0,    0.5,  1.35],
+        muted:      [0,    0.2,  0.8],
+        neon:       [0,    2.5,  1.2],
+        glow:       [0,    2.0,  1.3],
+        metallic:   [-5,   0.15, 0.7],
+        vintage:    [35,   0.4,  1.2],
         invert:     [180,  1.0,  1.0],
-        darker:     [0,    1.0,  0.6],
-        lighter:    [0,    1.0,  1.4],
-        warm:       [20,   1.1,  1.0],
-        cool:       [-20,  1.1,  1.0],
+        darker:     [0,    1.0,  0.4],
+        lighter:    [0,    1.0,  1.6],
+        warm:       [30,   1.2,  1.0],
+        cool:       [-30,  1.2,  1.0],
         monochrome: [0,    0,    1.0],
     };
     const mod = modifiers[modifier];
