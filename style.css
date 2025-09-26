@@ -40,7 +40,7 @@ header {
     align-items: center;
     /* Height is now determined by content + padding */
     padding-top: calc(var(--rabbit-safe-area-inset-top, 0px) + 2px); /* safe area + 2px gap above logo */
-    padding-bottom: 5px; /* Added 1px space above search bar */
+    padding-bottom: 3px; /* Reduced to tighten space */
     background-color: var(--header-bg-color);
     margin-bottom: 0;
 }
@@ -77,6 +77,8 @@ header {
     display: flex;
     gap: 4px;
     margin-bottom: 5px; /* Added 1px space below search bar */
+    max-width: 400px; /* Prevent search from touching edges */
+    margin: 0 auto 5px; /* Center the search section */
     align-items: center; /* Vertically center the input and buttons */
 }
 .search-input-wrapper {
@@ -119,8 +121,8 @@ header {
     background: transparent;
     border: none;
     padding: 0;
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -146,7 +148,7 @@ header {
 }
 input[type="text"] {
     flex-grow: 1;
-    padding: 4px 8px; /* Thinner on landing page */
+    padding: 3px 8px; /* Reduced vertical padding */
     border: 1px solid var(--border-color);
     border-radius: 8px;
     background-color: var(--item-bg);
@@ -583,8 +585,8 @@ button.rabbit-default:hover {
     border: none;
     padding: 0;
     cursor: pointer;
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
