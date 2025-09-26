@@ -500,6 +500,11 @@ button.rabbit-default:hover {
 .theme-color-item:hover {
     background-color: var(--item-bg-hover);
 }
+.theme-color-item.selected {
+    background-color: var(--selection-bg-color);
+    border: 1px solid var(--selection-border-color);
+    padding: 7px; /* Adjust padding to account for the border */
+}
 .theme-color-list .theme-color-item {
     /* Ensure color names are readable in light mode */
     color: var(--font-color);
@@ -653,10 +658,33 @@ button.rabbit-default:hover {
     gap: 4px; /* Squeezed gap */
     transition: padding 0.2s ease-in-out, gap 0.2s ease-in-out; /* Smooth transition */
 }
+.custom-prompt-title-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
 .custom-prompt-dialog .custom-prompt-title {
     margin: 0;
     font-weight: bold;
     text-align: center;
+}
+.studio-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.studio-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: var(--icon-color);
 }
 #genericPromptMessage {
     text-align: center;
