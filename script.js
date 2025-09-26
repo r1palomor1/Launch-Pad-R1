@@ -831,7 +831,7 @@ function renderThemeDialog() {
         themeDialogReset.style.display = 'none';
         themeModeToggleBtn.style.display = 'flex';
         if (studioStage === 1) {
-            themeDialogTitle.textContent = 'Studio: 1. Choose Color';
+            themeDialogTitle.textContent = 'Lab: 1. Choose Color';
             themeDialogOk.textContent = 'Next';
             themeDialogCancel.textContent = 'Cancel';
             STUDIO_BASE_COLORS.forEach(name => {
@@ -842,7 +842,7 @@ function renderThemeDialog() {
                 fragment.appendChild(li);
             });
         } else {
-            themeDialogTitle.textContent = 'Studio: 2. Apply Modifier';
+            themeDialogTitle.textContent = 'Lab: 2. Apply Modifier';
             themeDialogOk.textContent = 'Save';
             themeDialogCancel.textContent = 'Back';
             STUDIO_MODIFIERS.forEach(name => {
