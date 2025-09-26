@@ -29,14 +29,8 @@ const defaultTheme = {
     }
 };
 
-/**
- * Converts a CSS color name or hex string to an RGB array.
- * @param {string} name The color string (e.g., 'SteelBlue', '#3498db', 'f80').
- * @returns {number[]|null} An array [r, g, b] or null if invalid.
- */
 function colorNameToRgb(name) {
     const s = name.trim();
-    // 1. Check for HEX format (e.g., #ff8800, #f80, ff8800)
     const hexMatch = s.match(/^#?([a-f\d]{6}|[a-f\d]{3})$/i);
     if (hexMatch) {
         let hex = hexMatch[1];
@@ -44,31 +38,19 @@ function colorNameToRgb(name) {
             hex = hex.split('').map(char => char + char).join('');
         }
         const bigint = parseInt(hex, 16);
-        const r = (bigint >> 16) & 255;
-        const g = (bigint >> 8) & 255;
-        const b = bigint & 255;
-        return [r, g, b];
+        return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
     }
-
-    // 2. Fallback to CSS color name resolution
     const el = document.createElement('div');
-    // Set a known, unique color that is unlikely to be the result of a valid name.
     const magicColor = 'rgb(1, 2, 3)';
     el.style.color = magicColor;
     try {
         document.body.appendChild(el);
-        // Now, try to set the user's color.
-        el.style.color = s; // Use the trimmed string
+        el.style.color = s;
         const computedColor = window.getComputedStyle(el).color;
-        // If the computed color is still our magic color, the name was invalid.
         if (computedColor === magicColor || computedColor === 'rgba(0, 0, 0, 0)' || computedColor === 'transparent') return null;
-        const rgb = computedColor.match(/\d+/g).map(Number);
-        return rgb;
+        return computedColor.match(/\d+/g).map(Number);
     } finally {
-        // Ensure the temporary element is always removed from the DOM.
-        if (el.parentNode) {
-            document.body.removeChild(el);
-        }
+        if (el.parentNode) el.parentNode.removeChild(el);
     }
 }
 
@@ -106,43 +88,36 @@ function hslToRgb(h, s, l) {
     return `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
 }
 
-/**
- * Applies a named modifier to HSL values.
- * @param {number[]} hsl - An array [h, s, l].
- * @param {string} modifier - The name of the modifier (e.g., 'vibrant', 'pastel').
- * @returns {number[]} The modified [h, s, l] array.
- */
 function applyModifierToHsl([h, s, l], modifier) {
     const modifiers = {
-        // name: [hueDelta, saturationMultiplier, lightnessMultiplier]
-        vibrant: [0, 1.25, 1.0], pastel: [0, 0.5, 1.2], muted: [0, 0.3, 1.0],
-        neon: [0, 1.75, 1.15], darker: [0, 1.0, 0.65], lighter: [0, 1.0, 1.3],
-        rich: [0, 1.2, 0.8], faded: [0, 0.15, 1.25], deep: [0, 1.1, 0.45],
-        dusty: [0, 0.4, 1.15], shaded: [0, 0.85, 0.7], bold: [0, 1.4, 1.05],
-        warm: [20, 1.0, 1.0], cool: [-20, 1.0, 1.0], earthy: [10, 0.65, 0.9],
+        // [hueDelta, saturationMultiplier, lightnessMultiplier]
+        vibrant:    [0,    1.5,  1.0],
+        bold:       [0,    1.6,  1.05],
+        pastel:     [0,    0.6,  1.25],
+        muted:      [0,    0.3,  0.9],
+        neon:       [0,    2.2,  1.1],
+        glow:       [0,    1.8,  1.1], // Special handling in palette generator
+        metallic:   [0,    0.25, 0.8], // Special handling in palette generator
+        vintage:    [25,   0.6,  1.1],
+        invert:     [180,  1.0,  1.0],
+        darker:     [0,    1.0,  0.6],
+        lighter:    [0,    1.0,  1.4],
+        warm:       [20,   1.1,  1.0],
+        cool:       [-20,  1.1,  1.0],
+        monochrome: [0,    0,    1.0],
     };
-
     const mod = modifiers[modifier];
-    if (!mod) return [h, s, l]; // Return original if modifier is unknown
-
+    if (!mod) return [h, s, l];
     let [hDelta, sMult, lMult] = mod;
-
-    // Apply Hue change (and wrap around if it goes beyond 0-360 degrees)
     let newH = (h * 360 + hDelta) / 360;
-    newH = (newH % 1 + 1) % 1; // Ensures h is always between 0 and 1
-
-    // Apply Saturation, clamping between 0 and 1
+    newH = (newH % 1 + 1) % 1;
     let newS = Math.max(0, Math.min(1, s * sMult));
-
-    // Apply Lightness, clamping between a safe range (0.05 to 0.95)
-    // to prevent pure black or white, which can cause contrast issues.
     let newL = Math.max(0.05, Math.min(0.95, l * lMult));
 
-    // Special override for 'bold' to ensure it's always impactful
+    // Special override for bold to ensure it's always high-contrast
     if (modifier === 'bold') {
-        newL = Math.max(0.4, Math.min(0.65, newL));
+        newL = Math.max(0.45, Math.min(0.6, newL));
     }
-
     return [newH, newS, newL];
 }
 
@@ -155,50 +130,87 @@ function generatePaletteFromRgb(rgb, mode = 'dark', modifier = null) {
     }
 
     const MIN_CONTRAST_RATIO = 4.5;
+    const primaryColor = hslToRgb(h, s, l);
+    const primaryRgb = colorNameToRgb(primaryColor);
 
     if (mode === 'light') {
-        let fontRgb = colorNameToRgb(hslToRgb(h, s * 0.6, 0.1));
-        let bgHsl = [h, s * 0.2, 0.98]; // Initial light background HSL
-        let bgRgb = colorNameToRgb(hslToRgb(...bgHsl));
+        let fontHsl = [h, s * 0.8, 0.1]; // Dark, saturated font
+        let bgHsl = [h, s * 0.1, 0.98];   // Very light, desaturated background
 
-        // Adjust background color until contrast is acceptable
+        // Special overrides for certain modifiers to create a more cohesive feel
+        if (modifier === 'glow' || modifier === 'neon') {
+            bgHsl = [h, 0, 1]; // Pure white background for max pop
+            fontHsl = [h, 1, 0.05];
+        } else if (modifier === 'pastel') {
+            bgHsl = [h, 0.2, 0.97];
+        } else if (modifier === 'metallic') {
+            bgHsl = [h, 0.05, 0.95];
+            fontHsl = [h, 0.1, 0.2];
+        }
+
+        let bgRgb = colorNameToRgb(hslToRgb(...bgHsl));
+        let fontRgb = colorNameToRgb(hslToRgb(...fontHsl));
+        
         while (getContrast(fontRgb, bgRgb) < MIN_CONTRAST_RATIO && bgHsl[2] > 0.8) {
-            bgHsl[2] -= 0.02; // Make background slightly darker
+            bgHsl[2] -= 0.02; // Make background slightly darker if contrast fails
             bgRgb = colorNameToRgb(hslToRgb(...bgHsl));
         }
 
-        const primaryColor = hslToRgb(h, s, l);
-        const finalLuminance = getLuminance(colorNameToRgb(primaryColor));
-        const buttonTextColor = finalLuminance > 0.5 ? '#000000' : '#FFFFFF';
-        const secondaryColor = finalLuminance > 0.85 ? hslToRgb(...bgHsl) : primaryColor;
-
-        return { '--primary-color': primaryColor, '--secondary-color': secondaryColor, '--bg-color': hslToRgb(...bgHsl), '--header-bg-color': hslToRgb(...bgHsl), '--item-bg': '#ffffff', '--item-bg-hover': hslToRgb(h, s * 0.1, 0.95), '--border-color': hslToRgb(h, s * 0.1, 0.88), '--font-color': hslToRgb(h, s * 0.6, 0.1), '--icon-color': hslToRgb(h, s * 0.3, 0.45), '--button-font-color': buttonTextColor };
+        const buttonTextColor = getContrast(primaryRgb, [255, 255, 255]) > getContrast(primaryRgb, [0, 0, 0]) ? '#FFFFFF' : '#000000';
+        
+        return {
+            '--primary-color': primaryColor,
+            '--secondary-color': primaryColor, // Use primary for strong accent
+            '--bg-color': hslToRgb(...bgHsl),
+            '--header-bg-color': hslToRgb(...bgHsl),
+            '--item-bg': '#ffffff',
+            '--item-bg-hover': hslToRgb(h, s * 0.1, 0.95),
+            '--border-color': hslToRgb(h, s * 0.1, 0.88),
+            '--font-color': hslToRgb(...fontHsl),
+            '--icon-color': hslToRgb(h, s * 0.3, 0.45),
+            '--button-font-color': buttonTextColor
+        };
     }
 
     // Dark Mode
-    let fontRgb = [224, 224, 224]; // #e0e0e0
-    let bgHsl = [h, s * 0.5, 0.07]; // Initial dark background HSL
-    let bgRgb = colorNameToRgb(hslToRgb(...bgHsl));
+    let fontHsl = [h, s * 0.15, 0.9]; // Light, slightly colored font
+    let bgHsl = [h, s * 0.5, 0.05];   // Very dark, saturated background
 
-    // Adjust background color until contrast is acceptable
-    while (getContrast(fontRgb, bgRgb) < MIN_CONTRAST_RATIO && bgHsl[2] < 0.2) {
-        bgHsl[2] += 0.01; // Make background slightly lighter
+    // Special overrides for certain modifiers
+    if (modifier === 'glow' || modifier === 'neon') {
+        bgHsl = [h, s, 0.02]; // Almost pure black for max pop
+        fontHsl = [h, 0.1, 0.95];
+    } else if (modifier === 'pastel') {
+        bgHsl = [h, 0.2, 0.1];
+    } else if (modifier === 'metallic') {
+        bgHsl = [h, 0.1, 0.08];
+        fontHsl = [h, 0.05, 0.8];
+    }
+
+    let bgRgb = colorNameToRgb(hslToRgb(...bgHsl));
+    let fontRgb = colorNameToRgb(hslToRgb(...fontHsl));
+
+    while (getContrast(fontRgb, bgRgb) < MIN_CONTRAST_RATIO && bgHsl[2] < 0.25) {
+        bgHsl[2] += 0.01; // Make background slightly lighter if contrast fails
         bgRgb = colorNameToRgb(hslToRgb(...bgHsl));
     }
 
-    const primaryColor = hslToRgb(h, s, l);
-    const finalLuminance = getLuminance(colorNameToRgb(primaryColor));
-    const buttonTextColor = finalLuminance > 0.5 ? '#000000' : '#FFFFFF';
-    const secondaryColor = finalLuminance < 0.15 ? `rgb(${fontRgb.join(',')})` : primaryColor;
+    const buttonTextColor = getContrast(primaryRgb, [255, 255, 255]) > getContrast(primaryRgb, [0, 0, 0]) ? '#FFFFFF' : '#000000';
 
-    return { '--primary-color': primaryColor, '--secondary-color': secondaryColor, '--bg-color': hslToRgb(...bgHsl), '--header-bg-color': hslToRgb(...bgHsl), '--item-bg': hslToRgb(h, s * 0.6, 0.12), '--item-bg-hover': hslToRgb(h, s * 0.6, 0.16), '--border-color': hslToRgb(h, s * 0.6, 0.18), '--font-color': `rgb(${fontRgb.join(',')})`, '--icon-color': hslToRgb(h, s * 0.3, 0.5), '--button-font-color': buttonTextColor };
+    return {
+        '--primary-color': primaryColor,
+        '--secondary-color': primaryColor, // Use primary for strong accent
+        '--bg-color': hslToRgb(...bgHsl),
+        '--header-bg-color': hslToRgb(...bgHsl),
+        '--item-bg': hslToRgb(h, s * 0.6, 0.12),
+        '--item-bg-hover': hslToRgb(h, s * 0.6, 0.16),
+        '--border-color': hslToRgb(h, s * 0.6, 0.18),
+        '--font-color': hslToRgb(...fontHsl),
+        '--icon-color': hslToRgb(h, s * 0.3, 0.5),
+        '--button-font-color': buttonTextColor
+    };
 }
 
-/**
- * Calculates the WCAG relative luminance of an RGB color.
- * @param {number[]} rgb - An array [r, g, b] from 0-255.
- * @returns {number} The relative luminance (0 to 1).
- */
 function getLuminance(rgb) {
     const a = rgb.map(v => {
         v /= 255;
@@ -207,13 +219,8 @@ function getLuminance(rgb) {
     return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
 }
 
-/**
- * Calculates the contrast ratio between two RGB colors.
- * @param {number[]} rgb1 - The first color.
- * @param {number[]} rgb2 - The second color.
- * @returns {number} The contrast ratio.
- */
 function getContrast(rgb1, rgb2) {
+    if (!rgb1 || !rgb2) return 1; // Failsafe
     const lum1 = getLuminance(rgb1);
     const lum2 = getLuminance(rgb2);
     const brightest = Math.max(lum1, lum2);
