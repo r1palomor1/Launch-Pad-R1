@@ -39,7 +39,7 @@ header {
     justify-content: center;
     align-items: center;
     /* Height is now determined by content + padding */
-    padding-top: calc(var(--rabbit-safe-area-inset-top, 0px) + 2px); /* safe area + 2px gap above logo */
+    padding-top: var(--rabbit-safe-area-inset-top, 0px); /* Remove extra gap above logo */
     padding-bottom: 3px; /* Reduced to tighten space */
     background-color: var(--header-bg-color);
     margin-bottom: 0;
