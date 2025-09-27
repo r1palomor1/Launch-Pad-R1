@@ -141,11 +141,6 @@ header {
     height: 16px;
     fill: var(--icon-color);
 }
-.app-actions #themeBtn img {
-    width: 18px;
-    height: 18px;
-    display: block;
-}
 input[type="text"] {
     flex-grow: 1;
     padding: 3px 8px; /* Reduced vertical padding */
@@ -186,12 +181,8 @@ button:hover {
 #deleteAllBtn:hover svg {
     fill: #e74c3c; /* A dangerous red */
 }
-#searchBtn:hover svg, #quickLaunchBtn:hover svg, .view-btn:hover svg {
+#searchBtn:hover svg, #quickLaunchBtn:hover svg, .view-btn:hover svg, #themeBtn:hover svg {
     fill: var(--primary-color);
-}
-/* For the theme button, which uses an <img>, we can't change fill. A background is a good alternative. */
-#themeBtn:hover {
-    background-color: var(--item-bg-hover);
 }
 button:disabled {
     opacity: 0.6;
