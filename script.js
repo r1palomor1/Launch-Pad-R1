@@ -1,1188 +1,436 @@
-const mainView = document.getElementById('mainView');
+// --- Element References (Existing Launch Pad elements + New Theme elements) ---
+const root = document.documentElement; // For applying CSS variables
+const launcher = document.getElementById('launcher');
 const searchInput = document.getElementById('searchInput');
-const logo = document.getElementById('logo');
-const clearSearchBtn = document.getElementById('clearSearchBtn');
-const searchBtn = document.getElementById('searchBtn');
+const searchButton = document.getElementById('searchButton');
+const addLinkButton = document.getElementById('addLinkButton');
 const linksList = document.getElementById('linksList');
-const toggleViewBtn = document.getElementById('toggleViewBtn');
-const quickLaunchBtn = document.getElementById('quickLaunchBtn');
-const toggleAllLink = document.getElementById('toggleAllLink');
-const cancelSearchBtn = document.getElementById('cancelSearchBtn');
-const themeBtn = document.getElementById('themeBtn');
-const deleteAllBtn = document.getElementById('deleteAllBtn');
-const themeDialogOverlay = document.getElementById('themeDialogOverlay');
-const themeDialogTitle = document.getElementById('themeDialogTitle');
-const themeDialogError = document.getElementById('themeDialogError');
-const themeColorList = document.getElementById('themeColorList');
-const themeDialogInput = document.getElementById('themeDialogInput');
-const clearThemeInputBtn = document.getElementById('clearThemeInputBtn');
-const themeDialogOk = document.getElementById('themeDialogOk');
-const themeDialogCancel = document.getElementById('themeDialogCancel');
-const themeDialogReset = document.getElementById('themeDialogReset');
-const themeModeToggleBtn = document.getElementById('themeModeToggleBtn');
-const themeStudioBtn = document.getElementById('themeStudioBtn');
-const deletePromptOverlay = document.getElementById('deletePromptOverlay');
-const deleteLinksList = document.getElementById('deleteLinksList');
-const deletePromptCancel = document.getElementById('deletePromptCancel');
-const deletePromptOk = document.getElementById('deletePromptOk');
-const favoritesPromptOverlay = document.getElementById('favoritesPromptOverlay');
-const favoritesList = document.getElementById('favoritesList');
-const favoritesPromptClose = document.getElementById('favoritesPromptClose');
-const genericPromptOverlay = document.getElementById('genericPromptOverlay');
-const genericPromptMessage = document.getElementById('genericPromptMessage');
-const genericPromptActions = document.getElementById('genericPromptActions');
+const settingsButton = document.getElementById('settingsButton');
+const settingsDialogOverlay = document.getElementById('settingsDialogOverlay');
+const settingsDialog = document.getElementById('settingsDialog');
+const closeSettingsButton = document.getElementById('closeSettingsButton');
+const themeModeToggle = document.getElementById('themeModeToggle'); // Existing toggle in settings
+const themeDialogOverlay = document.getElementById('themeDialogOverlay'); // Existing theme dialog
+const themeStudioBtn = document.getElementById('themeStudioBtn'); // Existing button to open color lab
+const themeColorList = document.getElementById('themeColorList'); // Existing list for built-in themes
+const themeDialogOk = document.getElementById('themeDialogOk'); // Existing OK button
+const themeDialogCancel = document.getElementById('themeDialogCancel'); // Existing Cancel button
 
-const SUN_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM11 1h2v3h-2V1zm0 19h2v3h-2v-3zM3.55 4.95l1.414-1.414L7.05 5.636 5.636 7.05 3.55 4.95zm12.728 12.728l1.414-1.414L19.778 18.364l-1.414 1.414-2.086-2.086zM1 11h3v2H1v-2zm19 0h3v2h-3v-2zM4.95 20.45l-1.414-1.414L5.636 17l1.414 1.414-2.086 2.036zM18.364 7.05l1.414-1.414L21.864 7.05l-1.414 1.414-2.086-2.086z"/></svg>`;
-const MOON_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 7a7 7 0 0 0 12 4.9v.1c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2h.1A6.979 6.979 0 0 0 10 7zm-6 5a8 8 0 0 0 8 8 .5.5 0 0 1 .5.5v.5a10 10 0 1 1 0-20 .5.5 0 0 1 .5.5V4a8 8 0 0 0-8 8z"/></svg>`;
+// New Theme Elements for the integrated Color Lab
+const colorLabToggleContainer = themeDialogOverlay.querySelector('.color-lab-checkbox-container');
+const colorLabToggle = document.getElementById('color-lab-toggle');
+const modifierControls = document.getElementById('modifier-controls');
+const modifierGrid = modifierControls.querySelector('.modifier-grid');
+const saveCustomThemeButton = document.getElementById('save-custom-theme-button');
+const cancelCustomThemeButton = document.getElementById('cancel-custom-theme-button');
 
-let originalThemeState = { theme: 'rabbit', mode: 'dark' };
-let suggestionRequestCount = 0;
-const GENERIC_FAVICON_SRC = 'data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23888\'%3e%3cpath d=\'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z\'/%3e%3c/svg%3e';
+// --- Global State Variables (Existing + New) ---
+let links = JSON.parse(localStorage.getItem('links')) || [];
+let isThemeStudioMode = false; // Flag to indicate if the theme dialog is in Color Lab mode
+let currentSelectedBuiltinColorName = ''; // Stores the name of the built-in color chosen for modification
+let currentModifier = 'Bold'; // Default modifier for Color Lab
+let currentIsDarkMode = false; // Tracks the state of themeModeToggle
 
-async function launchUrlOnRabbit(url, name) {
-    try {
-        // The line below was causing a UI flicker by clearing the screen before launch. It has been removed for a smoother transition.
-        if (window.rabbit && window.rabbit.core) {
-            await window.rabbit.core.launchUrl({ url: url });
-        } else {
-            console.log(`[Browser Mode] Launching: ${name} at ${url}`);
-            window.location.href = url;
-        }
-    } catch (error) {
-        console.error("Error launching URL on Rabbit:", error);
-        await showAlert("Failed to launch URL.");
-    }
-}
-
-function triggerHaptic() {
-    try {
-        if (window.rabbit && window.rabbit.core && window.rabbit.core.vibrate) {
-            window.rabbit.core.vibrate({ pattern: [50] });
-        }
-    } catch (e) { console.error("Haptic feedback failed:", e); }
-}
-
-function scrollToTop() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function goHome() {
-    themeDialogOverlay.style.display = 'none';
-    deletePromptOverlay.style.display = 'none';
-    favoritesPromptOverlay.style.display = 'none';
-    genericPromptOverlay.style.display = 'none';
-    searchInput.value = '';
-    clearSearchBtn.style.display = 'none';
-    mainView.classList.remove('input-mode-active');
-    renderLinks();
-    scrollToTop();
-}
-
-function debounce(func, delay) {
-    let timeout;
-    return function(...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), delay);
-    };
-}
-
-function showGenericPrompt({ message, buttons }) {
-    return new Promise(resolve => {
-        genericPromptMessage.textContent = message;
-        genericPromptActions.innerHTML = '';
-        const sortedButtons = buttons.sort((a, b) => (a.order || 0) - (b.order || 0));
-        sortedButtons.forEach(btnConfig => {
-            const button = document.createElement('button');
-            button.textContent = btnConfig.text;
-            if (btnConfig.class) {
-                button.className = btnConfig.class;
-            }
-            button.onclick = () => {
-                genericPromptOverlay.style.display = 'none';
-                resolve(btnConfig.value);
-            };
-            genericPromptActions.appendChild(button);
-        });
-        genericPromptActions.style.justifyContent = buttons.length === 1 ? 'center' : 'space-between';
-        genericPromptOverlay.style.display = 'flex';
-    });
-}
-
-async function showAlert(message) {
-    return showGenericPrompt({
-        message,
-        buttons: [ { text: 'OK', value: true, class: '' } ]
-    });
-}
-
-async function showConfirm(message) {
-    return showGenericPrompt({
-        message,
-        buttons: [
-            { text: 'Cancel', value: false, class: 'secondary', order: 1 },
-            { text: 'OK', value: true, class: '', order: 2 }
-        ]
-    });
-}
-
-async function sayOnRabbit(message) {
-    try {
-        if (window.rabbit && window.rabbit.core) {
-            await window.rabbit.core.say({ text: message });
-        }
-    } catch (e) { console.error("Say feedback failed:", e); }
-}
-
-function normalizeUrl(url) {
-    if (!url || typeof url !== 'string') return '';
-    let trimmedUrl = url.trim();
-    if (trimmedUrl === '' || trimmedUrl.toLowerCase().startsWith('javascript:') || trimmedUrl === 'https://') {
-        return '';
-    }
-    if (!/^(https?:\/\/)/i.test(trimmedUrl)) {
-        trimmedUrl = `https://${trimmedUrl}`;
-    }
-    return trimmedUrl;
-}
-
-const categories = ['Education', 'Entertainment', 'Finance', 'Gaming', 'Health', 'Music', 'News', 'Personal', 'Reference', 'Shopping', 'Social', 'Sports', 'Tech', 'Tools', 'Travel', 'Work', 'Other'];
-
-let links = JSON.parse(localStorage.getItem('launchPadR1Links')) || [
-    { description: 'Youtube', url: 'https://m.youtube.com', category: 'Entertainment' },
-    { description: 'Copilot', url: 'https://copilot.microsoft.com/', category: 'Tools' },
-    { description: 'Radio.net', url: 'https://www.radio.net/', category: 'Music' }
+// --- Theme Data (Same as before) ---
+const baseColors = [
+    { name: "Red", rgb: "255, 99, 71" }, { name: "Blue", rgb: "65, 105, 225" },
+    { name: "Green", rgb: "60, 179, 113" }, { name: "Yellow", rgb: "255, 215, 0" },
+    { name: "Orange", rgb: "255, 165, 0" }, { name: "Purple", rgb: "138, 43, 226" },
+    { name: "Pink", rgb: "255, 105, 180" }, { name: "Teal", rgb: "0, 128, 128" },
+    { name: "Cyan", rgb: "0, 255, 255" }, { name: "Magenta", rgb: "255, 0, 255" },
+    { name: "Lime", rgb: "50, 205, 50" }, { name: "Crimson", rgb: "220, 20, 60" },
+    { name: "Indigo", rgb: "75, 0, 130" }, { name: "Turquoise", rgb: "64, 224, 208" },
+    { name: "Emerald", rgb: "80, 200, 120" }, { name: "Gold", rgb: "255, 215, 0" },
+    { name: "Maroon", rgb: "128, 0, 0" }, { name: "Olive", rgb: "128, 128, 0" },
+    { name: "Lavender", rgb: "230, 230, 250" }, { name: "Beige", rgb: "245, 245, 220" },
+    { name: "Brown", rgb: "165, 42, 42" }, { name: "Gray", rgb: "128, 128, 128" },
+    { name: "Coral", rgb: "255, 127, 80" }, { name: "SkyBlue", rgb: "135, 206, 235" }
 ];
 
-let needsSave = false;
-const urlMigrationFlag = 'launchPadR1UrlNormalized_v1';
-if (!localStorage.getItem(urlMigrationFlag)) {
-    links.forEach(link => {
-        const originalUrl = link.url;
-        const normalizedUrl = normalizeUrl(originalUrl);
-        if (originalUrl !== normalizedUrl && normalizedUrl) {
-            link.url = normalizedUrl;
-            needsSave = true;
-        }
-    });
-    localStorage.setItem(urlMigrationFlag, 'true');
-}
-links.forEach((link, index) => {
-    if (!link.id) {
-        link.id = `link-${Date.now()}-${index}`;
-        needsSave = true;
-    }
-});
-const oldFavoriteIndex = parseInt(localStorage.getItem('launchPadR1FavoriteLinkIndex') || '-1', 10);
-const oldFavoriteLinkId = localStorage.getItem('launchPadR1FavoriteLinkId');
-let favoriteLinkIds = new Set(JSON.parse(localStorage.getItem('launchPadR1FavoriteLinkIds')) || []);
-if (oldFavoriteLinkId && favoriteLinkIds.size === 0) {
-    favoriteLinkIds.add(oldFavoriteLinkId);
-} else if (oldFavoriteIndex !== -1 && links[oldFavoriteIndex] && favoriteLinkIds.size === 0) {
-    favoriteLinkIds.add(links[oldFavoriteIndex].id);
-}
-if (localStorage.getItem('launchPadR1FavoriteLinkIndex') || localStorage.getItem('launchPadR1FavoriteLinkId')) {
-    localStorage.removeItem('launchPadR1FavoriteLinkIndex');
-    localStorage.removeItem('launchPadR1FavoriteLinkId');
-    needsSave = true;
-}
-if (needsSave) {
-    localStorage.setItem('launchPadR1Links', JSON.stringify(links));
-}
-links.forEach(link => {
-    if (!link.category) {
-        link.category = 'Other';
-    }
-});
+const modifiers = [
+    "Bold", "Darker", "Lighter", "Cool", "Warm", "Pastel", "Muted", "Vibrant",
+    "Monochrome", "Glow", "Neon", "Metallic", "Vintage", "Invert"
+];
 
-let currentView = localStorage.getItem('launchPadR1View') || 'list';
-let collapsedCategories = JSON.parse(localStorage.getItem('launchPadR1CollapsedCategories')) || [];
-let currentThemeName = localStorage.getItem('launchPadR1Theme') || 'rabbit';
-let currentLuminanceMode = localStorage.getItem('launchPadR1LuminanceMode') || 'dark';
-let customTheme = JSON.parse(localStorage.getItem('launchPadR1CustomTheme')) || null;
-
-function updateToggleAllLinkState() {
-    if (currentView !== 'group') {
-        toggleAllLink.style.display = 'none';
-        return;
-    }
-    const allCategoriesInApp = [...new Set(links.map(link => link.category || 'Other'))];
-    const hasExpandedCategory = allCategoriesInApp.some(cat => !collapsedCategories.includes(cat));
-    if (hasExpandedCategory) {
-        toggleAllLink.textContent = 'Collapse All';
-        toggleAllLink.style.display = 'block';
-    } else {
-        toggleAllLink.style.display = 'none';
-    }
-}
-
-function renderLinks(linksToRender = links) {
-    if (currentView === 'list') {
-        toggleViewBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 3h8v8H3V3zM13 3h8v8h-8V3zM3 13h8v8H3v-8zM13 13h8v8h-8v-8z"/></svg>`;
-        toggleViewBtn.title = 'Group View';
-    } else {
-        toggleViewBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 4H21V6H3V4ZM3 11H21V13H3V11ZM3 18H21V20H3V18Z" /></svg>`;
-        toggleViewBtn.title = 'List View';
-    }
-    quickLaunchBtn.classList.toggle('active', favoriteLinkIds.size > 0);
+// --- Core Launch Pad Functions (Preserved and slightly adapted) ---
+function renderLinks() {
     linksList.innerHTML = '';
-    const fragment = document.createDocumentFragment();
-    if (linksToRender.length === 0) {
-        linksList.innerHTML = '<p style="text-align:center; color: #6c757d;">No links saved. Type in the search box to add a new link.</p>';
-        return;
-    }
-    const groupedLinks = linksToRender.reduce((acc, link) => {
-        const category = link.category || 'Other';
-        if (!acc[category]) acc[category] = [];
-        acc[category].push(link);
-        return acc;
-    }, {});
-    for (const category in groupedLinks) {
-        groupedLinks[category].sort((a, b) => a.description.localeCompare(b.description));
-    }
-    const sortedCategories = Object.keys(groupedLinks).sort((a, b) => {
-        if (a === 'Other') return 1;
-        if (b === 'Other') return -1;
-        return a.localeCompare(b);
+    links.forEach((link, index) => {
+        const li = document.createElement('li');
+        li.draggable = true;
+        li.dataset.index = index;
+        li.innerHTML = `
+            <a href="${link.url}" target="_blank">
+                <img src="https://www.google.com/s2/favicons?domain=${new URL(link.url).hostname}" alt="Favicon">
+                <span>${link.name}</span>
+            </a>
+            <button class="remove-link-button" data-index="${index}">X</button>
+        `;
+        linksList.appendChild(li);
     });
-    const favoriteCategories = new Set(links.filter(l => favoriteLinkIds.has(l.id)).map(l => l.category));
-    updateToggleAllLinkState();
-    if (currentView === 'list') {
-        sortedCategories.forEach(category => {
-            const categoryHeader = document.createElement('h3');
-            categoryHeader.className = 'category-header';
-            categoryHeader.innerHTML = favoriteCategories.has(category) ? `${category} <span class="favorite-indicator">★</span>` : category;
-            fragment.appendChild(categoryHeader);
-            groupedLinks[category].forEach(link => fragment.appendChild(renderLinkItem(link)));
-        });
-    } else {
-        sortedCategories.forEach(category => {
-            const categoryHeader = document.createElement('h3');
-            categoryHeader.className = 'category-header collapsible';
-            categoryHeader.innerHTML = favoriteCategories.has(category) ? `${category} <span class="favorite-indicator" aria-hidden="true">★</span>` : category;
-            fragment.appendChild(categoryHeader);
-            const linksContainer = document.createElement('div');
-            linksContainer.className = 'links-container';
-            groupedLinks[category].forEach(link => linksContainer.appendChild(renderLinkItem(link)));
-            fragment.appendChild(linksContainer);
-            const isSearching = searchInput.value.trim() !== '';
-            const isCollapsed = collapsedCategories.includes(category);
-            if (isSearching || !isCollapsed) {
-                categoryHeader.classList.add('expanded');
-                linksContainer.classList.add('expanded');
-            }
-        });
+    addDragAndDropListeners();
+    addRemoveLinkListeners();
+}
+
+function addLink(name, url) {
+    if (name && url) {
+        links.push({ name, url });
+        localStorage.setItem('links', JSON.stringify(links));
+        renderLinks();
     }
-    linksList.appendChild(fragment);
 }
 
-function getHostname(url) {
-    try {
-        return new URL(url).hostname;
-    } catch (e) { return url; }
-}
-
-function renderLinkItem(link) {
-    const li = document.createElement('li');
-    li.className = 'link-item';
-    li.dataset.id = link.id;
-    const isFavorite = favoriteLinkIds.has(link.id);
-    li.innerHTML = `
-        <img src="https://www.google.com/s2/favicons?sz=64&domain_url=${getHostname(link.url)}" class="link-favicon" alt="Favicon" onerror="this.onerror=null; this.src='${GENERIC_FAVICON_SRC}'; this.style.padding='3px';">
-        <div class="link-display">
-            <div class="link-description">${link.description}</div>
-            <div class="link-actions">
-                <span class="favorite-btn" title="Set as favorite"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 18.26l-7.053 3.948 1.575-7.928L.587 8.792l8.027-.952L12 .5l3.386 7.34 8.027.952-5.935 5.488 1.575 7.928z"></path></svg></span>
-                <span class="edit-btn" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.7279 9.57627L14.3137 8.16206L5.82842 16.6473V18H7.18263L15.7279 9.57627ZM17.1421 8.16206L18.5563 6.74785L17.1421 5.33363L15.7279 6.74785L17.1421 8.16206ZM7.24264 20H3V15.7574L14.435 4.32233C14.8256 3.93181 15.4587 3.93181 15.8492 4.32233L19.6777 8.15076C20.0682 8.54128 20.0682 9.17445 19.6777 9.56497L8.24264 21H7.24264V20Z"></path></svg></span>
-                <span class="delete-btn" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17 6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6ZM18 8H6V20H18V8ZM9 11H11V17H9V11ZM13 11H15V17H13V11ZM9 4V6H15V4H9Z"></path></svg></span>
-            </div>
-        </div>`;
-    if (isFavorite) {
-        li.querySelector('.favorite-btn')?.classList.add('is-favorite');
-    }
-    return li;
-}
-
-function setView(view) {
-    currentView = view;
-    localStorage.setItem('launchPadR1View', view);
+function removeLink(index) {
+    links.splice(index, 1);
+    localStorage.setItem('links', JSON.stringify(links));
     renderLinks();
 }
 
-function saveLinks() {
-    localStorage.setItem('launchPadR1Links', JSON.stringify(links));
-    localStorage.setItem('launchPadR1FavoriteLinkIds', JSON.stringify(Array.from(favoriteLinkIds)));
-}
-
-function handleCategoryToggle(headerElement) {
-    const linksContainer = headerElement.nextElementSibling;
-    if (!linksContainer || !linksContainer.classList.contains('links-container')) return;
-    linksContainer.classList.toggle('expanded');
-    headerElement.classList.toggle('expanded');
-    const categoryName = headerElement.textContent.replace(' ★', '');
-    const isNowExpanded = linksContainer.classList.contains('expanded');
-    if (isNowExpanded) {
-        collapsedCategories = collapsedCategories.filter(c => c !== categoryName);
-    } else {
-        if (!collapsedCategories.includes(categoryName)) {
-            collapsedCategories.push(categoryName);
-        }
-    }
-    localStorage.setItem('launchPadR1CollapsedCategories', JSON.stringify(collapsedCategories));
-    updateToggleAllLinkState();
-}
-
-function handleDeleteLink(idToDelete) {
-    const index = links.findIndex(l => l.id === idToDelete);
-    if (index === -1) return;
-    const [deletedLink] = links.splice(index, 1);
-    favoriteLinkIds.delete(deletedLink.id);
-    saveLinks();
-    searchHandler(searchInput.value);
-}
-
-function handleLaunchLink(li, idToLaunch) {
-    if (li.querySelector('.edit-description')) return;
-    const link = links.find(l => l.id === idToLaunch);
-    if (!link) return;
-    triggerHaptic();
-    launchUrlOnRabbit(link.url, link.description);
-}
-
-linksList.addEventListener('click', async (e) => {
-    const target = e.target;
-    if (target.matches('input.new-description')) {
-        if (!target.dataset.hasBeenInteracted) {
-            target.dataset.hasBeenInteracted = 'true';
-            setTimeout(() => {
-                const len = target.value.length;
-                target.setSelectionRange(len, len);
-            }, 0);
-        }
-        return;
-    }
-    const li = target.closest('.link-item');
-    const categoryHeader = target.closest('.category-header.collapsible');
-    if (currentView === 'group' && categoryHeader) {
-        handleCategoryToggle(categoryHeader);
-        return;
-    }
-    if (!li) return;
-    const id = li.dataset.id;
-    if (target.closest('.delete-btn')) {
-        const link = links.find(l => l.id === id);
-        if (link && await showConfirm(`Are you sure you want to delete "${link.description}"?`)) {
-            handleDeleteLink(id);
-        }
-    } else if (target.closest('.edit-btn')) {
-        const index = links.findIndex(l => l.id === id);
-        if (index !== -1) editLink(li, index);
-    } else if (target.closest('.favorite-btn')) {
-        if (favoriteLinkIds.has(id)) {
-            favoriteLinkIds.delete(id);
-        } else {
-            favoriteLinkIds.add(id);
-        }
-        triggerHaptic();
-        saveLinks();
-        searchHandler(searchInput.value);
-    } else if (target.closest('.link-display') || target.closest('.link-favicon')) {
-        handleLaunchLink(li, id);
-    }
-});
-
-function createFormHTML(linkData = {}, isForEditing = false) {
-    const { description = '', url = 'https://', category = 'Other' } = linkData;
-    const categoryOptions = categories.map(cat => `<option value="${cat}" ${category === cat ? 'selected' : ''}>${cat}</option>`).join('');
-    const inputClassPrefix = isForEditing ? 'edit' : 'new';
-    const saveButtonClass = isForEditing ? 'save-btn' : 'save-new-btn';
-    return `
-        <div class="link-info">
-            <input type="text" class="${inputClassPrefix}-description" value="${description}" placeholder="Description">
-            <input type="text" class="${inputClassPrefix}-url" value="${url}" placeholder="URL (e.g., https://...)">
-            <select class="${inputClassPrefix}-category">${categoryOptions}</select>
-            <div class="form-actions">
-                <button class="cancel-btn secondary">Cancel</button>
-                <button class="${saveButtonClass}">${isForEditing ? 'Save' : 'Add'}</button>
-            </div>
-        </div>`;
-}
-
-function editLink(li, index) {
-    const link = links[index];
-    li.innerHTML = createFormHTML(link, true);
-    li.querySelector('.save-btn').addEventListener('click', async () => {
-        const newDescription = li.querySelector('.edit-description').value.trim();
-        const newUrl = normalizeUrl(li.querySelector('.edit-url').value.trim());
-        const newCategory = li.querySelector('.edit-category').value;
-        if (newDescription && newUrl) {
-            links[index] = { ...links[index], description: newDescription, url: newUrl, category: newCategory };
-            saveLinks();
-            searchHandler(searchInput.value);
-        } else {
-            await showAlert('Description and URL cannot be empty or invalid.');
-        }
-    });
-    li.querySelector('.cancel-btn').addEventListener('click', () => searchHandler(searchInput.value));
-}
-
-async function showAddForm(prefillData = {}) {
-    const existingNewInput = document.querySelector('.new-description');
-    if (existingNewInput) {
-        const existingForm = existingNewInput.closest('.link-item');
-        if (prefillData.description) existingForm.querySelector('.new-description').value = prefillData.description;
-        if (prefillData.url) existingForm.querySelector('.new-url').value = prefillData.url;
-        existingForm.querySelector('.new-description').focus();
-        return;
-    }
-    const li = document.createElement('li');
-    li.className = 'link-item';
-    li.innerHTML = createFormHTML(prefillData, false);
-    linksList.appendChild(li);
-    li.scrollIntoView({ behavior: 'smooth' });
-    if (prefillData.description) {
-        li.querySelector('.new-category').focus();
-    } else {
-        li.querySelector('.new-description').focus();
-    }
-    const saveHandler = async () => {
-        const description = li.querySelector('.new-description').value.trim();
-        const url = li.querySelector('.new-url').value.trim();
-        const category = li.querySelector('.new-category').value;
-        await addNewLink({ description, url, category });
-    };
-    li.querySelector('.save-new-btn').addEventListener('click', saveHandler);
-    li.querySelector('.cancel-btn').addEventListener('click', () => {
-        li.remove();
-        searchInput.value = '';
-        linksList.innerHTML = `<div class="search-prompt">Search your links or add from the web.</div>`;
-        clearSearchBtn.style.display = 'none';
-        cancelSearchBtn.style.display = 'flex';
-        searchInput.focus();
+function addRemoveLinkListeners() {
+    document.querySelectorAll('.remove-link-button').forEach(button => {
+        button.onclick = (e) => {
+            e.stopPropagation();
+            removeLink(parseInt(e.target.dataset.index));
+        };
     });
 }
 
-async function handleAddFromQuery(description, url) {
-    if (!description) return;
-    linksList.innerHTML = '';
-    let prefillData = {};
-    if (description.includes(' ')) {
-        prefillData = { description: description.replace(/\b\w/g, l => l.toUpperCase()), url: url || 'https://' };
-    } else {
-        const finalUrl = url || (() => {
-            const hasProtocol = description.startsWith('http://') || description.startsWith('https://');
-            const looksLikeDomain = description.includes('.');
-            return hasProtocol ? description : (looksLikeDomain ? `https://${description}` : `https://www.${description}.com`);
-        })();
-        const finalDescription = description.split('.')[0].replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\b\w/g, l => l.toUpperCase());
-        prefillData = { description: finalDescription, url: finalUrl, category: 'Other' };
-    }
-    prefillData.url = normalizeUrl(prefillData.url);
-    await showAddForm(prefillData);
-}
+function addDragAndDropListeners() {
+    let draggedItem = null;
 
-async function addNewLink(linkData) {
-    const normalizedUrl = normalizeUrl(linkData.url);
-    if (!linkData || !linkData.description || !normalizedUrl) {
-        await showAlert('Please provide a description and a full URL.');
-        return false;
-    }
-    links.push({ ...linkData, url: normalizedUrl, id: `link-${Date.now()}` });
-    saveLinks();
-    const newCategory = linkData.category || 'Other';
-    collapsedCategories = collapsedCategories.filter(c => c !== newCategory);
-    localStorage.setItem('launchPadR1CollapsedCategories', JSON.stringify(collapsedCategories));
-    searchInput.value = '';
-    renderLinks();
-    await sayOnRabbit(`Added ${linkData.description}`);
-    return true;
-}
-
-async function performExternalSearch(queryOverride) {
-    const query = queryOverride || searchInput.value.trim();
-    if (query) {
-        linksList.innerHTML = `<div class="search-prompt">Launching web search for "${query}"...</div>`;
-        const searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
-        await launchUrlOnRabbit(searchUrl, `search for ${query}`);
-    } else {
-        searchHandler('');
-    }
-}
-
-function renderCombinedResults(query, apiSuggestions, localResults) {
-    const fragment = document.createDocumentFragment();
-    let hasContent = false;
-    if (localResults.length > 0) {
-        const header = document.createElement('h3');
-        header.className = 'category-header';
-        header.textContent = 'In Your Links';
-        fragment.appendChild(header);
-        hasContent = true;
-        localResults.forEach(link => fragment.appendChild(renderLinkItem(link)));
-    }
-    const existingUrls = new Set(links.map(link => link.url.replace(/\/$/, '')));
-    const filteredApiSuggestions = apiSuggestions.filter(sugg => !existingUrls.has(sugg.link.replace(/\/$/, '')));
-    if (filteredApiSuggestions.length > 0) {
-        const header = document.createElement('h3');
-        header.className = 'category-header';
-        header.textContent = 'Web Suggestions';
-        if (hasContent) header.style.marginTop = '15px';
-        fragment.appendChild(header);
-        hasContent = true;
-        filteredApiSuggestions.slice(0, 4).forEach(sugg => {
-            const suggLi = document.createElement('li');
-            suggLi.className = 'link-item add-suggestion-item';
-            suggLi.innerHTML = `<img src="https://www.google.com/s2/favicons?sz=64&domain_url=${getHostname(sugg.link)}" class="link-favicon" alt="Favicon" onerror="this.onerror=null; this.src='${GENERIC_FAVICON_SRC}'; this.style.padding='3px';"><div class="link-description">Add: ${sugg.title}</div>`;
-            suggLi.addEventListener('click', () => handleAddFromQuery(sugg.title, sugg.link));
-            fragment.appendChild(suggLi);
+    linksList.querySelectorAll('li').forEach(item => {
+        item.addEventListener('dragstart', (e) => {
+            draggedItem = item;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', item.dataset.index);
+            setTimeout(() => item.classList.add('dragging'), 0);
         });
-    }
-    const webSearchLi = document.createElement('li');
-    webSearchLi.className = 'link-item web-search-item';
-    webSearchLi.innerHTML = `<div class="link-favicon" style="display: flex; align-items: center; justify-content: center;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--primary-color)" width="20" height="20"><path d="M18.031 16.617l4.283 4.282-1.415 1.415-4.282-4.283A8.96 8.96 0 0 1 11 20c-4.968 0-9-4.032-9-9s4.032-9 9-9 9 4.032 9 9a8.96 8.96 0 0 1-1.969 5.617zm-2.006-.742A6.977 6.977 0 0 0 18 11c0-3.868-3.133-7-7-7-3.868 0-7 3.132-7 7 0 3.867 3.132 7 7 7a6.977 6.977 0 0 0 4.875-1.975l.15-.15z"/></svg></div><div class="link-description">Search for "${query}" on the web</div>`;
-    webSearchLi.addEventListener('click', () => performExternalSearch(query));
-    fragment.appendChild(webSearchLi);
-    linksList.innerHTML = '';
-    linksList.appendChild(fragment);
-}
 
-function handleOSMessage(e, requestQuery) {
-    const currentQueryInBox = searchInput.value.trim();
-    if (requestQuery.toLowerCase() !== currentQueryInBox.toLowerCase()) return;
-    try {
-        let data = e.data ? (typeof e.data == "string" ? JSON.parse(e.data) : e.data) : null;
-        const queryForFilter = requestQuery.trim().toLowerCase();
-        const localResults = links.filter(link => link.description.toLowerCase().includes(queryForFilter) || link.url.toLowerCase().includes(queryForFilter));
-        if (data && data.organic_results) {
-            renderCombinedResults(requestQuery, data.organic_results, localResults);
-        } else {
-            renderCombinedResults(requestQuery, [], localResults);
-        }
-    } catch (err) { console.error("Error parsing plugin message:", err); }
-}
+        item.addEventListener('dragend', () => {
+            draggedItem.classList.remove('dragging');
+            draggedItem = null;
+        });
 
-function searchHandler(query) {
-    query = query.trim();
-    if (!query) {
-        renderLinks(links);
-        return;
-    }
-    if (typeof PluginMessageHandler !== "undefined") {
-        window.onPluginMessage = (e) => handleOSMessage(e, query);
-        PluginMessageHandler.postMessage(JSON.stringify({
-            message: JSON.stringify({ query_params: { engine: "google", q: query, hl: "en" }, useLocation: false }),
-            useSerpAPI: true
-        }));
-    } else {
-        const mockApiResults = [{ title: `Mock Result for '${query}'`, link: `https://www.example.com/search?q=${query}` }, { title: "The Verge - Tech News", link: "https://www.theverge.com" }, { title: "Hacker News", link: "https://news.ycombinator.com" }];
-        const localResults = links.filter(link => link.description.toLowerCase().includes(query.toLowerCase()) || link.url.toLowerCase().includes(query.toLowerCase()));
-        setTimeout(() => {
-            if (query.toLowerCase() === searchInput.value.trim().toLowerCase()) {
-                renderCombinedResults(query, mockApiResults, localResults);
+        item.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const bounding = item.getBoundingClientRect();
+            const offset = bounding.y + (bounding.height / 2);
+            if (e.clientY > offset) {
+                item.style.borderBottom = '2px solid #007bff';
+                item.style.borderTop = '';
+            } else {
+                item.style.borderTop = '2px solid #007bff';
+                item.style.borderBottom = '';
             }
-        }, 200);
-    }
-}
+        });
 
-searchBtn.addEventListener('click', () => performExternalSearch());
-searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') performExternalSearch();
-});
+        item.addEventListener('dragleave', () => {
+            item.style.borderBottom = '';
+            item.style.borderTop = '';
+        });
 
-const debouncedSearch = debounce(searchHandler, 400);
-searchInput.addEventListener('input', () => {
-    const query = searchInput.value;
-    clearSearchBtn.style.display = query.length > 0 ? 'flex' : 'none';
-    if (mainView.classList.contains('input-mode-active')) {
-        cancelSearchBtn.style.display = query.length > 0 ? 'none' : 'flex';
-    }
-    debouncedSearch(query);
-});
+        item.addEventListener('drop', (e) => {
+            e.preventDefault();
+            item.style.borderBottom = '';
+            item.style.borderTop = '';
 
-cancelSearchBtn.addEventListener('click', () => {
-    if (window.getComputedStyle(cancelSearchBtn).display === 'none') return;
-    searchInput.value = '';
-    clearSearchBtn.style.display = 'none';
-    cancelSearchBtn.style.display = 'none';
-    searchHandler('');
-    searchInput.blur();
-    scrollToTop();
-});
+            if (draggedItem && draggedItem !== item) {
+                const fromIndex = parseInt(draggedItem.dataset.index);
+                const toIndex = parseInt(item.dataset.index);
 
-mainView.addEventListener('focusin', (e) => {
-    if (e.target.id === 'searchInput') {
-        mainView.classList.add('input-mode-active');
-        const query = e.target.value.trim();
-        cancelSearchBtn.style.display = query.length > 0 ? 'none' : 'flex';
-        clearSearchBtn.style.display = query.length > 0 ? 'flex' : 'none';
-        if (query === '') {
-            linksList.innerHTML = `<div class="search-prompt">Search your links or add from the web.</div>`;
-        }
-        setTimeout(() => {
-            document.querySelector('.search-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-    }
-});
+                // Reorder the links array
+                const [movedLink] = links.splice(fromIndex, 1);
+                links.splice(toIndex, 0, movedLink);
 
-mainView.addEventListener('focusout', (e) => {
-    if (e.target.id === 'searchInput') {
-        setTimeout(() => {
-            const isADialogOpen = ['flex', 'block'].includes(themeDialogOverlay.style.display) ||
-                                  ['flex', 'block'].includes(deletePromptOverlay.style.display) ||
-                                  ['flex', 'block'].includes(favoritesPromptOverlay.style.display) ||
-                                  ['flex', 'block'].includes(genericPromptOverlay.style.display);
-            if (isADialogOpen) return;
-            const isSearchInputEmpty = searchInput.value.trim() === '';
-            const isEditingOrAdding = !!document.querySelector('.edit-description, .new-description');
-            if (!isEditingOrAdding && isSearchInputEmpty) {
-                mainView.classList.remove('input-mode-active');
-                searchHandler('');
-            }
-        }, 150);
-    }
-});
-
-clearSearchBtn.addEventListener('click', () => {
-    searchInput.value = '';
-    clearSearchBtn.style.display = 'none';
-    cancelSearchBtn.style.display = 'flex';
-    searchHandler('');
-    searchInput.focus();
-    triggerHaptic();
-});
-
-toggleViewBtn.addEventListener('click', () => {
-    setView(currentView === 'list' ? 'group' : 'list');
-});
-
-toggleAllLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    collapsedCategories = [...new Set(links.map(link => link.category || 'Other'))];
-    localStorage.setItem('launchPadR1CollapsedCategories', JSON.stringify(collapsedCategories));
-    searchHandler(searchInput.value);
-});
-
-function openFavoritesDialog() {
-    function renderFavoritesList() {
-        favoritesList.innerHTML = '';
-        const favoriteLinks = links.filter(l => favoriteLinkIds.has(l.id)).sort((a, b) => a.description.localeCompare(b.description));
-        if (favoriteLinks.length === 0) {
-            favoritesList.innerHTML = `<p class="no-favorites-message">No favorites set yet.<br>Click the star on any link to add it here.</p>`;
-            quickLaunchBtn.classList.remove('active');
-        } else {
-            const fragment = document.createDocumentFragment();
-            favoriteLinks.forEach(link => {
-                const li = document.createElement('li');
-                li.className = 'favorite-list-item';
-                li.dataset.id = link.id;
-                li.dataset.url = link.url;
-                li.dataset.name = link.description;
-                li.innerHTML = `<img src="https://www.google.com/s2/favicons?sz=64&domain_url=${getHostname(link.url)}" class="link-favicon" alt="Favicon" onerror="this.onerror=null; this.src='${GENERIC_FAVICON_SRC}'; this.style.padding='3px';"><span class="favorite-list-item-description">${link.description}</span><span class="remove-favorite-btn" title="Remove from favorites"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z"></path></svg></span>`;
-                fragment.appendChild(li);
-            });
-            favoritesList.appendChild(fragment);
-        }
-    }
-    renderFavoritesList();
-    favoritesPromptOverlay.style.display = 'flex';
-    favoritesList.focus();
-    const closeDialog = () => {
-        favoritesPromptOverlay.style.display = 'none';
-        scrollToTop();
-    };
-    favoritesList.onclick = async (e) => {
-        const removeBtn = e.target.closest('.remove-favorite-btn');
-        if (removeBtn) {
-            const li = removeBtn.closest('.favorite-list-item');
-            if (await showConfirm(`Remove "${li.dataset.name}" from favorites?`)) {
-                favoriteLinkIds.delete(li.dataset.id);
-                saveLinks();
-                triggerHaptic();
-                renderFavoritesList();
+                localStorage.setItem('links', JSON.stringify(links));
                 renderLinks();
             }
-        } else {
-            const li = e.target.closest('.favorite-list-item');
-            if (li) {
-                closeDialog();
-                launchUrlOnRabbit(li.dataset.url, li.dataset.name);
-            }
-        }
-    };
-    favoritesPromptClose.onclick = closeDialog;
-}
-
-quickLaunchBtn.addEventListener('click', async () => {
-    if (favoriteLinkIds.size === 0) {
-        await sayOnRabbit("No favorite link set.");
-        await showAlert("No favorite link set. Click the star on any link to set it as a favorite.");
-        return;
-    }
-    triggerHaptic();
-    openFavoritesDialog();
-});
-
-const CSS_COLOR_NAMES = ['AliceBlue','AntiqueWhite','Aqua','Aquamarine','Azure','Beige','Bisque','Black','BlanchedAlmond','Blue','BlueViolet','Brown','BurlyWood','CadetBlue','Chartreuse','Chocolate','Coral','CornflowerBlue','Cornsilk','Crimson','Cyan','DarkBlue','DarkCyan','DarkGoldenRod','DarkGray','DarkGreen','DarkKhaki','DarkMagenta','DarkOliveGreen','DarkOrange','DarkOrchid','DarkRed','DarkSalmon','DarkSeaGreen','DarkSlateBlue','DarkSlateGray','DarkTurquoise','DarkViolet','DeepPink','DeepSkyBlue','DimGray','DodgerBlue','FireBrick','FloralWhite','ForestGreen','Fuchsia','Gainsboro','GhostWhite','Gold','GoldenRod','Gray','Green','GreenYellow','HoneyDew','HotPink','IndianRed','Indigo','Ivory','Khaki','Lavender','LavenderBlush','LawnGreen','LemonChiffon','LightBlue','LightCoral','LightCyan','LightGoldenRodYellow','LightGray','LightGreen','LightPink','LightSalmon','LightSeaGreen','LightSkyBlue','LightSlateGray','LightSteelBlue','LightYellow','Lime','LimeGreen','Linen','Magenta','Maroon','MediumAquaMarine','MediumBlue','MediumOrchid','MediumPurple','MediumSeaGreen','MediumSlateBlue','MediumSpringGreen','MediumTurquoise','MediumVioletRed','MidnightBlue','MintCream','MistyRose','Moccasin','NavajoWhite','Navy','OldLace','Olive','OliveDrab','Orange','OrangeRed','Orchid','PaleGoldenRod','PaleGreen','PaleTurquoise','PaleVioletRed','PapayaWhip','PeachPuff','Peru','Pink','Plum','PowderBlue','Purple','RebeccaPurple','Red','RosyBrown','RoyalBlue','SaddleBrown','Salmon','SandyBrown','SeaGreen','SeaShell','Sienna','Silver','SkyBlue','SlateBlue','SlateGray','Snow','SpringGreen','SteelBlue','Tan','Teal','Thistle','Tomato','Turquoise','Violet','Wheat','White','WhiteSmoke','Yellow','YellowGreen'].sort();
-const STUDIO_BASE_COLORS = ['Beige', 'Blue', 'Brown', 'Coral', 'Crimson', 'Cyan', 'Emerald', 'Gold', 'Gray', 'Green', 'Indigo', 'Lavender', 'Lime', 'Magenta', 'Maroon', 'Olive', 'Orange', 'Pink', 'Purple', 'Red', 'SkyBlue', 'Teal', 'Turquoise', 'Violet', 'Yellow'];
-const STUDIO_MODIFIERS = ['Bold', 'Cool', 'Darker', 'Glow', 'Invert', 'Lighter', 'Metallic', 'Monochrome', 'Muted', 'Neon', 'Pastel', 'Vibrant', 'Vintage', 'Warm'];
-
-let isStudioMode = false;
-let studioStage = 1;
-let studioBaseColor = null;
-let studioActiveModifier = null;
-
-function updateModifierSelectionUI() {
-    const listItems = themeColorList.querySelectorAll('.theme-color-item');
-    listItems.forEach(item => {
-        item.classList.toggle('selected', item.dataset.modifierName?.toLowerCase() === studioActiveModifier);
-    });
-}
-
-// *** DEFINITIVE FIX: Central function for all Studio previews ***
-async function updateStudioPreview() {
-    if (!isStudioMode || !studioBaseColor) return;
-
-    let themeToApply;
-    if (studioStage === 1) {
-        themeToApply = { name: `custom:${studioBaseColor}` };
-    } else { // Stage 2
-        const modifier = studioActiveModifier || 'bold'; // Default to bold if unset
-        themeToApply = { name: `custom:${studioBaseColor}`, modifier: modifier };
-    }
-    
-    // Update the master theme name variable every time a preview is generated
-    currentThemeName = themeToApply.modifier 
-        ? `${themeToApply.name}:${themeToApply.modifier}` 
-        : themeToApply.name;
-
-    const applyResult = await applyTheme(themeToApply, false); // false = isConfirmation
-    if (applyResult && !applyResult.success) {
-        themeDialogError.textContent = applyResult.error;
-    }
-}
-
-async function applyTheme(themeIdentifier, silent = false, isConfirmation = false) {
-    let themeColors;
-    let friendlyName;
-    let error = null;
-    let themeToApply = { ...themeIdentifier };
-    if (customTheme && themeToApply.name === `custom:My Custom Theme`) {
-        themeToApply.name = `custom:${customTheme.baseColor}`;
-        themeToApply.modifier = customTheme.modifier;
-    }
-    if (themeToApply.name.startsWith('custom:')) {
-        const themeParts = themeToApply.name.split(':');
-        const colorName = themeParts[1];
-        const modifierFromName = themeParts.length > 2 ? themeParts[2] : null;
-        const primaryRgb = colorNameToRgb(colorName);
-        if (!primaryRgb) {
-            error = `'${colorName}' is not a valid color.`;
-        } else {
-            themeColors = generatePaletteFromRgb(primaryRgb, currentLuminanceMode, themeToApply.modifier || modifierFromName);
-            if (!themeColors) {
-                error = currentLuminanceMode === 'dark' ? "This color is too dark." : "This color is too light.";
-            } else {
-                friendlyName = colorName;
-            }
-        }
-    } else {
-        themeColors = defaultTheme[currentLuminanceMode] || defaultTheme.dark;
-        friendlyName = defaultTheme.name || 'Rabbit';
-    }
-    if (error) return { success: false, error: error };
-    if (!themeColors) return { success: true };
-    themeDialogTitle.style.color = themeColors['--primary-color'];
-    const finalThemeName = themeToApply.modifier ? `${themeToApply.name}:${themeToApply.modifier}` : themeToApply.name;
-    if (isConfirmation) {
-        Object.entries(themeColors).forEach(([key, value]) => document.documentElement.style.setProperty(key, value));
-        currentThemeName = finalThemeName;
-        localStorage.setItem('launchPadR1Theme', currentThemeName);
-        if (!silent) await sayOnRabbit(`Theme set to ${friendlyName}`);
-    } else {
-        const dialog = themeDialogOverlay.querySelector('.custom-prompt-dialog');
-        dialog.style.cssText = '';
-        Object.entries(themeColors).forEach(([key, value]) => dialog.style.setProperty(key, value));
-        currentThemeName = finalThemeName;
-    }
-    return { success: true };
-}
-
-function openThemeEditor() {
-    isStudioMode = false;
-    studioStage = 1;
-    studioBaseColor = null;
-    studioActiveModifier = null;
-    originalThemeState = { theme: currentThemeName, mode: currentLuminanceMode };
-    renderThemeDialog();
-    themeDialogTitle.style.color = getComputedStyle(document.documentElement).getPropertyValue('--primary-color');
-    updateModeToggleUI();
-    updateThemeListDisabledState();
-}
-
-function renderThemeDialog() {
-    themeDialogOverlay.style.display = 'flex';
-    themeDialogInput.value = '';
-    themeDialogError.textContent = '';
-    clearThemeInputBtn.style.display = 'none';
-    themeColorList.innerHTML = '';
-    themeColorList.scrollTop = 0;
-    const fragment = document.createDocumentFragment();
-    if (isStudioMode) {
-        themeStudioBtn.style.display = 'none';
-        themeDialogReset.style.display = 'none';
-        themeModeToggleBtn.style.display = 'flex';
-        if (studioStage === 1) {
-            themeDialogTitle.textContent = 'Lab: 1. Choose Color';
-            themeDialogOk.textContent = 'Next';
-            themeDialogCancel.textContent = 'Cancel';
-            STUDIO_BASE_COLORS.forEach(name => {
-                const li = document.createElement('li');
-                li.className = 'theme-color-item';
-                li.textContent = name;
-                li.dataset.colorName = name;
-                fragment.appendChild(li);
-            });
-        } else {
-            themeDialogTitle.textContent = 'Lab: 2. Apply Modifier';
-            themeDialogOk.textContent = 'Save';
-            themeDialogCancel.textContent = 'Back';
-            STUDIO_MODIFIERS.forEach(name => {
-                const li = document.createElement('li');
-                li.className = 'theme-color-item';
-                li.textContent = name;
-                li.dataset.modifierName = name;
-                fragment.appendChild(li);
-            });
-        }
-    } else {
-        themeDialogTitle.textContent = 'Change Theme';
-        themeDialogOk.textContent = 'OK';
-        themeDialogCancel.textContent = 'Cancel';
-        themeStudioBtn.style.display = 'flex';
-        themeDialogReset.style.display = 'block';
-        themeModeToggleBtn.style.display = 'flex';
-        if (customTheme) {
-            const li = document.createElement('li');
-            li.className = 'theme-color-item';
-            li.innerHTML = `My Custom Theme <span class="favorite-indicator">★</span>`;
-            li.dataset.colorName = customTheme.baseColor;
-            li.dataset.isCustom = 'true';
-            fragment.appendChild(li);
-        }
-        CSS_COLOR_NAMES.forEach(name => {
-            const li = document.createElement('li');
-            li.className = 'theme-color-item';
-            li.textContent = name;
-            li.dataset.colorName = name;
-            fragment.appendChild(li);
         });
-    }
-    themeColorList.appendChild(fragment);
-    themeColorList.focus();
-    themeDialogOverlay.classList.remove('input-focused');
-}
-
-function enterThemeStudio() {
-    isStudioMode = true;
-    studioStage = 1;
-    studioBaseColor = null;
-    studioActiveModifier = null;
-    renderThemeDialog();
-}
-
-function updateThemeListDisabledState() {
-    const listItems = themeColorList.querySelectorAll('.theme-color-item');
-    listItems.forEach(item => {
-        const colorName = item.dataset.colorName;
-        if (colorName) { // Only check colors, not modifiers
-            const rgb = colorNameToRgb(colorName);
-            item.classList.toggle('disabled', !rgb || !generatePaletteFromRgb(rgb, currentLuminanceMode));
-        }
     });
 }
 
-function updateModeToggleUI() {
-    themeModeToggleBtn.innerHTML = currentLuminanceMode === 'light' ? MOON_ICON_SVG : SUN_ICON_SVG;
-    themeModeToggleBtn.title = `Switch to ${currentLuminanceMode === 'light' ? 'Dark' : 'Light'} Mode`;
-}
+// --- Theme Application Logic (Integrated) ---
 
-// *** DEFINITIVE FIX: Re-architected luminance mode function ***
-async function setLuminanceMode(mode, silent = false) {
-    if (currentLuminanceMode === mode) return;
-    currentLuminanceMode = mode;
-    localStorage.setItem('launchPadR1LuminanceMode', mode);
-    updateModeToggleUI();
-    updateThemeListDisabledState();
-
-    if (isStudioMode) {
-        // In the studio, all preview updates go through the central function.
-        await updateStudioPreview();
-    } else {
-        // In normal mode, re-apply the last known theme with the new mode.
-        const themeToApply = { name: currentThemeName };
-        const applyResult = await applyTheme(themeToApply, silent);
-        if (applyResult && !applyResult.success) {
-            themeDialogError.textContent = applyResult.error;
-        }
-    }
-}
-
-async function toggleLuminanceMode() {
-    triggerHaptic();
-    const newMode = currentLuminanceMode === 'light' ? 'dark' : 'light';
-    await setLuminanceMode(newMode);
-}
-
-function filterThemeList(query) {
-    const lowerCaseQuery = query.trim().toLowerCase().replace(/\s+/g, '');
-    const listItems = themeColorList.querySelectorAll('.theme-color-item');
-    let visibleCount = 0;
-    const noMatchesEl = themeColorList.querySelector('.no-matches-message');
-    if (noMatchesEl) noMatchesEl.remove();
-    if (!lowerCaseQuery) {
-        listItems.forEach(item => item.style.display = 'block');
+function applyTheme(colorName, modifierName = null, isDark = false) {
+    const selectedColor = baseColors.find(c => c.name === colorName);
+    if (!selectedColor) {
+        console.error("Color not found:", colorName);
         return;
     }
-    listItems.forEach(item => {
-        const isVisible = (item.dataset.colorName || item.dataset.modifierName || '').toLowerCase().includes(lowerCaseQuery);
-        item.style.display = isVisible ? 'block' : 'none';
-        if (isVisible) visibleCount++;
-    });
-    if (visibleCount === 0 && listItems.length > 0) {
+
+    const rgbString = selectedColor.rgb;
+    const rgbArray = rgbString.split(',').map(Number);
+    let themePalette;
+
+    // Ensure theme-engine.js and generatePaletteFromRgb are loaded
+    if (typeof generatePaletteFromRgb === 'function') {
+        if (modifierName && modifierName !== 'None') {
+            themePalette = generatePaletteFromRgb(rgbArray, isDark ? 'dark' : 'light', modifierName.toLowerCase());
+        } else {
+            // Default palette generation without specific modifier
+            themePalette = generatePaletteFromRgb(rgbArray, isDark ? 'dark' : 'light', null);
+        }
+    } else {
+        console.error('theme-engine.js or generatePaletteFromRgb function not loaded. Cannot apply theme.');
+        return;
+    }
+
+    // Apply CSS variables to the root element
+    for (const key in themePalette) {
+        if (Object.hasOwnProperty.call(themePalette, key)) {
+            root.style.setProperty(key, themePalette[key]);
+        }
+    }
+
+    // Store the applied theme for persistence
+    localStorage.setItem('appliedThemeColor', colorName);
+    localStorage.setItem('appliedThemeModifier', modifierName || 'None');
+    localStorage.setItem('appliedThemeIsDark', isDark);
+}
+
+function loadAppliedTheme() {
+    const storedColor = localStorage.getItem('appliedThemeColor') || "Gray"; // Default to Gray
+    const storedModifier = localStorage.getItem('appliedThemeModifier') === 'None' ? null : localStorage.getItem('appliedThemeModifier');
+    const storedIsDark = localStorage.getItem('appliedThemeIsDark') === 'true';
+
+    currentSelectedBuiltinColorName = storedColor;
+    currentModifier = storedModifier || 'Bold'; // Set default if no modifier was stored
+    currentIsDarkMode = storedIsDark;
+
+    themeModeToggle.checked = storedIsDark; // Sync settings toggle
+    root.classList.toggle('dark-mode', storedIsDark); // Apply dark mode class
+
+    applyTheme(storedColor, storedModifier, storedIsDark);
+}
+
+// --- Theme UI Rendering (Adapted for integration) ---
+
+function renderBuiltInThemeColors() {
+    themeColorList.innerHTML = ''; // Clear existing built-in theme colors
+    baseColors.forEach(color => {
         const li = document.createElement('li');
-        li.className = 'no-matches-message';
-        li.textContent = `No matches for "${query}"`;
+        li.classList.add('theme-color-item');
+        li.dataset.colorName = color.name;
+        li.style.backgroundColor = `rgb(${color.rgb})`;
+        li.title = color.name;
+
+        // Highlight if this is the currently applied theme or the selected one in the dialog
+        if (color.name === currentSelectedBuiltinColorName && !isThemeStudioMode) {
+            li.classList.add('selected');
+        }
         themeColorList.appendChild(li);
-    }
+    });
 }
 
-async function closeThemeDialog(shouldRevert = false) {
-    if (shouldRevert && (currentLuminanceMode !== originalThemeState.mode || currentThemeName !== originalThemeState.theme)) {
-        await setLuminanceMode(originalThemeState.mode, true);
-        await applyTheme({ name: originalThemeState.theme }, true, true);
+function renderModifierButtons() {
+    modifierGrid.innerHTML = '';
+    modifiers.forEach(modifier => {
+        const button = document.createElement('button');
+        button.classList.add('modifier-button');
+        button.textContent = modifier;
+        button.dataset.modifierName = modifier;
+        if (modifier === currentModifier) {
+            button.classList.add('active');
+        }
+        modifierGrid.appendChild(button);
+    });
+}
+
+// --- Event Listeners (Existing Launch Pad + New Theme) ---
+
+// Existing Launch Pad Event Listeners
+searchButton.addEventListener('click', () => {
+    const query = searchInput.value.trim();
+    if (query) {
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
     }
+});
+
+searchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        searchButton.click();
+    }
+});
+
+addLinkButton.addEventListener('click', () => {
+    const name = prompt('Enter link name:');
+    const url = prompt('Enter link URL:');
+    addLink(name, url);
+});
+
+// Settings Dialog
+settingsButton.addEventListener('click', () => {
+    settingsDialogOverlay.style.display = 'flex';
+    // Ensure theme mode toggle reflects current state when dialog opens
+    themeModeToggle.checked = currentIsDarkMode;
+});
+
+closeSettingsButton.addEventListener('click', () => {
+    settingsDialogOverlay.style.display = 'none';
+});
+
+// Theme Mode Toggle in Settings
+themeModeToggle.addEventListener('change', () => {
+    currentIsDarkMode = themeModeToggle.checked;
+    root.classList.toggle('dark-mode', currentIsDarkMode);
+    // Apply theme based on stored/selected color and new dark mode state
+    if (!isThemeStudioMode) { // If not in Color Lab mode, apply based on current applied theme
+        applyTheme(currentSelectedBuiltinColorName, null, currentIsDarkMode);
+        // Persist only built-in theme mode if not in studio
+        localStorage.setItem('appliedThemeIsDark', currentIsDarkMode);
+    } else { // If in Color Lab mode, apply the custom theme with new dark mode state
+        applyTheme(currentSelectedBuiltinColorName, currentModifier, currentIsDarkMode);
+    }
+});
+
+// Theme Dialog (Existing functionality adapted)
+themeStudioBtn.addEventListener('click', () => {
+    themeDialogOverlay.style.display = 'flex';
+    resetThemeDialogState(true); // Open in "built-in colors" mode by default
+});
+
+themeDialogOk.addEventListener('click', () => {
+    // This button now only applies the selected built-in theme
+    // Custom theme saving is handled by saveCustomThemeButton
+    applyTheme(currentSelectedBuiltinColorName, null, currentIsDarkMode);
+    localStorage.setItem('appliedThemeModifier', 'None'); // Ensure modifier is reset for built-in themes
     themeDialogOverlay.style.display = 'none';
-    scrollToTop();
-}
+});
 
-function setupThemeDialogListeners() {
-    themeDialogInput.addEventListener('input', () => {
-        const query = themeDialogInput.value;
-        clearThemeInputBtn.style.display = query.length > 0 ? 'flex' : 'none';
-        if (themeDialogError.textContent) themeDialogError.textContent = '';
-        filterThemeList(query);
-    });
+themeDialogCancel.addEventListener('click', () => {
+    themeDialogOverlay.style.display = 'none';
+    // Revert to the last saved theme
+    loadAppliedTheme(); 
+});
 
-    themeDialogOverlay.addEventListener('click', (e) => e.stopPropagation());
+// New Theme Dialog / Color Lab Event Listeners
 
-    clearThemeInputBtn.addEventListener('click', () => {
-        themeDialogInput.value = '';
-        clearThemeInputBtn.style.display = 'none';
-        filterThemeList('');
-        themeDialogInput.focus();
-        triggerHaptic();
-    });
+// Handle selection of built-in theme colors within the dialog
+themeColorList.addEventListener('click', (event) => {
+    const colorItem = event.target.closest('.theme-color-item');
+    if (colorItem) {
+        themeColorList.querySelectorAll('.theme-color-item').forEach(item => item.classList.remove('selected'));
+        colorItem.classList.add('selected');
 
-    // *** DEFINITIVE FIX: Re-architected theme dialog click handlers ***
-    themeColorList.addEventListener('click', async (e) => {
-        const li = e.target.closest('.theme-color-item');
-        if (!li || li.classList.contains('disabled')) return;
-        triggerHaptic();
-        themeDialogError.textContent = '';
-
-        if (isStudioMode) {
-            if (studioStage === 1) {
-                studioBaseColor = li.dataset.colorName;
-                themeDialogInput.value = studioBaseColor;
-                await updateStudioPreview(); // Use central function
-            } else { // Stage 2
-                studioActiveModifier = li.dataset.modifierName.toLowerCase();
-                themeDialogInput.value = `${li.dataset.modifierName} ${studioBaseColor}`;
-                updateModifierSelectionUI();
-                await updateStudioPreview(); // Use central function
-            }
-        } else { // Default mode
-            const colorName = li.dataset.colorName;
-            themeDialogInput.value = li.dataset.isCustom ? customTheme.baseColor || '' : colorName;
-            const themeToPreview = li.dataset.isCustom ? { name: `custom:My Custom Theme` } : { name: `custom:${colorName}` };
-            const applyResult = await applyTheme(themeToPreview);
-            if (!applyResult.success) themeDialogError.textContent = applyResult.error;
-        }
-        clearThemeInputBtn.style.display = themeDialogInput.value.length > 0 ? 'flex' : 'none';
-    });
-
-    // *** DEFINITIVE FIX: Re-architected OK/Next/Save button handler ***
-    themeDialogOk.addEventListener('click', async () => {
-        if (isStudioMode) {
-            if (studioStage === 1) { // "Next" button
-                if (!studioBaseColor) {
-                    themeDialogError.textContent = 'Please select a color to continue.';
-                    return;
-                }
-                studioActiveModifier = 'bold'; // Set default for next stage
-                studioStage = 2;
-                renderThemeDialog(); // Redraw UI for Stage 2
-                await updateStudioPreview(); // Apply preview for the new stage
-                updateModifierSelectionUI(); // Highlight 'bold'
-            } else { // "Save" button
-                const themeToSave = { name: 'My Custom Theme', baseColor: studioBaseColor, modifier: studioActiveModifier || 'bold' };
-                customTheme = { ...themeToSave };
-                localStorage.setItem('launchPadR1CustomTheme', JSON.stringify(customTheme));
-                await applyTheme({ name: `custom:${customTheme.baseColor}`, modifier: customTheme.modifier }, true, true);
-                await sayOnRabbit("Custom theme saved.");
-                isStudioMode = false;
-                closeThemeDialog();
-            }
-        } else { // Default "OK" button
-            const colorInput = themeDialogInput.value.trim();
-            const themeToConfirm = colorInput ? `custom:${colorInput.replace(/\s+/g, '')}` : currentThemeName;
-            triggerHaptic();
-            const applyResult = await applyTheme({ name: themeToConfirm }, false, true);
-            if (applyResult.success) {
-                closeThemeDialog();
-            } else {
-                themeDialogError.textContent = applyResult.error;
-            }
-        }
-    });
-
-    themeDialogInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            themeDialogOk.click();
-        }
-    });
-
-    themeDialogCancel.addEventListener('click', async () => {
-        if (isStudioMode && studioStage === 2) { // "Back" button
-            studioStage = 1;
-            studioActiveModifier = null;
-            renderThemeDialog();
-            await updateStudioPreview(); // Revert preview to just the base color
-        } else { // "Cancel" button
-            isStudioMode = false;
-            closeThemeDialog(true);
-        }
-    });
-
-    themeDialogReset.addEventListener('click', async () => {
-        triggerHaptic();
-        await setLuminanceMode('dark', true);
-        await applyTheme({ name: 'rabbit' }, false, true);
-        closeThemeDialog();
-    });
-
-    themeModeToggleBtn.addEventListener('click', toggleLuminanceMode);
-    themeStudioBtn.addEventListener('click', enterThemeStudio);
-}
-
-function openDeleteDialog() {
-    const deleteModeRadios = document.querySelectorAll('input[name="delete-mode"]');
-    const CHECKBOX_UNCHECKED_SVG = `<svg class="icon-checkbox-unchecked" viewBox="0 0 24 24" fill="currentColor"><path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>`;
-    const CHECKBOX_CHECKED_SVG = `<svg class="icon-checkbox-checked" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`;
-    const FAVORITE_SVG = `<svg class="icon-favorite" viewBox="0 0 24 24" fill="currentColor"><path d="M12 18.26l-7.053 3.948 1.575-7.928L.587 8.792l8.027-.952L12 .5l3.386 7.34 8.027.952-5.935 5.488 1.575 7.928z"></path></svg>`;
-    let selectedIds = new Set();
-    function renderDeleteList() {
-        deleteLinksList.innerHTML = '';
-        const fragment = document.createDocumentFragment();
-        [...links].sort((a, b) => a.description.localeCompare(b.description)).forEach(link => {
-            const li = document.createElement('li');
-            li.className = 'delete-link-item';
-            li.dataset.id = link.id;
-            const isFav = favoriteLinkIds.has(link.id);
-            const isSelected = selectedIds.has(link.id);
-            let icon = isSelected ? CHECKBOX_CHECKED_SVG : (isFav ? FAVORITE_SVG : CHECKBOX_UNCHECKED_SVG);
-            li.innerHTML = `<span class="delete-checkbox">${icon}</span><span class="delete-link-item-description">${link.description}</span>`;
-            fragment.appendChild(li);
-        });
-        deleteLinksList.appendChild(fragment);
-    }
-    function updateSelectionFromMode() {
-        const mode = document.querySelector('input[name="delete-mode"]:checked').value;
-        selectedIds.clear();
-        if (mode === 'all') links.forEach(link => selectedIds.add(link.id));
-        else if (mode === 'keep-favs') links.forEach(link => !favoriteLinkIds.has(link.id) && selectedIds.add(link.id));
-        renderDeleteList();
-    }
-    function updateButtonState() {
-        const mode = document.querySelector('input[name="delete-mode"]:checked').value;
-        deletePromptOk.disabled = mode === 'selected' && selectedIds.size === 0;
-    }
-    return new Promise((resolve) => {
-        document.querySelector('input[name="delete-mode"][value="selected"]').checked = true;
-        selectedIds.clear();
-        renderDeleteList();
-        deletePromptOverlay.style.display = 'flex';
-        deleteLinksList.scrollTop = 0;
-        deleteLinksList.focus();
-        updateButtonState();
-        const handleItemClick = (e) => {
-            const li = e.target.closest('.delete-link-item');
-            if (!li) return;
-            document.querySelector('input[name="delete-mode"][value="selected"]').checked = true;
-            const id = li.dataset.id;
-            if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
-            renderDeleteList();
-            updateButtonState();
-        };
-        const handleModeChange = () => { updateSelectionFromMode(); updateButtonState(); };
-        deleteLinksList.addEventListener('click', handleItemClick);
-        deleteModeRadios.forEach(radio => radio.addEventListener('change', handleModeChange));
-        const closeDialog = (value) => {
-            deleteLinksList.removeEventListener('click', handleItemClick);
-            deleteModeRadios.forEach(radio => radio.removeEventListener('change', handleModeChange));
-            deletePromptOverlay.style.display = 'none';
-            resolve(value);
-        };
-        deletePromptOk.onclick = () => closeDialog({ mode: document.querySelector('input[name="delete-mode"]:checked').value, ids: Array.from(selectedIds) });
-        deletePromptCancel.onclick = () => closeDialog(null);
-    });
-}
-
-deleteAllBtn.addEventListener('click', async () => {
-    let keepLooping = true;
-    while (keepLooping) {
-        const result = await openDeleteDialog();
-        if (!result || (result.mode === 'selected' && result.ids.length === 0)) {
-            keepLooping = false;
-            continue;
-        }
-        let confirmMessage = '';
-        let linksToDelete = new Set(result.ids);
-        if (result.mode === 'all') confirmMessage = `Are you sure you want to delete all ${links.length} link(s)?`;
-        else if (result.mode === 'keep-favs') {
-            if (linksToDelete.size === 0) {
-                await showAlert("No links to delete (all links are favorites).");
-                continue;
-            }
-            confirmMessage = `Are you sure you want to delete ${linksToDelete.size} non-favorite link(s)?`;
-        } else if (result.mode === 'selected') confirmMessage = `Are you sure you want to delete ${linksToDelete.size} selected link(s)?`;
-        if (await showConfirm(confirmMessage)) {
-            links = links.filter(link => !linksToDelete.has(link.id));
-            const remainingLinkIds = new Set(links.map(l => l.id));
-            favoriteLinkIds = new Set([...favoriteLinkIds].filter(id => remainingLinkIds.has(id)));
-            saveLinks();
-            renderLinks();
-            scrollToTop();
-            await sayOnRabbit("Links deleted.");
-            keepLooping = false;
+        currentSelectedBuiltinColorName = colorItem.dataset.colorName;
+        
+        // Show the Color Lab checkbox only when a built-in color is selected
+        colorLabToggleContainer.style.display = 'flex'; 
+        
+        // Temporarily apply theme to preview it
+        if (isThemeStudioMode) { // If already in Color Lab mode, apply with modifier
+            applyTheme(currentSelectedBuiltinColorName, currentModifier, currentIsDarkMode);
+        } else { // If in standard built-in selection, apply without modifier
+            applyTheme(currentSelectedBuiltinColorName, null, currentIsDarkMode);
         }
     }
 });
 
-document.addEventListener('click', (e) => {
-    if (themeDialogOverlay.style.display === 'flex' && !e.target.closest('.custom-prompt-dialog') && !themeBtn.contains(e.target)) {
-        closeThemeDialog(true);
+// Handle toggling the "Color Lab" checkbox
+colorLabToggle.addEventListener('change', () => {
+    isThemeStudioMode = colorLabToggle.checked; // Update the flag
+
+    if (isThemeStudioMode) {
+        // Switch to modifier view
+        themeColorList.style.display = 'none'; // Hide built-in color selection
+        modifierControls.style.display = 'block'; // Show modifier controls
+        renderModifierButtons(); // Ensure modifier buttons are rendered
+        
+        // Set default modifier and apply theme if a color is selected
+        if (currentSelectedBuiltinColorName) {
+            currentModifier = 'Bold'; // Default modifier when entering studio
+            applyTheme(currentSelectedBuiltinColorName, currentModifier, currentIsDarkMode);
+        }
+        // Hide standard dialog buttons, show custom ones
+        themeDialogOk.style.display = 'none';
+        themeDialogCancel.style.display = 'none'; // Hide existing cancel
+        saveCustomThemeButton.style.display = 'inline-block';
+        cancelCustomThemeButton.style.display = 'inline-block'; // Show new cancel
+
+    } else {
+        // Switch back to built-in color selection view
+        themeColorList.style.display = 'block'; // Show built-in color selection
+        modifierControls.style.display = 'none'; // Hide modifier controls
+        
+        // Apply the base color's default theme (no modifier)
+        if (currentSelectedBuiltinColorName) {
+            applyTheme(currentSelectedBuiltinColorName, null, currentIsDarkMode);
+        }
+        // Show standard dialog buttons, hide custom ones
+        themeDialogOk.style.display = 'inline-block';
+        themeDialogCancel.style.display = 'inline-block';
+        saveCustomThemeButton.style.display = 'none';
+        cancelCustomThemeButton.style.display = 'none';
     }
 });
-themeBtn.addEventListener('click', openThemeEditor);
-logo.addEventListener('click', goHome);
 
-(async function() {
-    setupThemeDialogListeners();
-    await applyTheme({ name: currentThemeName }, true);
-    updateModeToggleUI();
-    deletePromptOverlay.addEventListener('click', e => e.stopPropagation());
-    favoritesPromptOverlay.addEventListener('click', e => e.stopPropagation());
-    genericPromptOverlay.addEventListener('click', e => e.stopPropagation());
+// Handles clicks on modifier buttons in Color Lab
+modifierGrid.addEventListener('click', (event) => {
+    const modifierButton = event.target.closest('.modifier-button');
+    if (modifierButton && currentSelectedBuiltinColorName) {
+        modifierGrid.querySelectorAll('.modifier-button').forEach(button => button.classList.remove('active'));
+        modifierButton.classList.add('active');
+        currentModifier = modifierButton.dataset.modifierName;
+        applyTheme(currentSelectedBuiltinColorName, currentModifier, currentIsDarkMode);
+    }
+});
+
+// Handles saving custom themes (within the Color Lab)
+saveCustomThemeButton.addEventListener('click', () => {
+    console.log(`Custom Theme Saved: Color - ${currentSelectedBuiltinColorName}, Modifier - ${currentModifier}, Dark Mode - ${currentIsDarkMode}`);
+    alert(`Custom Theme Saved:\nColor: ${currentSelectedBuiltinColorName}\nModifier: ${currentModifier}\nMode: ${currentIsDarkMode ? 'Dark' : 'Light'}`);
+    
+    // Store this custom theme as the new default
+    localStorage.setItem('appliedThemeColor', currentSelectedBuiltinColorName);
+    localStorage.setItem('appliedThemeModifier', currentModifier);
+    localStorage.setItem('appliedThemeIsDark', currentIsDarkMode);
+
+    themeDialogOverlay.style.display = 'none'; // Close dialog
+    resetThemeDialogState(); // Reset dialog UI for next time
+});
+
+// Handles canceling custom theme creation
+cancelCustomThemeButton.addEventListener('click', () => {
+    console.log("Custom Theme Creation Canceled.");
+    themeDialogOverlay.style.display = 'none'; // Close dialog
+    loadAppliedTheme(); // Revert to the last saved theme
+    resetThemeDialogState(); // Reset dialog UI for next time
+});
+
+// --- Initialization and Reset Functions ---
+
+// Resets the theme dialog's internal state
+function resetThemeDialogState(openBuiltInView = false) {
+    colorLabToggle.checked = false;
+    colorLabToggleContainer.style.display = 'none'; // Hide checkbox initially
+    modifierControls.style.display = 'none'; // Hide modifier controls
+
+    themeColorList.style.display = 'block'; // Ensure built-in colors are visible
+    renderBuiltInThemeColors(); // Re-render to clear selection highlights if needed
+
+    isThemeStudioMode = false; // Reset the state flag
+    currentSelectedBuiltinColorName = localStorage.getItem('appliedThemeColor') || "Gray"; // Default or last applied
+    currentModifier = localStorage.getItem('appliedThemeModifier') === 'None' ? 'Bold' : localStorage.getItem('appliedThemeModifier') || 'Bold';
+
+    // Show/hide appropriate buttons
+    themeDialogOk.style.display = 'inline-block';
+    themeDialogCancel.style.display = 'inline-block';
+    saveCustomThemeButton.style.display = 'none';
+    cancelCustomThemeButton.style.display = 'none';
+
+    // Apply the currently loaded theme to the preview within the dialog
+    loadAppliedTheme();
+    // After loading, ensure themeModeToggle reflects the current state for accurate preview
+    themeModeToggle.checked = currentIsDarkMode; 
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
     renderLinks();
-})();
+    loadAppliedTheme(); // Load theme on app start
+    resetThemeDialogState(); // Initialize theme dialog UI
+    searchInput.focus(); // Auto-focus the search bar on load
+});
+
+// Initial render for links
+renderLinks();
