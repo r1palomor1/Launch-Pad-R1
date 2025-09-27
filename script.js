@@ -832,6 +832,7 @@ function formatColorNameForDisplay(name) {
 function renderThemeDialog() {
     themeDialogOverlay.style.display = 'flex';
     themeDialogInput.value = '';
+    themeDialogInput.parentElement.style.display = 'block'; // Ensure it's visible by default
     themeDialogError.textContent = '';
     clearThemeInputBtn.style.display = 'none';
     themeColorList.innerHTML = '';
@@ -843,6 +844,7 @@ function renderThemeDialog() {
         themeDialogOk.textContent = 'Save';
         themeDialogCancel.textContent = 'Back';
         themeDialogReset.style.display = 'none'; // Not applicable in lab mode
+        themeDialogInput.parentElement.style.display = 'none'; // Hide input in lab mode
         STUDIO_MODIFIERS.forEach(name => {
             const li = document.createElement('li');
             li.className = 'theme-color-item';
