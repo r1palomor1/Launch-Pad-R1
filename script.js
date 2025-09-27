@@ -982,6 +982,13 @@ function setupThemeDialogListeners() {
         triggerHaptic();
     });
 
+    // Dismiss keyboard when user starts scrolling the color list
+    themeColorList.addEventListener('scroll', () => {
+        if (document.activeElement === themeDialogInput) {
+            themeDialogInput.blur();
+        }
+    }, { passive: true });
+
     // *** DEFINITIVE FIX: Re-architected theme dialog click handlers ***
     themeColorList.addEventListener('click', async (e) => {
         const li = e.target.closest('.theme-color-item');
