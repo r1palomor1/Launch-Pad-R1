@@ -341,14 +341,6 @@ function handleDeleteLink(idToDelete) {
     searchHandler(searchInput.value);
 }
 
-function handleLaunchLink(li, idToLaunch) {
-    if (li.querySelector('.edit-description')) return;
-    const link = links.find(l => l.id === idToLaunch);
-    if (!link) return;
-    triggerHaptic();
-    launchUrlOnRabbit(link.url, link.description);
-}
-
 linksList.addEventListener('click', async (e) => {
     const target = e.target;
     if (target.matches('input.new-description')) {
@@ -387,7 +379,33 @@ linksList.addEventListener('click', async (e) => {
         saveLinks();
         searchHandler(searchInput.value);
     } else if (target.closest('.link-display') || target.closest('.link-favicon')) {
-        handleLaunchLink(li, id);
+        if (li.querySelector('.edit-description')) return;
+        const link = links.find(l => l.id === id);
+        if (!link) return;
+
+        const isYouTube = /youtube\.com|youtu\.be/.test(link.url);
+
+        if (isYouTube) {
+            const choice = await showGenericPrompt({
+                message: `How would you like to launch "${link.description}"?`,
+                buttons: [
+                    { text: 'Internally', value: 'internal', class: '', order: 2 },
+                    { text: 'Externally', value: 'external', class: 'secondary', order: 1 }
+                ]
+            });
+
+            if (choice === 'internal') {
+                await showAlert('Internal player coming soon!');
+            } else if (choice === 'external') {
+                triggerHaptic();
+                launchUrlOnRabbit(link.url, link.description);
+            }
+            // If prompt is cancelled, do nothing.
+        } else {
+            // Default behavior for all other links
+            triggerHaptic();
+            launchUrlOnRabbit(link.url, link.description);
+        }
     }
 });
 
