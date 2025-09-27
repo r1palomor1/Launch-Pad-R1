@@ -942,18 +942,17 @@ async function toggleLuminanceMode() {
 function filterThemeList(query) {
     const lowerCaseQuery = query.trim().toLowerCase().replace(/\s+/g, '');
     const listItems = themeColorList.querySelectorAll('.theme-color-item');
-    let visibleCount = 0;
     const noMatchesEl = themeColorList.querySelector('.no-matches-message');
     if (noMatchesEl) noMatchesEl.remove();
-    if (!lowerCaseQuery) {
-        listItems.forEach(item => item.style.display = 'block');
-        return;
-    }
+
+    let visibleCount = 0;
+
     listItems.forEach(item => {
-        const isVisible = (item.dataset.colorName || item.dataset.modifierName || '').toLowerCase().includes(lowerCaseQuery);
+        const isVisible = !lowerCaseQuery || (item.dataset.colorName || item.dataset.modifierName || '').toLowerCase().includes(lowerCaseQuery);
         item.style.display = isVisible ? 'block' : 'none';
         if (isVisible) visibleCount++;
     });
+
     if (visibleCount === 0 && listItems.length > 0) {
         const li = document.createElement('li');
         li.className = 'no-matches-message';
