@@ -668,21 +668,26 @@ button.rabbit-default:hover {
     font-weight: bold;
     text-align: center;
 }
-.studio-btn {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    width: 24px;
-    height: 24px;
+.lab-toggle-wrapper {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 5px;
+    cursor: pointer;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 2px 6px;
+    border-radius: 6px;
+    background-color: var(--item-bg);
+    border: 1px solid var(--border-color);
 }
-.studio-btn svg {
-    width: 18px;
-    height: 18px;
-    fill: var(--icon-color);
+.lab-toggle-wrapper label {
+    font-size: 0.8em;
+    font-weight: bold;
+    color: var(--icon-color);
+    cursor: pointer;
+    user-select: none;
 }
 #genericPromptMessage {
     text-align: center;
@@ -691,6 +696,16 @@ button.rabbit-default:hover {
     /* Add a small top margin to prevent text from being clipped at the top of the dialog.
        Bottom margin is handled by the parent's flex-gap. */
     margin: 4px 0 0;
+}
+.lab-toggle-wrapper:hover {
+    border-color: var(--primary-color);
+}
+.lab-toggle-wrapper:hover label {
+    color: var(--primary-color);
+}
+#lab-checkbox {
+    accent-color: var(--primary-color);
+    cursor: pointer;
 }
 .custom-prompt-actions {
     display: flex;

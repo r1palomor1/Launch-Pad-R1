@@ -20,7 +20,7 @@ const themeDialogOk = document.getElementById('themeDialogOk');
 const themeDialogCancel = document.getElementById('themeDialogCancel');
 const themeDialogReset = document.getElementById('themeDialogReset');
 const themeModeToggleBtn = document.getElementById('themeModeToggleBtn');
-const themeStudioBtn = document.getElementById('themeStudioBtn');
+const themeLabToggle = document.getElementById('themeLabToggle');
 const deletePromptOverlay = document.getElementById('deletePromptOverlay');
 const deleteLinksList = document.getElementById('deleteLinksList');
 const deletePromptCancel = document.getElementById('deletePromptCancel');
@@ -833,67 +833,31 @@ function renderThemeDialog() {
     themeColorList.innerHTML = '';
     themeColorList.scrollTop = 0;
     const fragment = document.createDocumentFragment();
-    if (isStudioMode) {
-        themeStudioBtn.style.display = 'none';
-        themeDialogReset.style.display = 'none';
-        themeModeToggleBtn.style.display = 'flex';
-        if (studioStage === 1) {
-            themeDialogTitle.textContent = 'Lab: 1. Choose Color';
-            themeDialogOk.textContent = 'Next';
-            themeDialogCancel.textContent = 'Cancel';
-            STUDIO_BASE_COLORS.forEach(name => {
-                const li = document.createElement('li');
-                li.className = 'theme-color-item';
-                li.textContent = name;
-                li.dataset.colorName = name;
-                fragment.appendChild(li);
-            });
-        } else {
-            themeDialogTitle.textContent = 'Lab: 2. Apply Modifier';
-            themeDialogOk.textContent = 'Save';
-            themeDialogCancel.textContent = 'Back';
-            STUDIO_MODIFIERS.forEach(name => {
-                const li = document.createElement('li');
-                li.className = 'theme-color-item';
-                li.textContent = name;
-                li.dataset.modifierName = name;
-                fragment.appendChild(li);
-            });
-        }
-    } else {
-        themeDialogTitle.textContent = 'Change Theme';
-        themeDialogOk.textContent = 'OK';
-        themeDialogCancel.textContent = 'Cancel';
-        themeStudioBtn.style.display = 'flex';
-        themeDialogReset.style.display = 'block';
-        themeModeToggleBtn.style.display = 'flex';
-        if (customTheme) {
-            const li = document.createElement('li');
-            li.className = 'theme-color-item';
-            li.innerHTML = `My Custom Theme <span class="favorite-indicator">★</span>`;
-            li.dataset.colorName = customTheme.baseColor;
-            li.dataset.isCustom = 'true';
-            fragment.appendChild(li);
-        }
-        CSS_COLOR_NAMES.forEach(name => {
-            const li = document.createElement('li');
-            li.className = 'theme-color-item';
-            li.textContent = name;
-            li.dataset.colorName = name;
-            fragment.appendChild(li);
-        });
+    // Simplified render logic for the new flow
+    themeDialogTitle.textContent = 'Change Theme';
+    themeDialogOk.textContent = 'OK';
+    themeDialogCancel.textContent = 'Cancel';
+    themeDialogReset.style.display = 'block';
+    themeModeToggleBtn.style.display = 'flex';
+    themeLabToggle.style.display = 'none'; // Hide by default
+    if (customTheme) {
+        const li = document.createElement('li');
+        li.className = 'theme-color-item';
+        li.innerHTML = `My Custom Theme <span class="favorite-indicator">★</span>`;
+        li.dataset.colorName = customTheme.baseColor;
+        li.dataset.isCustom = 'true';
+        fragment.appendChild(li);
     }
+    CSS_COLOR_NAMES.forEach(name => {
+        const li = document.createElement('li');
+        li.className = 'theme-color-item';
+        li.textContent = name;
+        li.dataset.colorName = name;
+        fragment.appendChild(li);
+    });
     themeColorList.appendChild(fragment);
     themeColorList.focus();
     themeDialogOverlay.classList.remove('input-focused');
-}
-
-function enterThemeStudio() {
-    isStudioMode = true;
-    studioStage = 1;
-    studioBaseColor = null;
-    studioActiveModifier = null;
-    renderThemeDialog();
 }
 
 function updateThemeListDisabledState() {
@@ -1100,7 +1064,6 @@ function setupThemeDialogListeners() {
     });
 
     themeModeToggleBtn.addEventListener('click', toggleLuminanceMode);
-    themeStudioBtn.addEventListener('click', enterThemeStudio);
 }
 
 function openDeleteDialog() {
