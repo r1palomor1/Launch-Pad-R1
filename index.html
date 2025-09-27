@@ -3,64 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700&display=swap" rel="stylesheet">
     <title>Launch Pad R1</title>
     <link rel="stylesheet" href="style.css">
-    <script src="theme-engine.js"></script> 
 </head>
 <body>
-    <div id="launcher">
+    <div id="mainView" class="main-view">
         <header>
-            <input type="text" id="searchInput" placeholder="Search or Type URL...">
-            <button id="searchButton">Search</button>
-            <button id="addLinkButton">Add Link</button>
-            <button id="settingsButton">Settings</button>
+            <div id="logo" title="Go to Home">
+                <span class="logo-text">Launch Pad R1</span>
+                <svg class="logo-rocket" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+            </div>
         </header>
-        <ul id="linksList">
-            </ul>
-    </div>
-
-    <div id="settingsDialogOverlay" class="custom-prompt-overlay" style="display: none;">
-        <div id="settingsDialog" class="custom-prompt-dialog">
-            <h2>Settings</h2>
-            <div class="setting-item">
-                <label for="themeModeToggle">Dark Mode</label>
-                <input type="checkbox" id="themeModeToggle">
+        <div class="search-section">
+            <div class="search-input-wrapper">
+                <input type="text" id="searchInput" placeholder="Search or Add..." autocomplete="off">
+                <button id="clearSearchBtn" title="Clear search" style="display: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z"></path></svg>
+                </button>
             </div>
-            <div class="setting-item">
-                <span>Theme Studio</span>
-                <button id="themeStudioBtn" class="studio-btn" title="Open Color Lab">🎨</button>
-            </div>
-            <button id="closeSettingsButton">Close</button>
+            <button id="searchBtn" title="Search with DuckDuckGo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.031 16.617l4.283 4.282-1.415 1.415-4.282-4.283A8.96 8.96 0 0 1 11 20c-4.968 0-9-4.032-9-9s4.032-9 9-9 9 4.032 9 9a8.96 8.96 0 0 1-1.969 5.617zm-2.006-.742A6.977 6.977 0 0 0 18 11c0-3.868-3.133-7-7-7-3.868 0-7 3.132-7 7 0 3.867 3.132 7 7 7a6.977 6.977 0 0 0 4.875-1.975l.15-.15z"/></svg>
+            </button>
+            <button id="cancelSearchBtn" class="secondary">Cancel</button>
         </div>
-    </div>
+        <div class="actions-bar">
+            <div class="list-actions">
+                <div class="view-controls">
+                    <button id="toggleViewBtn" class="view-btn"></button>
+                </div>
+                <a href="#" id="toggleAllLink" style="display: none;"></a>
+                <button id="quickLaunchBtn" title="Launch Favorite">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 18.26l-7.053 3.948 1.575-7.928L.587 8.792l8.027-.952L12 .5l3.386 7.34 8.027.952-5.935 5.488 1.575 7.928z"></path></svg>
+                </button>
+            </div>
+            <div class="app-actions">
+                <button id="themeBtn" title="Change Theme">
+                    <img src="Theme-transparentT.svg" alt="Theme Icon">
+                </button>
+                <button id="deleteAllBtn" title="Delete All Links">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17 6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6ZM18 8H6V20H18V8ZM9 11H11V17H9V11ZM13 11H15V17H13V11ZM9 4V6H15V4H9Z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
 
+        <ul id="linksList"></ul>
+    </div>
+    
     <div id="themeDialogOverlay" class="custom-prompt-overlay" style="display: none;">
         <div class="custom-prompt-dialog">
-            <h2>Change Theme</h2>
-            
-            <div class="color-lab-checkbox-container" style="display: none;">
-                <label for="color-lab-toggle">Color Lab</label>
-                <input type="checkbox" id="color-lab-toggle">
+            <div class="custom-prompt-title-wrapper">
+                <p id="themeDialogTitle" class="custom-prompt-title">Change Theme</p>
+                <button id="themeStudioBtn" class="studio-btn" title="Open Color Lab">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17.25 2.75l-1.5 1.5-2.5-2.5 1.5-1.5a1 1 0 0 1 1.414 0l1.086 1.086zM5.586 12.586l8-8L15 6l-8 8-1.414-1.414zM3.75 15.75l-1.5 1.5a1 1 0 0 0 0 1.414l1.086 1.086a1 1 0 0 0 1.414 0l1.5-1.5-2.5-2.5z"/></svg>
+                </button>
             </div>
-
-            <ul id="themeColorList" class="theme-color-list scrollable-list-dialog" tabindex="-1">
-                </ul>
-
-            <div id="modifier-controls" style="display: none;">
-                <h3>Apply Modifier</h3>
-                <div class="modifier-grid">
-                    </div>
-                <div class="button-group">
-                    <button id="save-custom-theme-button">Save Theme</button>
-                    <button id="cancel-custom-theme-button" class="cancel-btn">Cancel</button>
+            <p id="themeDialogError" class="custom-prompt-error"></p>
+            <ul id="themeColorList" class="theme-color-list scrollable-list-dialog" tabindex="-1"></ul>
+            <div class="dialog-input-wrapper">
+                <input type="text" id="themeDialogInput" placeholder="e.g., 'SteelBlue' or #3498db">
+                <button id="clearThemeInputBtn" title="Clear color" style="display: none;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z"></path></svg></button>
+            </div>
+            <div class="custom-prompt-actions">
+                <div class="custom-prompt-actions-left">
+                    <button id="themeModeToggleBtn" class="dialog-icon-btn" title="Switch Mode"></button>
+                    <button id="themeDialogReset" class="rabbit-default" title="Reset to default theme">Rabbit Me!</button>
+                </div>
+                <div class="custom-prompt-actions-right">
+                    <button id="themeDialogCancel" class="secondary">Cancel</button>
+                    <button id="themeDialogOk">OK</button>
                 </div>
             </div>
-
-            <button id="themeDialogOk">OK</button>
-            <button id="themeDialogCancel" class="cancel-btn">Cancel</button>
         </div>
     </div>
 
+    <div id="deletePromptOverlay" class="custom-prompt-overlay" style="display: none;">
+        <div class="custom-prompt-dialog">
+            <div class="delete-options">
+                <label><input type="radio" name="delete-mode" value="all"> Delete All Links</label>
+                <label><input type="radio" name="delete-mode" value="keep-favs"> Delete All Except Favorites</label>
+                <label><input type="radio" name="delete-mode" value="selected" checked> Select Links to Delete:</label>
+            </div>
+            <ul id="deleteLinksList" class="delete-links-list scrollable-list-dialog" tabindex="-1">
+                <!-- Links will be populated here by JS -->
+            </ul>
+            <div class="custom-prompt-actions">
+                <button id="deletePromptCancel" class="secondary">Cancel</button>
+                <button id="deletePromptOk">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="favoritesPromptOverlay" class="custom-prompt-overlay" style="display: none;">
+        <div class="custom-prompt-dialog">
+            <p class="custom-prompt-title">Favorites</p>
+            <ul id="favoritesList" class="favorites-list scrollable-list-dialog" tabindex="-1">
+                <!-- Favorite links will be populated here by JS -->
+            </ul>
+            <div class="custom-prompt-actions">
+                <button id="favoritesPromptClose" style="width: 100%;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="genericPromptOverlay" class="custom-prompt-overlay" style="display: none;">
+        <div class="custom-prompt-dialog">
+            <p id="genericPromptMessage"></p>
+            <div id="genericPromptActions" class="custom-prompt-actions">
+                <!-- Buttons are dynamically added here by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script src="theme-engine.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
