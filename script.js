@@ -741,14 +741,9 @@ function updateModifierSelectionUI() {
 // *** DEFINITIVE FIX: Central function for all Studio previews ***
 async function updateStudioPreview() {
     if (!isStudioMode || !studioBaseColor) return;
-
-    let themeToApply;
-    if (studioStage === 1) {
-        themeToApply = { name: `custom:${studioBaseColor}` };
-    } else { // Stage 2
-        const modifier = studioActiveModifier || 'bold'; // Default to bold if unset
-        themeToApply = { name: `custom:${studioBaseColor}`, modifier: modifier };
-    }
+    
+    // In the new streamlined flow, if we are in studio mode, we always apply the active modifier.
+    const themeToApply = { name: `custom:${studioBaseColor}`, modifier: studioActiveModifier || 'bold' };
     
     // Update the master theme name variable every time a preview is generated
     currentThemeName = themeToApply.modifier 
@@ -820,11 +815,18 @@ function openThemeEditor() {
     studioBaseColor = null;
     studioActiveModifier = null;
     originalThemeState = { theme: currentThemeName, mode: currentLuminanceMode };
+    themeLabToggle.style.display = 'none'; // Always hide on open
     labCheckbox.checked = false; // Ensure lab mode is off when opening
     renderThemeDialog();
     themeDialogTitle.style.color = getComputedStyle(document.documentElement).getPropertyValue('--primary-color');
     updateModeToggleUI();
     updateThemeListDisabledState();
+}
+
+function formatColorNameForDisplay(name) {
+    // Add a space before capital letters in a compound word (e.g., "DarkGreen" -> "Dark Green")
+    // but not for the first letter.
+    return name.replace(/([A-Z])/g, ' $1').trim();
 }
 
 function renderThemeDialog() {
@@ -835,28 +837,41 @@ function renderThemeDialog() {
     themeColorList.innerHTML = '';
     themeColorList.scrollTop = 0;
     const fragment = document.createDocumentFragment();
-    // Simplified render logic for the new flow
-    themeDialogTitle.textContent = 'Change Theme';
-    themeDialogOk.textContent = 'OK';
-    themeDialogCancel.textContent = 'Cancel';
-    themeDialogReset.style.display = 'block';
-    themeModeToggleBtn.style.display = 'flex';
-    themeLabToggle.style.display = 'none'; // Hide by default
-    if (customTheme) {
-        const li = document.createElement('li');
-        li.className = 'theme-color-item';
-        li.innerHTML = `My Custom Theme <span class="favorite-indicator">★</span>`;
-        li.dataset.colorName = customTheme.baseColor;
-        li.dataset.isCustom = 'true';
-        fragment.appendChild(li);
+
+    if (isStudioMode) {
+        themeDialogTitle.textContent = 'Apply Modifier';
+        themeDialogOk.textContent = 'Save';
+        themeDialogCancel.textContent = 'Back';
+        themeDialogReset.style.display = 'none'; // Not applicable in lab mode
+        STUDIO_MODIFIERS.forEach(name => {
+            const li = document.createElement('li');
+            li.className = 'theme-color-item';
+            li.textContent = name;
+            li.dataset.modifierName = name;
+            fragment.appendChild(li);
+        });
+    } else {
+        themeDialogTitle.textContent = 'Change Theme';
+        themeDialogOk.textContent = 'OK';
+        themeDialogCancel.textContent = 'Cancel';
+        themeDialogReset.style.display = 'block';
+        if (customTheme) {
+            const li = document.createElement('li');
+            li.className = 'theme-color-item';
+            li.innerHTML = `My Custom Theme <span class="favorite-indicator">★</span>`;
+            li.dataset.colorName = customTheme.baseColor;
+            li.dataset.isCustom = 'true';
+            fragment.appendChild(li);
+        }
+        CSS_COLOR_NAMES.forEach(name => {
+            const li = document.createElement('li');
+            li.className = 'theme-color-item';
+            li.textContent = formatColorNameForDisplay(name);
+            li.dataset.colorName = name;
+            fragment.appendChild(li);
+        });
     }
-    CSS_COLOR_NAMES.forEach(name => {
-        const li = document.createElement('li');
-        li.className = 'theme-color-item';
-        li.textContent = name;
-        li.dataset.colorName = name;
-        fragment.appendChild(li);
-    });
+
     themeColorList.appendChild(fragment);
     themeColorList.focus();
     themeDialogOverlay.classList.remove('input-focused');
@@ -979,25 +994,28 @@ function setupThemeDialogListeners() {
         triggerHaptic();
         themeDialogError.textContent = '';
 
-        if (isStudioMode) {
-            if (studioStage === 1) {
-                studioBaseColor = li.dataset.colorName;
-                themeDialogInput.value = studioBaseColor;
-                await updateStudioPreview(); // Use central function
-            } else { // Stage 2
-                studioActiveModifier = li.dataset.modifierName.toLowerCase();
-                themeDialogInput.value = `${li.dataset.modifierName} ${studioBaseColor}`;
-                updateModifierSelectionUI();
-                await updateStudioPreview(); // Use central function
-            }
-        } else { // Default mode
+        if (isStudioMode) { // In Lab/Modifier mode
+            studioActiveModifier = li.dataset.modifierName.toLowerCase();
+            // Capitalize first letter for display
+            const displayModifier = studioActiveModifier.charAt(0).toUpperCase() + studioActiveModifier.slice(1);
+            themeDialogInput.value = `${displayModifier} ${studioBaseColor}`;
+            updateModifierSelectionUI();
+            await updateStudioPreview();
+        } else { // In standard color selection mode
             const colorName = li.dataset.colorName;
-            themeDialogInput.value = li.dataset.isCustom ? customTheme.baseColor || '' : colorName;
+            if (li.dataset.isCustom && customTheme) {
+                const displayModifier = customTheme.modifier.charAt(0).toUpperCase() + customTheme.modifier.slice(1);
+                themeDialogInput.value = `${displayModifier} ${customTheme.baseColor}`;
+            } else {
+                themeDialogInput.value = colorName;
+            }
             const themeToPreview = li.dataset.isCustom ? { name: `custom:My Custom Theme` } : { name: `custom:${colorName}` };
             const applyResult = await applyTheme(themeToPreview);
             if (!applyResult.success) themeDialogError.textContent = applyResult.error;
             // Show the Lab toggle only if a standard color is selected, not the custom theme.
-            if (!li.dataset.isCustom) {
+            if (li.dataset.isCustom) {
+                themeLabToggle.style.display = 'none';
+            } else {
                 themeLabToggle.style.display = 'flex';
             }
         }
@@ -1007,17 +1025,8 @@ function setupThemeDialogListeners() {
     // *** DEFINITIVE FIX: Re-architected OK/Next/Save button handler ***
     themeDialogOk.addEventListener('click', async () => {
         if (isStudioMode) {
-            if (studioStage === 1) { // "Next" button
-                if (!studioBaseColor) {
-                    themeDialogError.textContent = 'Please select a color to continue.';
-                    return;
-                }
-                studioActiveModifier = 'bold'; // Set default for next stage
-                studioStage = 2;
-                renderThemeDialog(); // Redraw UI for Stage 2
-                await updateStudioPreview(); // Apply preview for the new stage
-                updateModifierSelectionUI(); // Highlight 'bold'
-            } else { // "Save" button
+            // "Save" button logic
+            if (studioBaseColor) {
                 const themeToSave = { name: 'My Custom Theme', baseColor: studioBaseColor, modifier: studioActiveModifier || 'bold' };
                 // *** FIX: Save the current luminance mode with the custom theme ***
                 customTheme = { 
@@ -1029,10 +1038,13 @@ function setupThemeDialogListeners() {
                 await sayOnRabbit("Custom theme saved.");
                 isStudioMode = false;
                 closeThemeDialog();
+            } else {
+                themeDialogError.textContent = 'Error: No base color selected.';
             }
         } else { // Default "OK" button
-            const colorInput = themeDialogInput.value.trim();
-            const themeToConfirm = colorInput ? `custom:${colorInput.replace(/\s+/g, '')}` : currentThemeName;
+            // *** FIX: Always confirm the theme that is currently being previewed. ***
+            // The input box is for display/filtering; currentThemeName holds the true state.
+            const themeToConfirm = currentThemeName;
             triggerHaptic();
             const applyResult = await applyTheme({ name: themeToConfirm }, false, true);
             if (applyResult.success) {
@@ -1051,11 +1063,13 @@ function setupThemeDialogListeners() {
     });
 
     themeDialogCancel.addEventListener('click', async () => {
-        if (isStudioMode && studioStage === 2) { // "Back" button
-            studioStage = 1;
+        if (isStudioMode) { // "Back" button
+            labCheckbox.checked = false; // This will trigger the change event to exit lab mode
+            isStudioMode = false;
             studioActiveModifier = null;
             renderThemeDialog();
-            await updateStudioPreview(); // Revert preview to just the base color
+            themeLabToggle.style.display = 'none'; // Hide the lab toggle on back
+            await applyTheme({ name: `custom:${studioBaseColor}` }); // Revert preview
         } else { // "Cancel" button
             isStudioMode = false;
             closeThemeDialog(true);
@@ -1070,6 +1084,22 @@ function setupThemeDialogListeners() {
     });
 
     themeModeToggleBtn.addEventListener('click', toggleLuminanceMode);
+
+    labCheckbox.addEventListener('change', async () => {
+        if (labCheckbox.checked) {
+            // Entering Lab Mode
+            isStudioMode = true;
+            studioBaseColor = themeDialogInput.value.trim();
+            studioActiveModifier = 'bold'; // Default modifier on enter
+            renderThemeDialog();
+            themeDialogInput.value = studioBaseColor; // Set input to the base color on entering lab
+            updateModifierSelectionUI();
+            await updateStudioPreview();
+        } else {
+            // Exiting Lab Mode (handled by the "Back" button logic in themeDialogCancel)
+            themeDialogCancel.click();
+        }
+    });
 }
 
 function openDeleteDialog() {
