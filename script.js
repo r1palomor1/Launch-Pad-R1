@@ -21,6 +21,7 @@ const themeDialogCancel = document.getElementById('themeDialogCancel');
 const themeDialogReset = document.getElementById('themeDialogReset');
 const themeModeToggleBtn = document.getElementById('themeModeToggleBtn');
 const themeLabToggle = document.getElementById('themeLabToggle');
+const labCheckbox = document.getElementById('lab-checkbox');
 const deletePromptOverlay = document.getElementById('deletePromptOverlay');
 const deleteLinksList = document.getElementById('deleteLinksList');
 const deletePromptCancel = document.getElementById('deletePromptCancel');
@@ -819,6 +820,7 @@ function openThemeEditor() {
     studioBaseColor = null;
     studioActiveModifier = null;
     originalThemeState = { theme: currentThemeName, mode: currentLuminanceMode };
+    labCheckbox.checked = false; // Ensure lab mode is off when opening
     renderThemeDialog();
     themeDialogTitle.style.color = getComputedStyle(document.documentElement).getPropertyValue('--primary-color');
     updateModeToggleUI();
@@ -994,6 +996,8 @@ function setupThemeDialogListeners() {
             const themeToPreview = li.dataset.isCustom ? { name: `custom:My Custom Theme` } : { name: `custom:${colorName}` };
             const applyResult = await applyTheme(themeToPreview);
             if (!applyResult.success) themeDialogError.textContent = applyResult.error;
+            // Show the Lab toggle now that a color has been selected
+            themeLabToggle.style.display = 'flex';
         }
         clearThemeInputBtn.style.display = themeDialogInput.value.length > 0 ? 'flex' : 'none';
     });
