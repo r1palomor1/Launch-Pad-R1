@@ -141,6 +141,12 @@ header {
     height: 16px;
     fill: var(--icon-color);
 }
+/* Specific styling for the theme button's image icon */
+#themeBtn img {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
 input[type="text"] {
     flex-grow: 1;
     padding: 3px 8px; /* Reduced vertical padding */
@@ -181,13 +187,12 @@ button:hover {
 #deleteAllBtn:hover svg {
     fill: #e74c3c; /* A dangerous red */
 }
-#searchBtn:hover svg, #quickLaunchBtn:hover svg, .view-btn:hover svg, #themeBtn:hover svg {
+#searchBtn:hover svg, #quickLaunchBtn:hover svg, .view-btn:hover svg {
     fill: var(--primary-color);
 }
-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    filter: none;
+/* For the theme button, which uses an <img>, we can't change fill. A background is a good alternative. */
+#themeBtn:hover {
+    background-color: var(--item-bg-hover);
 }
 /* Secondary button style for non-primary actions like 'Cancel' */
 body button.secondary {
