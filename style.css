@@ -686,7 +686,7 @@ button.rabbit-default:hover {
     border: 1px solid var(--border-color);
 }
 .lab-toggle-wrapper label {
-    font-size: 0.8em;
+    font-size: 0.85em; /* Slightly larger for better balance */
     font-weight: bold;
     color: var(--icon-color);
     cursor: pointer;
@@ -709,6 +709,8 @@ button.rabbit-default:hover {
 #lab-checkbox {
     accent-color: var(--primary-color);
     cursor: pointer;
+    transform: scale(0.9); /* Make checkbox slightly smaller to match label */
+    margin: 0; /* Adjust alignment after scaling */
 }
 .custom-prompt-actions {
     display: flex;
