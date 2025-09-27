@@ -975,21 +975,18 @@ function setupThemeDialogListeners() {
     themeDialogInput.addEventListener('input', () => {
         const query = themeDialogInput.value;
         clearThemeInputBtn.style.display = query.length > 0 ? 'flex' : 'none';
+        // When the user is typing, ensure the dialog moves up for the keyboard.
+        themeDialogOverlay.classList.add('input-focused');
         if (themeDialogError.textContent) themeDialogError.textContent = '';
         filterThemeList(query);
     });
 
     themeDialogOverlay.addEventListener('click', (e) => e.stopPropagation());
 
-    // When the input is focused, move the dialog up to make space for the keyboard.
-    themeDialogInput.addEventListener('focus', () => {
-        themeDialogOverlay.classList.add('input-focused');
-    });
-
-    // When the input is blurred, return the dialog to its original position.
-    themeDialogInput.addEventListener('blur', () => {
-        themeDialogOverlay.classList.remove('input-focused');
-    });
+    // Only add the class on focus. The input event will handle it while typing.
+    // On blur, the class is removed, returning the dialog to its normal position.
+    themeDialogInput.addEventListener('focus', () => themeDialogOverlay.classList.add('input-focused'));
+    themeDialogInput.addEventListener('blur', () => themeDialogOverlay.classList.remove('input-focused'));
 
     // Use 'mousedown' and prevent default to stop the input from losing focus (blurring)
     // when the clear button is pressed. This is the definitive fix for the keyboard dismissing.
@@ -999,7 +996,6 @@ function setupThemeDialogListeners() {
         clearThemeInputBtn.style.display = 'none';
         filterThemeList('');
         triggerHaptic();
-        // We don't need to call focus() again because it never lost focus.
     });
 
     // Dismiss keyboard when user starts scrolling the color list
