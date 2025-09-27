@@ -991,12 +991,15 @@ function setupThemeDialogListeners() {
         themeDialogOverlay.classList.remove('input-focused');
     });
 
-    clearThemeInputBtn.addEventListener('click', () => {
+    // Use 'mousedown' and prevent default to stop the input from losing focus (blurring)
+    // when the clear button is pressed. This is the definitive fix for the keyboard dismissing.
+    clearThemeInputBtn.addEventListener('mousedown', (e) => {
+        e.preventDefault(); 
         themeDialogInput.value = '';
         clearThemeInputBtn.style.display = 'none';
         filterThemeList('');
-        themeDialogInput.focus();
         triggerHaptic();
+        // We don't need to call focus() again because it never lost focus.
     });
 
     // Dismiss keyboard when user starts scrolling the color list
