@@ -968,6 +968,16 @@ function setupThemeDialogListeners() {
     themeDialogInput.addEventListener('input', () => {
         const query = themeDialogInput.value;
         clearThemeInputBtn.style.display = query.length > 0 ? 'flex' : 'none';
+        
+        // If the user is typing, ensure we are in input-focused mode.
+        // This prevents the keyboard from dismissing unexpectedly.
+        if (query.length > 0) {
+            themeDialogOverlay.classList.add('input-focused');
+        } else {
+            // When input is cleared, we can show the list again.
+            themeDialogOverlay.classList.remove('input-focused');
+        }
+
         if (themeDialogError.textContent) themeDialogError.textContent = '';
         filterThemeList(query);
     });
@@ -975,11 +985,25 @@ function setupThemeDialogListeners() {
     themeDialogOverlay.addEventListener('click', (e) => e.stopPropagation());
 
     clearThemeInputBtn.addEventListener('click', () => {
+        // Prevent the click from bubbling and causing a focusout event on the dialog
+        // which would incorrectly close the keyboard.
         themeDialogInput.value = '';
         clearThemeInputBtn.style.display = 'none';
         filterThemeList('');
         themeDialogInput.focus();
         triggerHaptic();
+        themeDialogOverlay.classList.remove('input-focused');
+    });
+
+    themeDialogInput.addEventListener('focus', () => {
+        themeDialogOverlay.classList.add('input-focused');
+    });
+
+    themeDialogInput.addEventListener('blur', () => {
+        // Only remove the class if the input is empty. This keeps the keyboard up if the user blurs and re-focuses.
+        if (themeDialogInput.value.trim() === '') {
+            themeDialogOverlay.classList.remove('input-focused');
+        }
     });
 
     // Dismiss keyboard when user starts scrolling the color list
