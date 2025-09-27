@@ -975,17 +975,6 @@ function setupThemeDialogListeners() {
         themeDialogInput.focus();
     });
 
-    // Dismiss keyboard when user starts scrolling the color list by touching it.
-    // Using 'scroll' is okay here as long as we check that the input is the
-    // active element. Programmatic scrolls won't trigger this if the input
-    // is still focused for typing. The 'touchstart' event was a bit too aggressive
-    // and had side effects. This is the most stable approach.
-    themeColorList.addEventListener('scroll', () => {
-        if (document.activeElement === themeDialogInput) {
-            themeDialogInput.blur();
-        }
-    }, { passive: true });
-
     // *** DEFINITIVE FIX: Re-architected theme dialog click handlers ***
     themeColorList.addEventListener('click', async (e) => {
         const li = e.target.closest('.theme-color-item');
