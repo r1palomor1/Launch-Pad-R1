@@ -980,27 +980,31 @@ function setupThemeDialogListeners() {
 
     themeDialogOverlay.addEventListener('click', (e) => e.stopPropagation());
 
-    // Only add the class on focus. The input event will handle it while typing.
-    // On blur, the class is removed, returning the dialog to its normal position.
     themeDialogInput.addEventListener('focus', () => themeDialogOverlay.classList.add('input-focused'));
     themeDialogInput.addEventListener('blur', () => themeDialogOverlay.classList.remove('input-focused'));
 
-    // Use 'mousedown' and prevent default to stop the input from losing focus (blurring)
-    // when the clear button is pressed. This is the definitive fix for the keyboard dismissing.
     clearThemeInputBtn.addEventListener('mousedown', (e) => {
+        // Prevent the mousedown from blurring the input field
         e.preventDefault(); 
         themeDialogInput.value = '';
         clearThemeInputBtn.style.display = 'none';
         filterThemeList('');
         triggerHaptic();
+        // Manually re-focus the input, as some interactions might still cause a blur
+        themeDialogInput.focus();
     });
 
-    // Dismiss keyboard when user starts scrolling the color list
-    themeColorList.addEventListener('scroll', () => {
+    // Dismiss keyboard when user starts *touching* the color list (to scroll or tap).
+    // Using 'touchstart' instead of 'scroll' is the key fix. The 'scroll' event
+    // can be triggered programmatically when filtering the list, which caused the
+    // input to lose focus and the keyboard to dismiss while typing. 'touchstart'
+    // only fires from direct user interaction.
+    themeColorList.addEventListener('touchstart', () => {
         if (document.activeElement === themeDialogInput) {
             themeDialogInput.blur();
         }
     }, { passive: true });
+
 
     // *** DEFINITIVE FIX: Re-architected theme dialog click handlers ***
     themeColorList.addEventListener('click', async (e) => {
