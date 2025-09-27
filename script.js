@@ -995,17 +995,6 @@ function setupThemeDialogListeners() {
         themeDialogOverlay.classList.remove('input-focused');
     });
 
-    themeDialogInput.addEventListener('focus', () => {
-        themeDialogOverlay.classList.add('input-focused');
-    });
-
-    themeDialogInput.addEventListener('blur', () => {
-        // Only remove the class if the input is empty. This keeps the keyboard up if the user blurs and re-focuses.
-        if (themeDialogInput.value.trim() === '') {
-            themeDialogOverlay.classList.remove('input-focused');
-        }
-    });
-
     // Dismiss keyboard when user starts scrolling the color list
     themeColorList.addEventListener('scroll', () => {
         if (document.activeElement === themeDialogInput) {
