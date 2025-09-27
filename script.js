@@ -975,8 +975,6 @@ function setupThemeDialogListeners() {
     themeDialogInput.addEventListener('input', () => {
         const query = themeDialogInput.value;
         clearThemeInputBtn.style.display = query.length > 0 ? 'flex' : 'none';
-        // When the user is typing, ensure the dialog moves up for the keyboard.
-        themeDialogOverlay.classList.add('input-focused');
         if (themeDialogError.textContent) themeDialogError.textContent = '';
         filterThemeList(query);
     });
