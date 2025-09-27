@@ -749,17 +749,6 @@ button.rabbit-default:hover {
     padding: 10px;
     gap: 5px;
 }
-.custom-prompt-overlay.input-focused .theme-color-list {
-    /* Hide the list when typing to save space */
-    max-height: 0;
-    opacity: 0;
-    overflow: hidden;
-    padding-top: 0;
-    padding-bottom: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-    border-width: 0;
-}
 .custom-prompt-error {
     color: #e74c3c; /* A noticeable red */
     font-size: 0.9em;

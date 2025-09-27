@@ -968,31 +968,28 @@ function setupThemeDialogListeners() {
     themeDialogInput.addEventListener('input', () => {
         const query = themeDialogInput.value;
         clearThemeInputBtn.style.display = query.length > 0 ? 'flex' : 'none';
-        
-        // If the user is typing, ensure we are in input-focused mode.
-        // This prevents the keyboard from dismissing unexpectedly.
-        if (query.length > 0) {
-            themeDialogOverlay.classList.add('input-focused');
-        } else {
-            // When input is cleared, we can show the list again.
-            themeDialogOverlay.classList.remove('input-focused');
-        }
-
         if (themeDialogError.textContent) themeDialogError.textContent = '';
         filterThemeList(query);
     });
 
     themeDialogOverlay.addEventListener('click', (e) => e.stopPropagation());
 
+    // When the input is focused, move the dialog up to make space for the keyboard.
+    themeDialogInput.addEventListener('focus', () => {
+        themeDialogOverlay.classList.add('input-focused');
+    });
+
+    // When the input is blurred, return the dialog to its original position.
+    themeDialogInput.addEventListener('blur', () => {
+        themeDialogOverlay.classList.remove('input-focused');
+    });
+
     clearThemeInputBtn.addEventListener('click', () => {
-        // Prevent the click from bubbling and causing a focusout event on the dialog
-        // which would incorrectly close the keyboard.
         themeDialogInput.value = '';
         clearThemeInputBtn.style.display = 'none';
         filterThemeList('');
         themeDialogInput.focus();
         triggerHaptic();
-        themeDialogOverlay.classList.remove('input-focused');
     });
 
     // Dismiss keyboard when user starts scrolling the color list
