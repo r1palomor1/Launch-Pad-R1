@@ -764,11 +764,18 @@ async function applyTheme(themeIdentifier, silent = false, isConfirmation = fals
     let themeColors;
     let friendlyName;
     let error = null;
-    let themeToApply = { ...themeIdentifier };
-    if (customTheme && themeToApply.name === `custom:My Custom Theme`) {
-        themeToApply.name = `custom:${customTheme.baseColor}`;
-        themeToApply.modifier = customTheme.modifier;
+    let themeToApply = { ...themeIdentifier }; // Make a mutable copy
+
+    // If applying "My Custom Theme", load its full definition
+    if (customTheme && (themeToApply.name === `custom:My Custom Theme` || themeToApply.name === 'My Custom Theme')) {
+        // If a mode is saved with the custom theme, apply it first.
+        if (customTheme.mode && customTheme.mode !== currentLuminanceMode) {
+            await setLuminanceMode(customTheme.mode, true); // Silently set the mode
+        }
+        themeToApply.name = `custom:${customTheme.baseColor}`; // Use the base color for generation
+        themeToApply.modifier = customTheme.modifier; // Use the saved modifier
     }
+
     if (themeToApply.name.startsWith('custom:')) {
         const themeParts = themeToApply.name.split(':');
         const colorName = themeParts[1];
@@ -1042,7 +1049,11 @@ function setupThemeDialogListeners() {
                 updateModifierSelectionUI(); // Highlight 'bold'
             } else { // "Save" button
                 const themeToSave = { name: 'My Custom Theme', baseColor: studioBaseColor, modifier: studioActiveModifier || 'bold' };
-                customTheme = { ...themeToSave };
+                // *** FIX: Save the current luminance mode with the custom theme ***
+                customTheme = { 
+                    ...themeToSave, 
+                    mode: currentLuminanceMode 
+                };
                 localStorage.setItem('launchPadR1CustomTheme', JSON.stringify(customTheme));
                 await applyTheme({ name: `custom:${customTheme.baseColor}`, modifier: customTheme.modifier }, true, true);
                 await sayOnRabbit("Custom theme saved.");
