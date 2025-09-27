@@ -996,8 +996,10 @@ function setupThemeDialogListeners() {
             const themeToPreview = li.dataset.isCustom ? { name: `custom:My Custom Theme` } : { name: `custom:${colorName}` };
             const applyResult = await applyTheme(themeToPreview);
             if (!applyResult.success) themeDialogError.textContent = applyResult.error;
-            // Show the Lab toggle now that a color has been selected
-            themeLabToggle.style.display = 'flex';
+            // Show the Lab toggle only if a standard color is selected, not the custom theme.
+            if (!li.dataset.isCustom) {
+                themeLabToggle.style.display = 'flex';
+            }
         }
         clearThemeInputBtn.style.display = themeDialogInput.value.length > 0 ? 'flex' : 'none';
     });

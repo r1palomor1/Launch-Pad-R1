@@ -662,6 +662,9 @@ button.rabbit-default:hover {
     align-items: center;
     gap: 8px;
     position: relative;
+    /* Add padding to prevent the centered title from overlapping the absolutely positioned lab toggle. */
+    /* The value is a bit more than the toggle's width to provide a safe margin. */
+    padding-right: 60px;
 }
 .custom-prompt-dialog .custom-prompt-title {
     margin: 0;
