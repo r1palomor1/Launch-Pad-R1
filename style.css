@@ -862,19 +862,6 @@ button.rabbit-default:hover {
     gap: 8px;
     flex-grow: 1;
 }
-.player-info-area #playerPlayPauseBtn {
-    width: 48px;
-    height: 48px;
-    margin-bottom: 8px;
-}
-.player-info-area #playerPlayPauseBtn svg {
-    width: 36px;
-    height: 36px;
-    fill: var(--font-color);
-}
-.player-info-area #playerPlayPauseBtn:hover svg {
-    fill: var(--primary-color);
-}
 
 #playerStatus,
 .player-volume-info {
