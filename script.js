@@ -430,23 +430,33 @@ function getYoutubeVideoId(url) {
 function openPlayerView(videoId, title) {
     playerVideoTitle.textContent = title;
     internalPlayerOverlay.style.display = 'flex';
-    // Create the YouTube player
-    player = new YT.Player('youtubePlayer', {
-        height: '100%',
-        width: '100%',
-        videoId: videoId,
-        playerVars: {
-            'playsinline': 1,        // Important for in-app playback on mobile
-            'controls': 0,           // We will use our own controls
-            'rel': 0,                // Do not show related videos at the end
-            'showinfo': 0,           // Deprecated, but good practice
-            'modestbranding': 1      // Reduce YouTube branding
-        },
-        events: {
-            'onReady': onPlayerReady,
-            'onStateChange': onPlayerStateChange
-        }
-    });
+
+    // The YouTube IFrame API will call this function when it's ready.
+    // We define it here so it has access to the videoId.
+    window.onYouTubeIframeAPIReady = function() {
+        player = new YT.Player('youtubePlayer', {
+            height: '100%',
+            width: '100%',
+            videoId: videoId,
+            playerVars: {
+                'playsinline': 1,
+                'controls': 0,
+                'rel': 0,
+                'showinfo': 0,
+                'modestbranding': 1
+            },
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    };
+
+    // If the YT object is already available (e.g., subsequent plays), call it directly.
+    // Otherwise, the API script will call it once it loads.
+    if (window.YT && window.YT.Player) {
+        window.onYouTubeIframeAPIReady();
+    }
 }
 
 function closePlayerView() {
