@@ -40,14 +40,10 @@ const playerSearchBtn = document.getElementById('playerSearchBtn');
 const playerStatus = document.getElementById('playerStatus');
 const playerVolume = document.getElementById('playerVolume');
 const playerPlayPauseBtn = document.getElementById('playerPlayPauseBtn');
-const playerCurrentTime = document.getElementById('playerCurrentTime');
-const playerDuration = document.getElementById('playerDuration');
-const progressFill = document.getElementById('progressFill');
 const SUN_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM11 1h2v3h-2V1zm0 19h2v3h-2v-3zM3.55 4.95l1.414-1.414L7.05 5.636 5.636 7.05 3.55 4.95zm12.728 12.728l1.414-1.414L19.778 18.364l-1.414 1.414-2.086-2.086zM1 11h3v2H1v-2zm19 0h3v2h-3v-2zM4.95 20.45l-1.414-1.414L5.636 17l1.414 1.414-2.086 2.036zM18.364 7.05l1.414-1.414L21.864 7.05l-1.414 1.414-2.086-2.086z"/></svg>`;
 const MOON_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 7a7 7 0 0 0 12 4.9v.1c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2h.1A6.979 6.979 0 0 0 10 7zm-6 5a8 8 0 0 0 8 8 .5.5 0 0 1 .5.5v.5a10 10 0 1 1 0-20 .5.5 0 0 1 .5.5V4a8 8 0 0 0-8 8z"/></svg>`;
 
 let player; // Will hold the YouTube player instance
-let progressInterval = null; // To hold the timer for the progress bar
 const PLAY_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
 const PAUSE_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
 let originalThemeState = { theme: 'rabbit', mode: 'dark' };
@@ -451,7 +447,7 @@ function openPlayerView(videoId, title) {
                 videoId: videoId,
                 playerVars: {
                     'playsinline': 1,
-                    'controls': 0,
+                    'controls': 1, // Enable native YouTube controls
                     'rel': 0,
                     'showinfo': 0,
                     'modestbranding': 1
@@ -485,10 +481,6 @@ function closePlayerView() {
     // Reset player UI elements
     playerStatus.textContent = '';
     playerPlayPauseBtn.innerHTML = '';
-    playerCurrentTime.textContent = '00:00';
-    playerDuration.textContent = '00:00';
-    progressFill.style.width = '0%';
-    if (progressInterval) clearInterval(progressInterval);
     playerVolume.textContent = '';
     youtubePlayerContainer.innerHTML = '';
 }
@@ -1374,49 +1366,20 @@ function onPlayerReady(event) {
     // The initial state change to UNSTARTED (-1) will set the UI.
 }
 
-function formatTime(seconds) {
-    const min = Math.floor(seconds / 60);
-    const sec = Math.floor(seconds % 60);
-    return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-}
-
-function updateProgressBar() {
-    if (!player || typeof player.getCurrentTime !== 'function') return;
-    const currentTime = player.getCurrentTime();
-    const duration = player.getDuration();
-    if (duration > 0) {
-        const progressPercent = (currentTime / duration) * 100;
-        progressFill.style.width = `${progressPercent}%`;
-        playerCurrentTime.textContent = formatTime(currentTime);
-    }
-}
-
 function onPlayerStateChange(event) {
     if (event.data === YT.PlayerState.PLAYING) {
         playerStatus.textContent = 'Playing';
         playerPlayPauseBtn.innerHTML = PAUSE_ICON_SVG;
-        const duration = player.getDuration();
-        playerDuration.textContent = formatTime(duration);
-        if (progressInterval) clearInterval(progressInterval);
-        progressInterval = setInterval(updateProgressBar, 250);
     } else if (event.data === YT.PlayerState.PAUSED ) {
         playerStatus.textContent = 'Paused';
         playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG;
-        if (progressInterval) clearInterval(progressInterval);
     } else if (event.data === YT.PlayerState.ENDED ) {
         playerStatus.textContent = 'Ended';
         playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG; // Show play icon to allow replay
-        if (progressInterval) clearInterval(progressInterval);
-        progressFill.style.width = '100%'; // Ensure bar is full on end
     } else if (event.data === YT.PlayerState.BUFFERING) {
         playerStatus.textContent = 'Buffering...';
-        if (progressInterval) clearInterval(progressInterval);
     } else if (event.data === YT.PlayerState.UNSTARTED) {
         playerStatus.textContent = 'Ready to Play';
         playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG;
-        if (progressInterval) clearInterval(progressInterval);
-        progressFill.style.width = '0%';
-        playerCurrentTime.textContent = '00:00';
-        playerDuration.textContent = '00:00';
     }
 }

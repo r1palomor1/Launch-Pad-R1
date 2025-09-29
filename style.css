@@ -835,16 +835,6 @@ button.rabbit-default:hover {
     height: 100%;
 }
 
-.player-click-shield {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    /* This makes the div transparent and captures all clicks */
-    background-color: transparent; 
-}
-
 .player-controls {
     flex: 1; /* Takes up bottom third */
     display: flex;
@@ -861,38 +851,6 @@ button.rabbit-default:hover {
     justify-content: center;
     gap: 8px;
     flex-grow: 1;
-}
-.player-progress-container {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    gap: 8px;
-    margin-bottom: 8px;
-}
-
-#progressBar {
-    flex-grow: 1;
-    height: 6px;
-    background-color: var(--border-color);
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-#progressFill {
-    height: 100%;
-    width: 0%;
-    background-color: var(--primary-color);
-    border-radius: 3px;
-    /* A slight transition makes the updates feel less jittery */
-    transition: width 0.1s linear; 
-}
-
-#playerCurrentTime,
-#playerDuration {
-    font-size: 0.8em;
-    color: var(--icon-color);
-    min-width: 35px; /* Prevents layout shift as time changes */
-    text-align: center;
 }
 .player-info-area #playerPlayPauseBtn {
     width: 48px;
