@@ -1295,19 +1295,29 @@ logo.addEventListener('click', goHome);
         await showAlert('Coming Soon!');
     });
 
-    playerPlayPauseBtn.addEventListener('click', () => {
-        if (!player || typeof player.getPlayerState !== 'function') return;
-        triggerHaptic();
-        const playerState = player.getPlayerState();
-        if (playerState === YT.PlayerState.PLAYING) {
-            player.pauseVideo();
-        } else {
-            player.playVideo();
+    playerPlayPauseBtn.addEventListener('click', togglePlayback);
+
+    window.addEventListener('rabbit.side_button.press', (event) => {
+        // Only handle the side button press if the player overlay is visible.
+        if (internalPlayerOverlay.style.display === 'flex') {
+            event.preventDefault(); // Prevent any default OS action for the button press.
+            togglePlayback();
         }
     });
 
     renderLinks();
 })();
+
+function togglePlayback() {
+    if (!player || typeof player.getPlayerState !== 'function') return;
+    triggerHaptic();
+    const playerState = player.getPlayerState();
+    if (playerState === YT.PlayerState.PLAYING) {
+        player.pauseVideo();
+    } else {
+        player.playVideo();
+    }
+}
 
 function onPlayerReady(event) {
     event.target.playVideo();
