@@ -842,7 +842,9 @@ button.rabbit-default:hover {
     width: 100%;
     height: 100%;
     /* This makes the div transparent and captures all clicks */
-    background-color: transparent; 
+    background-color: transparent;
+    /* --- TEMPORARY TEST: Disable the shield to see if it interferes with hardware events --- */
+    display: none;
 }
 
 .player-controls {
