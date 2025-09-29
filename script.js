@@ -429,6 +429,11 @@ function getYoutubeVideoId(url) {
 function openPlayerView(videoId, title) {
     playerVideoTitle.textContent = title;
     internalPlayerOverlay.style.display = 'flex';
+
+    // Force the initial UI state to be visible immediately.
+    playerStatus.textContent = 'Ready to Play';
+    playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG;
+
     
     // This function creates the player. It will be called by the YouTube API callback.
     const createPlayer = () => {
@@ -1298,10 +1303,10 @@ logo.addEventListener('click', goHome);
     playerPlayPauseBtn.addEventListener('click', togglePlayback);
 
     window.addEventListener('rabbit.side_button.press', (event) => {
-        console.log('Side button press detected. Player visible:', internalPlayerOverlay.style.display === 'flex');
         // Only handle the side button press if the player overlay is visible.
         if (internalPlayerOverlay.style.display === 'flex') {
-            console.log('Condition met. Preventing default and toggling playback.');
+            // Visual debugging: Update status text to confirm button press is detected.
+            playerStatus.textContent = 'Side Button Pressed!';
             event.preventDefault(); // Prevent any default OS action for the button press.
             togglePlayback();
         }
