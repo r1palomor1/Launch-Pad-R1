@@ -1302,12 +1302,12 @@ logo.addEventListener('click', goHome);
 
     playerPlayPauseBtn.addEventListener('click', togglePlayback);
 
-    window.addEventListener('rabbit.side_button.press', (event) => {
+    window.addEventListener('rabbit.side_button.press_up', (event) => {
         // Only handle the side button press if the player overlay is visible.
         if (internalPlayerOverlay.style.display === 'flex') {
-            // Visual debugging: Update status text to confirm button press is detected.
-            playerStatus.textContent = 'Side Button Pressed!';
-            event.preventDefault(); // Prevent any default OS action for the button press.
+            // Visual debugging: Update status text to confirm button release is detected.
+            playerStatus.textContent = 'Side Button Released!';
+            event.preventDefault(); 
             togglePlayback();
         }
     });
