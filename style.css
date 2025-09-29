@@ -829,6 +829,24 @@ button.rabbit-default:hover {
     border-radius: 8px;
     overflow: hidden;
 }
+.player-container.audio-only #youtubePlayer {
+    opacity: 0;
+    pointer-events: none; /* Prevent interaction with the hidden player */
+}
+.player-container.audio-only::after {
+    content: 'Audio Only';
+    position: absolute;
+    color: var(--icon-color);
+    font-size: 1.2em;
+    font-weight: bold;
+    opacity: 0.8;
+    text-align: center;
+    pointer-events: none; /* Make sure text doesn't block anything */
+}
+
+#playerAudioOnlyBtn.active svg {
+    fill: var(--primary-color);
+}
 
 #youtubePlayer {
     width: 100%;
