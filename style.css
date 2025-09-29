@@ -862,6 +862,38 @@ button.rabbit-default:hover {
     gap: 8px;
     flex-grow: 1;
 }
+.player-progress-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+#progressBar {
+    flex-grow: 1;
+    height: 6px;
+    background-color: var(--border-color);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+#progressFill {
+    height: 100%;
+    width: 0%;
+    background-color: var(--primary-color);
+    border-radius: 3px;
+    /* A slight transition makes the updates feel less jittery */
+    transition: width 0.1s linear; 
+}
+
+#playerCurrentTime,
+#playerDuration {
+    font-size: 0.8em;
+    color: var(--icon-color);
+    min-width: 35px; /* Prevents layout shift as time changes */
+    text-align: center;
+}
 .player-info-area #playerPlayPauseBtn {
     width: 48px;
     height: 48px;
