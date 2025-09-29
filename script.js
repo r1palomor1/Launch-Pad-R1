@@ -1298,8 +1298,10 @@ logo.addEventListener('click', goHome);
     playerPlayPauseBtn.addEventListener('click', togglePlayback);
 
     window.addEventListener('rabbit.side_button.press', (event) => {
+        console.log('Side button press detected. Player visible:', internalPlayerOverlay.style.display === 'flex');
         // Only handle the side button press if the player overlay is visible.
         if (internalPlayerOverlay.style.display === 'flex') {
+            console.log('Condition met. Preventing default and toggling playback.');
             event.preventDefault(); // Prevent any default OS action for the button press.
             togglePlayback();
         }
@@ -1320,18 +1322,24 @@ function togglePlayback() {
 }
 
 function onPlayerReady(event) {
-    event.target.playVideo();
+    // Don't autoplay. The player is ready and will wait for user input.
+    // The initial state change to UNSTARTED (-1) will set the UI.
 }
 
 function onPlayerStateChange(event) {
     if (event.data === YT.PlayerState.PLAYING) {
         playerStatus.textContent = 'Playing';
         playerPlayPauseBtn.innerHTML = PAUSE_ICON_SVG;
-    } else if (event.data === YT.PlayerState.PAUSED) {
+    } else if (event.data === YT.PlayerState.PAUSED ) {
         playerStatus.textContent = 'Paused';
         playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG;
-    } else if (event.data === YT.PlayerState.ENDED) {
+    } else if (event.data === YT.PlayerState.ENDED ) {
         playerStatus.textContent = 'Ended';
         playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG; // Show play icon to allow replay
+    } else if (event.data === YT.PlayerState.BUFFERING) {
+        playerStatus.textContent = 'Buffering...';
+    } else if (event.data === YT.PlayerState.UNSTARTED) {
+        playerStatus.textContent = 'Ready to Play';
+        playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG;
     }
 }
