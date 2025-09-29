@@ -1311,6 +1311,32 @@ logo.addEventListener('click', goHome);
         }
     });
 
+    // --- Scroll Wheel Navigation for Main List ---
+    // Uses the correct event names found in the SDK documentation.
+    const SCROLL_AMOUNT = 120; // Pixels to scroll per event
+
+    function isOnMainView() {
+        return internalPlayerOverlay.style.display === 'none' &&
+               themeDialogOverlay.style.display === 'none' &&
+               deletePromptOverlay.style.display === 'none' &&
+               favoritesPromptOverlay.style.display === 'none' &&
+               genericPromptOverlay.style.display === 'none' &&
+               !mainView.classList.contains('input-mode-active');
+    }
+
+    window.addEventListener('scrollUp', () => {
+        if (isOnMainView()) {
+            window.scrollBy({ top: -SCROLL_AMOUNT, behavior: 'smooth' });
+        }
+    });
+
+    window.addEventListener('scrollDown', () => {
+        if (isOnMainView()) {
+            window.scrollBy({ top: SCROLL_AMOUNT, behavior: 'smooth' });
+        }
+    });
+    // --- End of Scroll Wheel Navigation ---
+
     renderLinks();
 })();
 
