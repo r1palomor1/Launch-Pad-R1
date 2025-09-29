@@ -1311,28 +1311,38 @@ logo.addEventListener('click', goHome);
         }
     });
 
-    // --- Scroll Wheel Navigation for Main List ---
+    // --- Scroll Wheel Navigation ---
     // Uses the correct event names found in the SDK documentation.
-    const SCROLL_AMOUNT = 120; // Pixels to scroll per event
+    // This now handles both the main list and lists within dialogs.
+    const SCROLL_AMOUNT_MAIN = 120; // Pixels to scroll on the main page.
+    const SCROLL_AMOUNT_DIALOG = 80; // A smaller scroll amount for lists in dialogs.
 
-    function isOnMainView() {
-        return internalPlayerOverlay.style.display === 'none' &&
-               themeDialogOverlay.style.display === 'none' &&
-               deletePromptOverlay.style.display === 'none' &&
-               favoritesPromptOverlay.style.display === 'none' &&
-               genericPromptOverlay.style.display === 'none' &&
-               !mainView.classList.contains('input-mode-active');
+    function getActiveScrollTarget() {
+        if (themeDialogOverlay.style.display === 'flex') return themeColorList;
+        if (deletePromptOverlay.style.display === 'flex') return deleteLinksList;
+        if (favoritesPromptOverlay.style.display === 'flex') return favoritesList;
+        
+        // Check if we are on the main view and not in input mode or another overlay.
+        const onMainView = internalPlayerOverlay.style.display === 'none' &&
+                           genericPromptOverlay.style.display === 'none' &&
+                           !mainView.classList.contains('input-mode-active');
+        
+        if (onMainView) return window;
+
+        return null; // No active target to scroll.
     }
 
     window.addEventListener('scrollUp', () => {
-        if (isOnMainView()) {
-            window.scrollBy({ top: -SCROLL_AMOUNT, behavior: 'smooth' });
+        const target = getActiveScrollTarget();
+        if (target) {
+            target.scrollBy({ top: -(target === window ? SCROLL_AMOUNT_MAIN : SCROLL_AMOUNT_DIALOG), behavior: 'smooth' });
         }
     });
 
     window.addEventListener('scrollDown', () => {
-        if (isOnMainView()) {
-            window.scrollBy({ top: SCROLL_AMOUNT, behavior: 'smooth' });
+        const target = getActiveScrollTarget();
+        if (target) {
+            target.scrollBy({ top: (target === window ? SCROLL_AMOUNT_MAIN : SCROLL_AMOUNT_DIALOG), behavior: 'smooth' });
         }
     });
     // --- End of Scroll Wheel Navigation ---
