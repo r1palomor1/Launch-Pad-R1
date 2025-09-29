@@ -852,6 +852,12 @@ button.rabbit-default:hover {
     gap: 8px;
     flex-grow: 1;
 }
+.player-main-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px; /* Add space between play and stop buttons */
+}
 .player-info-area #playerPlayPauseBtn {
     width: 48px;
     height: 48px;
