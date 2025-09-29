@@ -844,6 +844,11 @@ button.rabbit-default:hover {
     pointer-events: none; /* Make sure text doesn't block anything */
 }
 
+/* Ensure the audio-only button reverts to the default icon color when not active */
+#playerAudioOnlyBtn svg {
+    fill: var(--icon-color);
+}
+
 #playerAudioOnlyBtn.active svg {
     fill: var(--primary-color);
 }
