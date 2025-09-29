@@ -1302,29 +1302,14 @@ logo.addEventListener('click', goHome);
 
     playerPlayPauseBtn.addEventListener('click', togglePlayback);
 
-    // --- Comprehensive Side Button Test ---
-    // We are adding listeners for all three events to see which, if any, are captured by the app.
-
-    window.addEventListener('rabbit.side_button.press_down', (event) => {
+    // Use the correct 'sideClick' event based on the SDK demo.
+    window.addEventListener('sideClick', (event) => {
         if (internalPlayerOverlay.style.display === 'flex') {
-            playerStatus.textContent = 'Button Down';
-        }
-    });
-
-    window.addEventListener('rabbit.side_button.press', (event) => {
-        if (internalPlayerOverlay.style.display === 'flex') {
-            playerStatus.textContent = 'Button Press (Hold)';
-        }
-    });
-
-    window.addEventListener('rabbit.side_button.press_up', (event) => {
-        if (internalPlayerOverlay.style.display === 'flex') {
-            playerStatus.textContent = 'Button Released!';
-            event.preventDefault(); 
+            // Prevent any default OS action for the click.
+            event.preventDefault();
             togglePlayback();
         }
     });
-    // --- End of Test ---
 
     renderLinks();
 })();
