@@ -1306,48 +1306,11 @@ logo.addEventListener('click', goHome);
         }
     });
 
-    window.addEventListener('rabbit.side_button.scroll', async (event) => {
-        if (internalPlayerOverlay.style.display !== 'flex' || !window.rabbit || !window.rabbit.audio) {
-            return;
-        }
-        event.preventDefault();
-
-        try {
-            const volumeData = await window.rabbit.audio.getVolume();
-            const currentVolume = volumeData.volume; // This is a value from 0 to 15
-            let newVolume = currentVolume;
-
-            if (event.detail.delta < 0) { // Scrolling up
-                newVolume = Math.min(15, currentVolume + 1);
-            } else { // Scrolling down
-                newVolume = Math.max(0, currentVolume - 1);
-            }
-
-            if (newVolume !== currentVolume) {
-                await window.rabbit.audio.setVolume({ volume: newVolume });
-                updateVolumeDisplay(newVolume);
-            }
-        } catch (e) {
-            console.error("Error adjusting device volume:", e);
-            playerVolume.textContent = "Volume Error";
-        }
-    });
-
     renderLinks();
 })();
 
-function updateVolumeDisplay(volume) {
-    // The device volume is 0-15. Let's display it as a percentage.
-    const volumePercent = Math.round((volume / 15) * 100);
-    playerVolume.textContent = `Volume: ${volumePercent}%`;
-}
-
-async function onPlayerReady(event) {
+function onPlayerReady(event) {
     event.target.playVideo();
-    if (window.rabbit && window.rabbit.audio) {
-        const volumeData = await window.rabbit.audio.getVolume();
-        updateVolumeDisplay(volumeData.volume);
-    }
 }
 
 function onPlayerStateChange(event) {
