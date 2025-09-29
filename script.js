@@ -1307,42 +1307,25 @@ logo.addEventListener('click', goHome);
     });
 
     window.addEventListener('rabbit.side_button.scroll', (event) => {
-        if (internalPlayerOverlay.style.display !== 'flex' || !player || typeof player.getVolume !== 'function') {
+        // Only handle scroll when the player overlay is visible
+        if (internalPlayerOverlay.style.display !== 'flex') {
             return;
         }
         event.preventDefault();
-
-        const currentVolume = player.getVolume();
-        const volumeStep = 5;
-        let newVolume;
-
-        if (event.detail.delta < 0) { // Scrolling up
-            newVolume = Math.min(100, currentVolume + volumeStep);
-        } else { // Scrolling down
-            newVolume = Math.max(0, currentVolume - volumeStep);
-        }
-
-        player.setVolume(newVolume);
-        updateVolumeDisplay(newVolume);
+        console.log('Scroll wheel event detected:', event.detail);
     });
 
     renderLinks();
 })();
 
-function updateVolumeDisplay(volume) {
-    playerVolume.textContent = `Volume: ${Math.round(volume)}%`;
-}
-
 function onPlayerReady(event) {
     event.target.playVideo();
-    updateVolumeDisplay(event.target.getVolume());
 }
 
 function onPlayerStateChange(event) {
     if (event.data === YT.PlayerState.PLAYING) {
         playerStatus.textContent = 'Playing';
         playerPlayPauseBtn.innerHTML = PAUSE_ICON_SVG;
-        updateVolumeDisplay(player.getVolume()); // Update volume when playback starts/resumes
     } else if (event.data === YT.PlayerState.PAUSED) {
         playerStatus.textContent = 'Paused';
         playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG;
