@@ -329,11 +329,16 @@ button.rabbit-default:hover {
     font-size: 1em;
     font-weight: bold;
     color: var(--primary-color);
-    margin-top: 15px;
-    margin-bottom: 8px;
-    padding-bottom: 5px;
+    margin: 0; /* Remove default margins */
+    padding-bottom: 0.35rem; /* ~5px */
     border-bottom: 1px solid var(--border-color);
 }
+
+/* Add space *above* a category header only if it follows an expanded container */
+.links-container.expanded + .category-header {
+    margin-top: 1rem; /* ~16px */
+}
+
 #cardContainer > h3:first-of-type {
     margin-top: 0;
 }
