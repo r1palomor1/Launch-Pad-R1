@@ -869,17 +869,6 @@ button.rabbit-default:hover {
     justify-content: space-between; /* Pushes nav to bottom */
     padding-top: 10px;
 }
-.player-info-area #playerPlayPauseBtn {
-    width: 48px;
-    height: 48px;
-    margin-bottom: 8px;
-}
-
-.player-info-area #playerPlayPauseBtn svg {
-    width: 32px; /* Larger icon for the main action */
-    height: 32px;
-}
-
 .player-navigation {
     display: flex;
     justify-content: space-between; /* Distribute buttons evenly */
@@ -887,13 +876,6 @@ button.rabbit-default:hover {
     width: 100%;
     gap: 8px;
 }
-
-.player-navigation .dialog-icon-btn svg {
-    /* Slightly larger icons for secondary controls */
-    width: 24px;
-    height: 24px;
-}
-
 .player-navigation button {
     /* Make text buttons more compact */
     padding: 6px 8px;
