@@ -920,6 +920,11 @@ button.rabbit-default:hover {
     padding: 4px 10px;
 }
 
+/* Ensure the action buttons have some space above them */
+.youtube-search-view .custom-prompt-actions {
+    margin-top: 4px;
+}
+
 #youtubeSearchResultsContainer {
     /* Re-use existing dialog list styles */
     max-height: 75vh;

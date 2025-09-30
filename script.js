@@ -44,6 +44,7 @@ const playerContainer = document.querySelector('.player-container');
 const youtubeSearchViewOverlay = document.getElementById('youtubeSearchViewOverlay');
 const youtubeSearchInput = document.getElementById('youtubeSearchInput');
 const youtubeSearchCancelBtn = document.getElementById('youtubeSearchCancelBtn');
+const youtubeSearchGoBtn = document.getElementById('youtubeSearchGoBtn');
 const youtubeSearchResultsContainer = document.getElementById('youtubeSearchResultsContainer');
 const SUN_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM11 1h2v3h-2V1zm0 19h2v3h-2v-3zM3.55 4.95l1.414-1.414L7.05 5.636 5.636 7.05 3.55 4.95zm12.728 12.728l1.414-1.414L19.778 18.364l-1.414 1.414-2.086-2.086zM1 11h3v2H1v-2zm19 0h3v2h-3v-2zM4.95 20.45l-1.414-1.414L5.636 17l1.414 1.414-2.086 2.036zM18.364 7.05l1.414-1.414L21.864 7.05l-1.414 1.414-2.086-2.086z"/></svg>`;
 const MOON_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 7a7 7 0 0 0 12 4.9v.1c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2h.1A6.979 6.979 0 0 0 10 7zm-6 5a8 8 0 0 0 8 8 .5.5 0 0 1 .5.5v.5a10 10 0 1 1 0-20 .5.5 0 0 1 .5.5V4a8 8 0 0 0-8 8z"/></svg>`;
@@ -511,6 +512,59 @@ function closeYouTubeSearchView() {
     youtubeSearchResultsContainer.innerHTML = '';
 }
 
+function renderYouTubeResults(results) {
+    youtubeSearchResultsContainer.innerHTML = '';
+    if (!results || results.length === 0) {
+        youtubeSearchResultsContainer.innerHTML = '<p>No results found.</p>';
+        return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    results.forEach(video => {
+        // We can't get a favicon, so we use the video thumbnail.
+        const videoCard = document.createElement('div');
+        videoCard.className = 'card youtube-result-card'; // Use card styles
+        videoCard.dataset.videoId = video.video_id;
+        videoCard.dataset.title = video.title;
+
+        videoCard.innerHTML = `
+            <img src="${video.thumbnail}" class="link-favicon" alt="Video thumbnail">
+            <div class="link-description">${video.title}</div>
+        `;
+        fragment.appendChild(videoCard);
+    });
+    youtubeSearchResultsContainer.appendChild(fragment);
+}
+
+function handleYouTubeSearch(query) {
+    query = query.trim();
+    if (!query) {
+        youtubeSearchResultsContainer.innerHTML = '';
+        return;
+    }
+    youtubeSearchResultsContainer.innerHTML = '<p>Searching...</p>';
+
+    if (typeof PluginMessageHandler !== "undefined") {
+        // This is a simplified message for the YouTube plugin
+        PluginMessageHandler.postMessage(JSON.stringify({
+            message: JSON.stringify({ query_params: { engine: "youtube", search_query: query } }),
+            useSerpAPI: true
+        }));
+        // The results will be handled by the global onPluginMessage handler
+    } else {
+        // Mock data for browser testing
+        console.log(`[Browser Mode] Searching YouTube for: ${query}`);
+        const mockResults = [
+            { video_id: 'dQw4w9WgXcQ', title: `Mock Result 1 for ${query}`, thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg' },
+            { video_id: 'o-YBDTqX_ZU', title: `Mock Result 2 for ${query}`, thumbnail: 'https://i.ytimg.com/vi/o-YBDTqX_ZU/hqdefault.jpg' }
+        ];
+        setTimeout(() => renderYouTubeResults(mockResults), 500);
+    }
+}
+
+youtubeSearchInput.addEventListener('focus', () => youtubeSearchViewOverlay.classList.add('input-focused'));
+youtubeSearchInput.addEventListener('blur', () => youtubeSearchViewOverlay.classList.remove('input-focused'));
+
 function createFormHTML(linkData = {}, isForEditing = false) {
     const { description = '', url = 'https://', category = 'Other' } = linkData;
     const categoryOptions = categories.map(cat => `<option value="${cat}" ${category === cat ? 'selected' : ''}>${cat}</option>`).join('');
@@ -668,13 +722,14 @@ function renderCombinedResults(query, apiSuggestions, localResults) {
 
 function handleOSMessage(e, requestQuery) {
     const currentQueryInBox = searchInput.value.trim();
-    if (requestQuery.toLowerCase() !== currentQueryInBox.toLowerCase()) return;
+    const isMainSearch = requestQuery.toLowerCase() === currentQueryInBox.toLowerCase();
+
     try {
         const data = e.data ? (typeof e.data == "string" ? JSON.parse(e.data) : e.data) : null;
-        if (data && data.video_results) {
+        if (data && data.video_results && !isMainSearch) {
             // This is a YouTube search result
             renderYouTubeResults(data.video_results);
-        } else if (data && data.organic_results) {
+        } else if (data && data.organic_results && isMainSearch) {
             // This is a regular web search result
             const queryForFilter = requestQuery.trim().toLowerCase();
             const localResults = links.filter(link => link.description.toLowerCase().includes(queryForFilter) || link.url.toLowerCase().includes(queryForFilter));
@@ -1337,9 +1392,16 @@ logo.addEventListener('click', goHome);
         }
     });
 
+    const triggerYoutubeSearch = () => handleYouTubeSearch(youtubeSearchInput.value);
+
     youtubeSearchCancelBtn.addEventListener('click', closeYouTubeSearchView);
-    youtubeSearchInput.addEventListener('input', () => {
-        debouncedYouTubeSearch(youtubeSearchInput.value);
+    youtubeSearchGoBtn.addEventListener('click', triggerYoutubeSearch);
+    youtubeSearchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            // Prevent form submission if it's in a form
+            e.preventDefault();
+            triggerYoutubeSearch();
+        }
     });
 
     playerSearchBtn.addEventListener('click', async () => {
