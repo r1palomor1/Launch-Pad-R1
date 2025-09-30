@@ -299,7 +299,7 @@ button.rabbit-default:hover {
 .link-actions {
     display: flex;
     gap: 10px;
-    flex-direction: column;
+    flex-direction: row;
     flex-shrink: 0;
 }
 /* For the horizontal icons in the normal link view */
