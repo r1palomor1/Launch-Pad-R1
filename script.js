@@ -560,6 +560,19 @@ function handleYouTubeSearch(query) {
         ];
         setTimeout(() => renderYouTubeResults(mockResults), 500);
     }
+
+    // Set a specific listener for this YouTube search
+    window.onPluginMessage = (e) => {
+        try {
+            const data = e.data ? (typeof e.data == "string" ? JSON.parse(e.data) : e.data) : null;
+            if (data && data.video_results) {
+                renderYouTubeResults(data.video_results);
+            }
+        } catch (err) {
+            console.error("Error parsing YouTube plugin message:", err);
+            youtubeSearchResultsContainer.innerHTML = '<p>Error loading results.</p>';
+        }
+    };
 }
 
 youtubeSearchInput.addEventListener('focus', () => youtubeSearchViewOverlay.classList.add('input-focused'));
@@ -722,17 +735,12 @@ function renderCombinedResults(query, apiSuggestions, localResults) {
 
 function handleOSMessage(e, requestQuery) {
     const currentQueryInBox = searchInput.value.trim();
-    const isMainSearch = requestQuery.toLowerCase() === currentQueryInBox.toLowerCase();
+    if (requestQuery.toLowerCase() !== currentQueryInBox.toLowerCase()) return; // Ignore stale results
 
     try {
         const data = e.data ? (typeof e.data == "string" ? JSON.parse(e.data) : e.data) : null;
-        if (data && data.video_results && !isMainSearch) {
-            // This is a YouTube search result
-            renderYouTubeResults(data.video_results);
-        } else if (data && data.organic_results && isMainSearch) {
-            // This is a regular web search result
-            const queryForFilter = requestQuery.trim().toLowerCase();
-            const localResults = links.filter(link => link.description.toLowerCase().includes(queryForFilter) || link.url.toLowerCase().includes(queryForFilter));
+        if (data && data.organic_results) {
+            const localResults = links.filter(link => link.description.toLowerCase().includes(requestQuery.toLowerCase()) || link.url.toLowerCase().includes(requestQuery.toLowerCase()));
             renderCombinedResults(requestQuery, data.organic_results, localResults);
         } else {
             renderCombinedResults(requestQuery, [], localResults);
