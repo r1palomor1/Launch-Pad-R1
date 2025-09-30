@@ -37,9 +37,6 @@ const playerVideoTitle = document.getElementById('playerVideoTitle');
 const youtubePlayerContainer = document.getElementById('youtubePlayer');
 const playerBackBtn = document.getElementById('playerBackBtn');
 const playerSearchBtn = document.getElementById('playerSearchBtn');
-const playerPlayPauseBtn = document.getElementById('playerPlayPauseBtn');
-const playerStopBtn = document.getElementById('playerStopBtn');
-const playerAudioOnlyBtn = document.getElementById('playerAudioOnlyBtn');
 const playerContainer = document.querySelector('.player-container');
 const SUN_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM11 1h2v3h-2V1zm0 19h2v3h-2v-3zM3.55 4.95l1.414-1.414L7.05 5.636 5.636 7.05 3.55 4.95zm12.728 12.728l1.414-1.414L19.778 18.364l-1.414 1.414-2.086-2.086zM1 11h3v2H1v-2zm19 0h3v2h-3v-2zM4.95 20.45l-1.414-1.414L5.636 17l1.414 1.414-2.086 2.036zM18.364 7.05l1.414-1.414L21.864 7.05l-1.414 1.414-2.086-2.086z"/></svg>`;
 const MOON_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 7a7 7 0 0 0 12 4.9v.1c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2h.1A6.979 6.979 0 0 0 10 7zm-6 5a8 8 0 0 0 8 8 .5.5 0 0 1 .5.5v.5a10 10 0 1 1 0-20 .5.5 0 0 1 .5.5V4a8 8 0 0 0-8 8z"/></svg>`;
@@ -434,11 +431,6 @@ function openPlayerView(videoId, title) {
     playerVideoTitle.textContent = title;
     internalPlayerOverlay.style.display = 'flex';
 
-    // Force the initial UI state to be visible immediately.
-    playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG;
-    playerStopBtn.innerHTML = STOP_ICON_SVG;
-    playerAudioOnlyBtn.innerHTML = AUDIO_ICON_SVG;
-
     
     // This function creates the player. It will be called by the YouTube API callback.
     const createPlayer = () => {
@@ -484,7 +476,6 @@ function closePlayerView() {
     player = null;
     playerVideoTitle.textContent = '';
     // Reset player UI elements
-    playerPlayPauseBtn.innerHTML = '';
     isAudioOnly = false;
     playerContainer.classList.remove('audio-only');
     playerAudioOnlyBtn.classList.remove('active');
@@ -1395,6 +1386,5 @@ function onPlayerStateChange(event) {
         playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG; // Show play icon to allow replay
     } else if (event.data === YT.PlayerState.BUFFERING) {
     } else if (event.data === YT.PlayerState.UNSTARTED) {
-        playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG;
     }
 }

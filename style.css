@@ -869,6 +869,11 @@ button.rabbit-default:hover {
     justify-content: space-between; /* Pushes nav to bottom */
     padding-top: 10px;
 }
+.player-info-area {
+    width: 100%; /* Ensure it takes full width */
+    text-align: center;
+    margin-bottom: 8px; /* Space between status text and buttons */
+}
 .player-info-area #playerPlayPauseBtn {
     width: 48px;
     height: 48px;
@@ -881,6 +886,11 @@ button.rabbit-default:hover {
     align-items: center;
     width: 100%;
     gap: 8px;
+}
+
+.player-navigation .dialog-icon-btn svg {
+    width: 20px; /* Original icon size */
+    height: 20px;
 }
 
 .player-navigation .dialog-icon-btn svg {
