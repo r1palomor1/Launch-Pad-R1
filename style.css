@@ -463,6 +463,15 @@ button.rabbit-default:hover {
 .favorite-list-item:hover {
     background-color: var(--item-bg-hover);
 }
+.favorite-list-item .link-favicon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    display: block;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
 .favorite-list-item-description {
     flex-grow: 1;
     overflow: hidden;
