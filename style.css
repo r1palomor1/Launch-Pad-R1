@@ -224,74 +224,97 @@ button.rabbit-default:hover {
     padding: 4px 10px; /* More compact padding */
     font-size: 0.9em; /* Smaller font */
 }
-#linksList {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
+
+/* --- Card View Styles (Scoped Reset) --- */
+#cardContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
-.link-item {
+
+/* 1. Scoped Reset: Neutralize inherited/global styles for the card and its direct children. */
+.card,
+.card > * {
+    all: unset;
+    display: revert;
+    box-sizing: border-box;
+}
+
+/* 2. Reapply Card Container Rules */
+.card {
     background-color: var(--item-bg);
     border: 1px solid var(--border-color);
-    border-radius: 8px; 
-    padding: 8px 10px; /* Reduced vertical padding */
-    margin-bottom: 8px;
+    border-radius: 12px;
+    padding: 12px;
     display: flex;
+    flex-direction: row;
     align-items: center;
-    gap: 10px;
-    flex-wrap: nowrap;
+    gap: 12px;
+    min-width: 0;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    margin-bottom: 8px; /* Maintain spacing between cards */
 }
-.add-suggestion-item {
-    cursor: pointer;
+
+.card.focused {
+    border-color: var(--selection-border-color);
+    background-color: var(--selection-bg-color);
 }
-.add-suggestion-item:hover {
-    background-color: var(--item-bg-hover);
-}
-.web-search-item {
-    justify-content: center;
-    cursor: pointer;
-}
-.web-search-item:hover {
-    background-color: var(--item-bg-hover);
-    border-color: var(--primary-color);
-}
-.link-favicon {
+
+/* 3. Reapply Card Children Rules */
+.card .link-favicon {
     width: 24px;
     height: 24px;
     flex-shrink: 0;
-    background-color: #333;
-    border-radius: 4px;
+    display: block;
     object-fit: cover;
+    border-radius: 4px;
 }
-.link-description {
-    flex: 1 1 auto; /* Allow description to grow and shrink */
+
+.card .link-description {
+    flex: 1 1 auto;
     font-weight: bold;
-    font-size: 1em; /* Make card title text slightly larger */
-    cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    min-width: 0; /* Required for ellipsis to work inside a flex container */
+    min-width: 0;
+    cursor: pointer;
 }
-.link-actions {
+
+.card .link-actions {
     display: flex;
     gap: 10px;
     flex-direction: row;
     align-items: center;
     flex-shrink: 0;
 }
-/* For the horizontal icons in the normal link view */
-.link-actions span {
-    display: inline-flex; /* Ensures consistent sizing and alignment for icons */
+
+.card .link-actions span {
+    display: inline-flex;
     cursor: pointer;
     font-size: 1.1em;
     color: var(--icon-color);
 }
-.link-actions span:hover { color: var(--primary-color); }
-.link-actions svg {
+.card .link-actions span:hover { color: var(--primary-color); }
+
+.card .link-actions svg {
     width: 16px;
     height: 16px;
     display: block;
 }
+
+/* --- End Card View Styles --- */
+
+.add-suggestion-item, .web-search-item {
+    cursor: pointer;
+}
+.add-suggestion-item:hover, .web-search-item:hover {
+    background-color: var(--item-bg-hover);
+    border-color: var(--primary-color);
+}
+.web-search-item {
+    justify-content: center;
+}
+
 .favorite-btn.is-favorite {
     color: #FFD700; /* Gold, for high visibility across all themes */
 }
@@ -311,10 +334,11 @@ button.rabbit-default:hover {
     padding-bottom: 5px;
     border-bottom: 1px solid var(--border-color);
 }
-#linksList > h3:first-of-type {
+#cardContainer > h3:first-of-type {
     margin-top: 0;
 }
-.link-info input, .link-info select {
+/* Styles for the inputs inside an "add/edit" card */
+.card input, .card select {
     width: 100%;
     margin-top: 5px;
     padding: 6px;
@@ -324,7 +348,7 @@ button.rabbit-default:hover {
     color: var(--font-color);
     font-size: 0.95em;
 }
-.link-info > *:first-child {
+.card > *:first-child {
     margin-top: 0;
 }
 .form-actions {
