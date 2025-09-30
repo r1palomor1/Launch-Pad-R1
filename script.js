@@ -1390,13 +1390,16 @@ logo.addEventListener('click', goHome);
     genericPromptOverlay.addEventListener('click', e => e.stopPropagation());
     playerBackBtn.addEventListener('click', closePlayerView);
 
-    youtubeSearchViewOverlay.addEventListener('click', (e) => {
-        // Handle clicks on the search results
-        const card = e.target.closest('.youtube-result-card');
-        if (card) {
-            const { videoId, title } = card.dataset;
-            closeYouTubeSearchView();
-            openPlayerView(videoId, title);
+    // Use a more specific listener on the container to avoid conflicts
+    youtubeSearchResultsContainer.addEventListener('click', (e) => {
+        const resultCard = e.target.closest('.youtube-result-card');
+        if (resultCard) {
+            const videoId = resultCard.dataset.videoId;
+            const title = resultCard.dataset.title;
+            if (videoId && title) {
+                closeYouTubeSearchView();
+                openPlayerView(videoId, title);
+            }
         }
     });
 
