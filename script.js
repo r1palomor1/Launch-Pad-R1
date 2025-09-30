@@ -670,10 +670,14 @@ function handleOSMessage(e, requestQuery) {
     const currentQueryInBox = searchInput.value.trim();
     if (requestQuery.toLowerCase() !== currentQueryInBox.toLowerCase()) return;
     try {
-        let data = e.data ? (typeof e.data == "string" ? JSON.parse(e.data) : e.data) : null;
-        const queryForFilter = requestQuery.trim().toLowerCase();
-        const localResults = links.filter(link => link.description.toLowerCase().includes(queryForFilter) || link.url.toLowerCase().includes(queryForFilter));
-        if (data && data.organic_results) {
+        const data = e.data ? (typeof e.data == "string" ? JSON.parse(e.data) : e.data) : null;
+        if (data && data.video_results) {
+            // This is a YouTube search result
+            renderYouTubeResults(data.video_results);
+        } else if (data && data.organic_results) {
+            // This is a regular web search result
+            const queryForFilter = requestQuery.trim().toLowerCase();
+            const localResults = links.filter(link => link.description.toLowerCase().includes(queryForFilter) || link.url.toLowerCase().includes(queryForFilter));
             renderCombinedResults(requestQuery, data.organic_results, localResults);
         } else {
             renderCombinedResults(requestQuery, [], localResults);
@@ -1323,9 +1327,19 @@ logo.addEventListener('click', goHome);
     genericPromptOverlay.addEventListener('click', e => e.stopPropagation());
     playerBackBtn.addEventListener('click', closePlayerView);
 
+    youtubeSearchViewOverlay.addEventListener('click', (e) => {
+        // Handle clicks on the search results
+        const card = e.target.closest('.youtube-result-card');
+        if (card) {
+            const { videoId, title } = card.dataset;
+            closeYouTubeSearchView();
+            openPlayerView(videoId, title);
+        }
+    });
+
     youtubeSearchCancelBtn.addEventListener('click', closeYouTubeSearchView);
-    youtubeSearchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') showAlert('Search logic coming soon!');
+    youtubeSearchInput.addEventListener('input', () => {
+        debouncedYouTubeSearch(youtubeSearchInput.value);
     });
 
     playerSearchBtn.addEventListener('click', async () => {
@@ -1363,6 +1377,7 @@ logo.addEventListener('click', goHome);
         if (themeDialogOverlay.style.display === 'flex') return themeColorList;
         if (deletePromptOverlay.style.display === 'flex') return deleteLinksList;
         if (favoritesPromptOverlay.style.display === 'flex') return favoritesList;
+        if (youtubeSearchViewOverlay.style.display === 'flex') return youtubeSearchResultsContainer;
         
         // Check if we are on the main view and not in input mode or another overlay.
         const onMainView = internalPlayerOverlay.style.display === 'none' &&
