@@ -501,8 +501,8 @@ function closePlayerView() {
 function openYouTubeSearchView() {
     youtubeSearchViewOverlay.style.display = 'flex';
     youtubeSearchInput.value = '';
-    youtubeSearchResultsContainer.innerHTML = '<p>Search for videos to create a playlist.</p>';
-    youtubeSearchInput.focus();
+    // Clear previous results and don't auto-focus.
+    youtubeSearchResultsContainer.innerHTML = '';
 }
 
 function closeYouTubeSearchView() {
