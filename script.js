@@ -3,7 +3,7 @@ const searchInput = document.getElementById('searchInput');
 const logo = document.getElementById('logo');
 const clearSearchBtn = document.getElementById('clearSearchBtn');
 const searchBtn = document.getElementById('searchBtn');
-const linksList = document.getElementById('linksList');
+const cardContainer = document.getElementById('cardContainer');
 const toggleViewBtn = document.getElementById('toggleViewBtn');
 const quickLaunchBtn = document.getElementById('quickLaunchBtn');
 const toggleAllLink = document.getElementById('toggleAllLink');
@@ -239,10 +239,10 @@ function renderLinks(linksToRender = links) {
         toggleViewBtn.title = 'List View';
     }
     quickLaunchBtn.classList.toggle('active', favoriteLinkIds.size > 0);
-    linksList.innerHTML = '';
+    cardContainer.innerHTML = '';
     const fragment = document.createDocumentFragment();
     if (linksToRender.length === 0) {
-        linksList.innerHTML = '<p style="text-align:center; color: #6c757d;">No links saved. Type in the search box to add a new link.</p>';
+        cardContainer.innerHTML = '<p style="text-align:center; color: #6c757d;">No links saved. Type in the search box to add a new link.</p>';
         return;
     }
     const groupedLinks = linksToRender.reduce((acc, link) => {
@@ -287,7 +287,7 @@ function renderLinks(linksToRender = links) {
             }
         });
     }
-    linksList.appendChild(fragment);
+    cardContainer.appendChild(fragment);
 }
 
 function getHostname(url) {
@@ -297,11 +297,11 @@ function getHostname(url) {
 }
 
 function renderLinkItem(link) {
-    const li = document.createElement('li');
-    li.className = 'link-item';
-    li.dataset.id = link.id;
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.dataset.id = link.id;
     const isFavorite = favoriteLinkIds.has(link.id);
-    li.innerHTML = `
+    div.innerHTML = `
         <img src="https://www.google.com/s2/favicons?sz=64&domain_url=${getHostname(link.url)}" class="link-favicon" alt="Favicon" onerror="this.onerror=null; this.src='${GENERIC_FAVICON_SRC}'; this.style.padding='3px';">
         <div class="link-display">
             <div class="link-description">${link.description}</div>
@@ -312,9 +312,9 @@ function renderLinkItem(link) {
             </div>
         </div>`;
     if (isFavorite) {
-        li.querySelector('.favorite-btn')?.classList.add('is-favorite');
+        div.querySelector('.favorite-btn')?.classList.add('is-favorite');
     }
-    return li;
+    return div;
 }
 
 function setView(view) {
@@ -355,7 +355,7 @@ function handleDeleteLink(idToDelete) {
     searchHandler(searchInput.value);
 }
 
-linksList.addEventListener('click', async (e) => {
+cardContainer.addEventListener('click', async (e) => {
     const target = e.target;
     if (target.matches('input.new-description')) {
         if (!target.dataset.hasBeenInteracted) {
@@ -367,7 +367,7 @@ linksList.addEventListener('click', async (e) => {
         }
         return;
     }
-    const li = target.closest('.link-item');
+    const li = target.closest('.card');
     const categoryHeader = target.closest('.category-header.collapsible');
     if (currentView === 'group' && categoryHeader) {
         handleCategoryToggle(categoryHeader);
@@ -536,14 +536,14 @@ async function showAddForm(prefillData = {}) {
         return;
     }
     const li = document.createElement('li');
-    li.className = 'link-item';
+    li.className = 'card';
     li.innerHTML = createFormHTML(prefillData, false);
-    linksList.appendChild(li);
+    cardContainer.appendChild(li);
     li.scrollIntoView({ behavior: 'smooth' });
     if (prefillData.description) {
         li.querySelector('.new-category').focus();
     } else {
-        li.querySelector('.new-description').focus();
+        li.querySelector('.new-description')?.focus();
     }
     const saveHandler = async () => {
         const description = li.querySelector('.new-description').value.trim();
@@ -554,8 +554,8 @@ async function showAddForm(prefillData = {}) {
     li.querySelector('.save-new-btn').addEventListener('click', saveHandler);
     li.querySelector('.cancel-btn').addEventListener('click', () => {
         li.remove();
-        searchInput.value = '';
-        linksList.innerHTML = `<div class="search-prompt">Search your links or add from the web.</div>`;
+        searchInput.value = ''; // Clear search on cancel
+        cardContainer.innerHTML = `<div class="search-prompt">Search your links or add from the web.</div>`;
         clearSearchBtn.style.display = 'none';
         cancelSearchBtn.style.display = 'flex';
         searchInput.focus();
@@ -564,7 +564,7 @@ async function showAddForm(prefillData = {}) {
 
 async function handleAddFromQuery(description, url) {
     if (!description) return;
-    linksList.innerHTML = '';
+    cardContainer.innerHTML = '';
     let prefillData = {};
     if (description.includes(' ')) {
         prefillData = { description: description.replace(/\b\w/g, l => l.toUpperCase()), url: url || 'https://' };
@@ -601,7 +601,7 @@ async function addNewLink(linkData) {
 async function performExternalSearch(queryOverride) {
     const query = queryOverride || searchInput.value.trim();
     if (query) {
-        linksList.innerHTML = `<div class="search-prompt">Launching web search for "${query}"...</div>`;
+        cardContainer.innerHTML = `<div class="search-prompt">Launching web search for "${query}"...</div>`;
         const searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
         await launchUrlOnRabbit(searchUrl, `search for ${query}`);
     } else {
@@ -631,19 +631,19 @@ function renderCombinedResults(query, apiSuggestions, localResults) {
         hasContent = true;
         filteredApiSuggestions.slice(0, 4).forEach(sugg => {
             const suggLi = document.createElement('li');
-            suggLi.className = 'link-item add-suggestion-item';
+            suggLi.className = 'card add-suggestion-item';
             suggLi.innerHTML = `<img src="https://www.google.com/s2/favicons?sz=64&domain_url=${getHostname(sugg.link)}" class="link-favicon" alt="Favicon" onerror="this.onerror=null; this.src='${GENERIC_FAVICON_SRC}'; this.style.padding='3px';"><div class="link-description">Add: ${sugg.title}</div>`;
             suggLi.addEventListener('click', () => handleAddFromQuery(sugg.title, sugg.link));
             fragment.appendChild(suggLi);
         });
     }
     const webSearchLi = document.createElement('li');
-    webSearchLi.className = 'link-item web-search-item';
+    webSearchLi.className = 'card web-search-item';
     webSearchLi.innerHTML = `<div class="link-favicon" style="display: flex; align-items: center; justify-content: center;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--primary-color)" width="20" height="20"><path d="M18.031 16.617l4.283 4.282-1.415 1.415-4.282-4.283A8.96 8.96 0 0 1 11 20c-4.968 0-9-4.032-9-9s4.032-9 9-9 9 4.032 9 9a8.96 8.96 0 0 1-1.969 5.617zm-2.006-.742A6.977 6.977 0 0 0 18 11c0-3.868-3.133-7-7-7-3.868 0-7 3.132-7 7 0 3.867 3.132 7 7 7a6.977 6.977 0 0 0 4.875-1.975l.15-.15z"/></svg></div><div class="link-description">Search for "${query}" on the web</div>`;
     webSearchLi.addEventListener('click', () => performExternalSearch(query));
     fragment.appendChild(webSearchLi);
-    linksList.innerHTML = '';
-    linksList.appendChild(fragment);
+    cardContainer.innerHTML = '';
+    cardContainer.appendChild(fragment);
 }
 
 function handleOSMessage(e, requestQuery) {
@@ -716,7 +716,7 @@ mainView.addEventListener('focusin', (e) => {
         cancelSearchBtn.style.display = query.length > 0 ? 'none' : 'flex';
         clearSearchBtn.style.display = query.length > 0 ? 'flex' : 'none';
         if (query === '') {
-            linksList.innerHTML = `<div class="search-prompt">Search your links or add from the web.</div>`;
+            cardContainer.innerHTML = `<div class="search-prompt">Search your links or add from the web.</div>`;
         }
         setTimeout(() => {
             document.querySelector('.search-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
