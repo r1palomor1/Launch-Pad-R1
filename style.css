@@ -805,13 +805,13 @@ button.rabbit-default:hover {
 }
 
 .player-header {
-    flex: 1; /* Takes up top third */
+    flex: 0 0 auto; /* Don't grow, just take up needed space */
+    padding-bottom: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
 }
-
 #playerVideoTitle {
     font-size: 1.1em;
     font-weight: bold;
@@ -820,7 +820,7 @@ button.rabbit-default:hover {
 }
 
 .player-container {
-    flex: 2; /* Takes up middle section, larger than others */
+    flex-grow: 1; /* Allow the player to take up all available vertical space */
     position: relative; /* For positioning the click shield */
     display: flex;
     align-items: center;
@@ -859,7 +859,7 @@ button.rabbit-default:hover {
 }
 
 .player-controls {
-    flex: 1; /* Takes up bottom third */
+    flex: 0 0 auto; /* Don't grow, just take up needed space */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -868,18 +868,9 @@ button.rabbit-default:hover {
 }
 
 .player-info-area {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    flex-grow: 1;
-}
-.player-main-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 24px; /* Add space between play and stop buttons */
+    width: 100%; /* Ensure it takes full width */
+    text-align: center;
+    margin-bottom: 8px; /* Space between status text and buttons */
 }
 .player-info-area #playerPlayPauseBtn {
     width: 48px;
@@ -896,18 +887,21 @@ button.rabbit-default:hover {
 }
 
 #playerStatus,
-.player-volume-info {
+.player-volume-info { /* This class is no longer used but we'll keep it for now */
     font-size: 0.9em;
     color: var(--icon-color);
     text-align: center;
+    min-height: 1.2em; /* Reserve space to prevent layout shift */
 }
 
 .player-navigation {
     display: flex;
+    justify-content: space-between; /* Distribute buttons evenly */
+    align-items: center;
     width: 100%;
     gap: 8px;
 }
 
 .player-navigation button {
-    flex-grow: 1; /* Make buttons share space equally */
+    /* flex-grow: 1; Let buttons size naturally */
 }
