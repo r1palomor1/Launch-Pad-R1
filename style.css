@@ -898,22 +898,27 @@ button.rabbit-default:hover {
     font-size: 0.9em; /* Use a relative unit to make the font slightly smaller */
 }
 
-.player-search-container {
-    display: flex;
+/* --- YouTube Search View Styles --- */
+.youtube-search-view {
+    background-color: var(--bg-color);
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
     width: 100%;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
     gap: 8px;
-    margin-top: 10px; /* Space between nav and search */
 }
 
-#playerSearchInput {
-    flex-grow: 1;
-    /* Inherits base input styling */
+.youtube-search-view .search-section {
+    margin-bottom: 0; /* Override default margin */
 }
 
-#playerSearchGoBtn {
-    padding: 4px 10px;
-}
-
-#playerSearchCancelBtn {
-    padding: 4px 8px;
+#youtubeSearchResultsContainer {
+    /* Re-use existing dialog list styles */
+    max-height: 75vh;
+    /* Prompt for search */
+    color: var(--icon-color);
+    text-align: center;
 }
