@@ -312,6 +312,12 @@ button.rabbit-default:hover {
     font-size: 1.1em;
     color: var(--icon-color);
 }
+/* --- Card View Fix --- */
+/* This specifically targets the actions inside a card to ensure they are in a row. */
+.card .link-actions {
+    flex-direction: row !important; /* Use !important to override any conflicting styles */
+    gap: 8px !important;
+}
 .link-actions span:hover { color: var(--primary-color); }
 .link-actions svg {
     width: 16px;
