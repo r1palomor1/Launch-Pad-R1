@@ -915,6 +915,11 @@ button.rabbit-default:hover {
     margin-bottom: 0; /* Override default margin */
 }
 
+/* Make the cancel button height match the input field */
+#youtubeSearchCancelBtn {
+    padding: 4px 10px;
+}
+
 #youtubeSearchResultsContainer {
     /* Re-use existing dialog list styles */
     max-height: 75vh;
