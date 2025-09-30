@@ -897,3 +897,23 @@ button.rabbit-default:hover {
     padding: 4px 6px;
     font-size: 0.9em; /* Use a relative unit to make the font slightly smaller */
 }
+
+.player-search-container {
+    display: flex;
+    width: 100%;
+    gap: 8px;
+    margin-top: 10px; /* Space between nav and search */
+}
+
+#playerSearchInput {
+    flex-grow: 1;
+    /* Inherits base input styling */
+}
+
+#playerSearchGoBtn {
+    padding: 4px 10px;
+}
+
+#playerSearchCancelBtn {
+    padding: 4px 8px;
+}
