@@ -254,15 +254,6 @@ button.rabbit-default:hover {
     background-color: var(--item-bg-hover);
     border-color: var(--primary-color);
 }
-.search-prompt {
-    text-align: center;
-    color: var(--icon-color);
-    padding: 20px; /* Reduced padding to keep it visible with keyboard */
-    font-size: 1em;
-    line-height: 1.5;
-    opacity: 0.8;
-    user-select: none; /* Prevent text selection on this prompt */
-}
 .link-display {
     flex-grow: 1;
     overflow: hidden;
@@ -288,13 +279,14 @@ button.rabbit-default:hover {
     gap: 8px;
 }
 .link-description {
-    flex-grow: 1; /* Allow description to take available space */
+    flex: 1 1 auto; /* Allow description to grow and shrink */
     font-weight: bold;
     font-size: 1em; /* Make card title text slightly larger */
     cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-width: 0; /* Required for ellipsis to work inside a flex container */
 }
 .link-actions {
     display: flex;
@@ -304,6 +296,7 @@ button.rabbit-default:hover {
 }
 /* For the horizontal icons in the normal link view */
 .link-actions span {
+    display: inline-flex; /* Ensures consistent sizing and alignment for icons */
     cursor: pointer;
     font-size: 1.1em;
     color: var(--icon-color);
