@@ -806,7 +806,6 @@ button.rabbit-default:hover {
 
 .player-header {
     flex: 0 0 auto; /* Don't grow, just take up needed space */
-    padding-bottom: 4px; /* Reduced gap above player */
     display: flex;
     align-items: center;
     justify-content: center;
