@@ -455,8 +455,7 @@ function openPlayerView(videoId, title) {
                     'controls': 0, // Disable native YouTube controls
                     'rel': 0,
                     'showinfo': 0,
-                    'modestbranding': 1,
-                    'background': 1 // Ensures the video covers the player area, preventing letterboxing.
+                    'modestbranding': 1
                 },
                 events: {
                     'onReady': onPlayerReady,
