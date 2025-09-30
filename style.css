@@ -869,15 +869,15 @@ button.rabbit-default:hover {
     justify-content: space-between; /* Pushes nav to bottom */
     padding-top: 10px;
 }
-.player-info-area {
-    width: 100%; /* Ensure it takes full width */
-    text-align: center;
-    margin-bottom: 8px; /* Space between status text and buttons */
-}
 .player-info-area #playerPlayPauseBtn {
     width: 48px;
     height: 48px;
     margin-bottom: 8px;
+}
+
+.player-info-area #playerPlayPauseBtn svg {
+    width: 32px; /* Larger icon for the main action */
+    height: 32px;
 }
 
 .player-navigation {
@@ -889,13 +889,9 @@ button.rabbit-default:hover {
 }
 
 .player-navigation .dialog-icon-btn svg {
-    width: 20px; /* Original icon size */
-    height: 20px;
-}
-
-.player-navigation .dialog-icon-btn svg {
-    width: 20px; /* Original icon size */
-    height: 20px;
+    /* Slightly larger icons for secondary controls */
+    width: 24px;
+    height: 24px;
 }
 
 .player-navigation button {
