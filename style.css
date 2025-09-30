@@ -290,7 +290,7 @@ button.rabbit-default:hover {
 .link-description {
     flex-grow: 1; /* Allow description to take available space */
     font-weight: bold;
-    font-size: 0.9em;
+    font-size: 1em; /* Make card title text slightly larger */
     cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
@@ -303,10 +303,6 @@ button.rabbit-default:hover {
     flex-shrink: 0;
 }
 /* For the horizontal icons in the normal link view */
-.link-display > .link-actions {
-    flex-direction: row;
-    gap: 6px;
-}
 .link-actions span {
     cursor: pointer;
     font-size: 1.1em;
