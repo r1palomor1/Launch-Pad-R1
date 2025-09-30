@@ -390,7 +390,7 @@ cardContainer.addEventListener('click', async (e) => {
         triggerHaptic();
         saveLinks();
         searchHandler(searchInput.value);
-    } else if (target.closest('.link-display') || target.closest('.link-favicon')) {
+    } else if (target.closest('.link-description') || target.closest('.link-favicon')) {
         if (li.querySelector('.edit-description')) return;
         const link = links.find(l => l.id === id);
         if (!link) return;

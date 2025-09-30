@@ -254,15 +254,6 @@ button.rabbit-default:hover {
     background-color: var(--item-bg-hover);
     border-color: var(--primary-color);
 }
-.link-display {
-    flex-grow: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-}
 .link-favicon {
     width: 24px;
     height: 24px;
@@ -270,13 +261,6 @@ button.rabbit-default:hover {
     background-color: #333;
     border-radius: 4px;
     object-fit: cover;
-}
-.link-info {
-    flex-grow: 1;
-    overflow: hidden; 
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
 }
 .link-description {
     flex: 1 1 auto; /* Allow description to grow and shrink */
@@ -292,6 +276,7 @@ button.rabbit-default:hover {
     display: flex;
     gap: 10px;
     flex-direction: row;
+    align-items: center;
     flex-shrink: 0;
 }
 /* For the horizontal icons in the normal link view */
