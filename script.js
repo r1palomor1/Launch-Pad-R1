@@ -37,7 +37,6 @@ const playerVideoTitle = document.getElementById('playerVideoTitle');
 const youtubePlayerContainer = document.getElementById('youtubePlayer');
 const playerBackBtn = document.getElementById('playerBackBtn');
 const playerSearchBtn = document.getElementById('playerSearchBtn');
-const playerVolume = document.getElementById('playerVolume');
 const playerPlayPauseBtn = document.getElementById('playerPlayPauseBtn');
 const playerStopBtn = document.getElementById('playerStopBtn');
 const playerAudioOnlyBtn = document.getElementById('playerAudioOnlyBtn');
@@ -453,7 +452,7 @@ function openPlayerView(videoId, title) {
                 videoId: videoId,
                 playerVars: {
                     'playsinline': 1,
-                    'controls': 1, // Enable native YouTube controls
+                    'controls': 0, // Disable native YouTube controls
                     'rel': 0,
                     'showinfo': 0,
                     'modestbranding': 1
@@ -486,7 +485,6 @@ function closePlayerView() {
     playerVideoTitle.textContent = '';
     // Reset player UI elements
     playerPlayPauseBtn.innerHTML = '';
-    playerVolume.textContent = '';
     isAudioOnly = false;
     playerContainer.classList.remove('audio-only');
     playerAudioOnlyBtn.classList.remove('active');
@@ -1396,7 +1394,6 @@ function onPlayerStateChange(event) {
     } else if (event.data === YT.PlayerState.ENDED ) {
         playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG; // Show play icon to allow replay
     } else if (event.data === YT.PlayerState.BUFFERING) {
-        // We don't need to show a "Buffering" text status anymore.
     } else if (event.data === YT.PlayerState.UNSTARTED) {
         playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG;
     }

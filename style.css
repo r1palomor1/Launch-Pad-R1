@@ -875,14 +875,6 @@ button.rabbit-default:hover {
     margin-bottom: 8px;
 }
 
-/* This class is no longer used but we'll keep it for now */
-.player-volume-info { 
-    font-size: 0.9em;
-    color: var(--icon-color);
-    text-align: center;
-    min-height: 1.2em; /* Reserve space to prevent layout shift */
-}
-
 .player-navigation {
     display: flex;
     justify-content: space-between; /* Distribute buttons evenly */
@@ -892,8 +884,8 @@ button.rabbit-default:hover {
 }
 
 .player-navigation .dialog-icon-btn svg {
-    width: 21px; /* Increased icon size by 1px */
-    height: 21px;
+    width: 20px; /* Original icon size */
+    height: 20px;
 }
 
 .player-navigation button {
