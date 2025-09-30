@@ -1390,6 +1390,12 @@ function onPlayerReady(event) {
 function onPlayerStateChange(event) {
     if (event.data === YT.PlayerState.PLAYING) {
         playerStatus.textContent = 'Playing';
+        // Update title with Author when video starts playing
+        const videoData = player.getVideoData();
+        if (videoData.author) {
+            playerVideoTitle.textContent = `${videoData.title} - ${videoData.author}`;
+        }
+
         playerPlayPauseBtn.innerHTML = PAUSE_ICON_SVG;
     } else if (event.data === YT.PlayerState.PAUSED ) {
         playerStatus.textContent = 'Paused';

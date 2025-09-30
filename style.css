@@ -806,14 +806,14 @@ button.rabbit-default:hover {
 
 .player-header {
     flex: 0 0 auto; /* Don't grow, just take up needed space */
-    padding-bottom: 8px;
+    padding-bottom: 4px; /* Reduced gap above player */
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
 }
 #playerVideoTitle {
-    font-size: 1.1em;
+    font-size: 0.9em; /* Reduced font size */
     font-weight: bold;
     color: var(--primary-color);
     margin: 0;
@@ -903,5 +903,6 @@ button.rabbit-default:hover {
 }
 
 .player-navigation button {
-    /* flex-grow: 1; Let buttons size naturally */
+    /* Make text buttons more compact */
+    padding: 6px 8px;
 }
