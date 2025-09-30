@@ -817,6 +817,9 @@ button.rabbit-default:hover {
     font-weight: bold;
     color: var(--primary-color);
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .player-container {
@@ -866,28 +869,14 @@ button.rabbit-default:hover {
     justify-content: space-between; /* Pushes nav to bottom */
     padding-top: 10px;
 }
-
-.player-info-area {
-    width: 100%; /* Ensure it takes full width */
-    text-align: center;
-    margin-bottom: 8px; /* Space between status text and buttons */
-}
 .player-info-area #playerPlayPauseBtn {
     width: 48px;
     height: 48px;
     margin-bottom: 8px;
 }
-.player-info-area #playerPlayPauseBtn svg {
-    width: 36px;
-    height: 36px;
-    fill: var(--font-color);
-}
-.player-info-area #playerPlayPauseBtn:hover svg {
-    fill: var(--primary-color);
-}
 
-#playerStatus,
-.player-volume-info { /* This class is no longer used but we'll keep it for now */
+/* This class is no longer used but we'll keep it for now */
+.player-volume-info { 
     font-size: 0.9em;
     color: var(--icon-color);
     text-align: center;
@@ -900,6 +889,11 @@ button.rabbit-default:hover {
     align-items: center;
     width: 100%;
     gap: 8px;
+}
+
+.player-navigation .dialog-icon-btn svg {
+    width: 21px; /* Increased icon size by 1px */
+    height: 21px;
 }
 
 .player-navigation button {

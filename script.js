@@ -37,7 +37,6 @@ const playerVideoTitle = document.getElementById('playerVideoTitle');
 const youtubePlayerContainer = document.getElementById('youtubePlayer');
 const playerBackBtn = document.getElementById('playerBackBtn');
 const playerSearchBtn = document.getElementById('playerSearchBtn');
-const playerStatus = document.getElementById('playerStatus');
 const playerVolume = document.getElementById('playerVolume');
 const playerPlayPauseBtn = document.getElementById('playerPlayPauseBtn');
 const playerStopBtn = document.getElementById('playerStopBtn');
@@ -437,7 +436,6 @@ function openPlayerView(videoId, title) {
     internalPlayerOverlay.style.display = 'flex';
 
     // Force the initial UI state to be visible immediately.
-    playerStatus.textContent = 'Ready to Play';
     playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG;
     playerStopBtn.innerHTML = STOP_ICON_SVG;
     playerAudioOnlyBtn.innerHTML = AUDIO_ICON_SVG;
@@ -487,7 +485,6 @@ function closePlayerView() {
     player = null;
     playerVideoTitle.textContent = '';
     // Reset player UI elements
-    playerStatus.textContent = '';
     playerPlayPauseBtn.innerHTML = '';
     playerVolume.textContent = '';
     isAudioOnly = false;
@@ -1389,24 +1386,18 @@ function onPlayerReady(event) {
 
 function onPlayerStateChange(event) {
     if (event.data === YT.PlayerState.PLAYING) {
-        playerStatus.textContent = 'Playing';
-        // Update title with Author when video starts playing
+        // Update title with the full title from the API
         const videoData = player.getVideoData();
-        if (videoData.author) {
-            playerVideoTitle.textContent = `${videoData.title} - ${videoData.author}`;
-        }
+        playerVideoTitle.textContent = videoData.title;
 
         playerPlayPauseBtn.innerHTML = PAUSE_ICON_SVG;
     } else if (event.data === YT.PlayerState.PAUSED ) {
-        playerStatus.textContent = 'Paused';
         playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG;
     } else if (event.data === YT.PlayerState.ENDED ) {
-        playerStatus.textContent = 'Ended';
         playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG; // Show play icon to allow replay
     } else if (event.data === YT.PlayerState.BUFFERING) {
-        playerStatus.textContent = 'Buffering...';
+        // We don't need to show a "Buffering" text status anymore.
     } else if (event.data === YT.PlayerState.UNSTARTED) {
-        playerStatus.textContent = 'Ready to Play';
         playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG;
     }
 }
