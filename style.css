@@ -876,7 +876,13 @@ button.rabbit-default:hover {
     width: 100%;
     gap: 8px;
 }
+.player-navigation .dialog-icon-btn svg {
+    /* Make the player icons slightly larger for easier tapping */
+    width: 24px;
+    height: 24px;
+}
 .player-navigation button {
     /* Make text buttons more compact */
-    padding: 6px 8px;
+    padding: 4px 6px;
+    font-size: 0.9em; /* Use a relative unit to make the font slightly smaller */
 }
