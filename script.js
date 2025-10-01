@@ -1,24 +1,48 @@
+// --- Storage Fallback for Browser Testing ---
+if (typeof window.rabbit === "undefined") {
+  window.rabbit = { core:{}, audio:{}, creationStorage:{
+    getItem: (key) => Promise.resolve(localStorage.getItem(key)),
+    setItem: (key, val) => { localStorage.setItem(key, val); return Promise.resolve(); }
+  }};
+}
+
+// Provide mock categories if storage is empty (browser testing only)
+function getMockCategories() {
+  return [
+    {
+      name: "News",
+      links: [
+        { title: "CNN", url: "https://cnn.com" },
+        { title: "BBC", url: "https://bbc.com" }
+      ]
+    },
+    {
+      name: "Tech",
+      links: [
+        { title: "GitHub", url: "https://github.com" },
+        { title: "Hacker News", url: "https://news.ycombinator.com" }
+      ]
+    }
+  ];
+}
+
 // --- Core UI Functions ---
 
-// Open the YouTube search modal
 function openYouTubeSearchView() {
   document.getElementById('youtubeSearchViewOverlay').style.display = 'flex';
   document.body.classList.add('modal-open');
 }
 
-// Close the YouTube search modal
 function closeYouTubeSearchView() {
   document.getElementById('youtubeSearchViewOverlay').style.display = 'none';
   document.body.classList.remove('modal-open');
 }
 
-// Open player view with videoId + title
 function openPlayerView(videoId, title) {
   const playerOverlay = document.getElementById('playerOverlay');
   if (playerOverlay) {
     playerOverlay.style.display = 'flex';
     document.body.classList.add('modal-open');
-    // Set video frame src or handle logic
     const iframe = playerOverlay.querySelector('iframe');
     if (iframe) {
       iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
@@ -30,7 +54,6 @@ function openPlayerView(videoId, title) {
   }
 }
 
-// Close player view
 function closePlayerView() {
   const playerOverlay = document.getElementById('playerOverlay');
   if (playerOverlay) {
@@ -45,7 +68,6 @@ function closePlayerView() {
 
 // --- YouTube Search Integration ---
 
-// Render search results
 function renderYouTubeResults(results) {
   const container = document.getElementById("youtubeSearchResultsContainer");
   if (!container) return;
@@ -72,9 +94,8 @@ function renderYouTubeResults(results) {
   });
 }
 
-// Example search function stub (replace with real API call)
+// Example mock search
 async function doYouTubeSearch(query) {
-  // TODO: Replace with real YouTube API fetch
   const mockResults = [
     {
       id: { videoId: "dQw4w9WgXcQ" },
@@ -85,6 +106,36 @@ async function doYouTubeSearch(query) {
     }
   ];
   renderYouTubeResults(mockResults);
+}
+
+// --- Categories Rendering (with mock fallback) ---
+
+async function renderCategories() {
+  let categories = await window.rabbit.creationStorage.getItem("categories");
+  try { categories = JSON.parse(categories); } catch (e) {}
+  if (!categories || !Array.isArray(categories)) {
+    categories = getMockCategories();
+  }
+  const container = document.getElementById("cardContainer");
+  if (!container) return;
+  container.innerHTML = "";
+  categories.forEach(cat => {
+    const catDiv = document.createElement("div");
+    catDiv.className = "category";
+    const title = document.createElement("h3");
+    title.textContent = cat.name;
+    catDiv.appendChild(title);
+    cat.links.forEach(link => {
+      const linkDiv = document.createElement("div");
+      linkDiv.className = "card";
+      linkDiv.innerHTML = `
+        <img class="link-favicon" src="https://www.google.com/s2/favicons?sz=64&domain_url=${link.url}" alt="Favicon">
+        <div class="link-description">${link.title}</div>
+      `;
+      catDiv.appendChild(linkDiv);
+    });
+    container.appendChild(catDiv);
+  });
 }
 
 // --- Event Listeners ---
@@ -106,7 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
     cancelBtn.addEventListener('click', closeYouTubeSearchView);
   }
 
-  // Global click listener for youtube result cards
   const resultsContainer = document.getElementById("youtubeSearchResultsContainer");
   if (resultsContainer) {
     resultsContainer.addEventListener("click", e => {
@@ -122,7 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Player "Search" button (reopens search view)
   const playerSearchBtn = document.getElementById('playerSearchBtn');
   if (playerSearchBtn) {
     playerSearchBtn.addEventListener('click', () => {
@@ -131,9 +180,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Player "Back" button
   const backBtn = document.getElementById('playerBackBtn');
   if (backBtn) {
     backBtn.addEventListener('click', closePlayerView);
   }
+
+  // Render categories on load (with mock fallback)
+  renderCategories();
 });
