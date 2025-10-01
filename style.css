@@ -898,9 +898,12 @@ button.rabbit-default:hover {
     font-size: 0.9em; /* Use a relative unit to make the font slightly smaller */
 }
 
-/* --- YouTube Search View Styles --- */
+
+/* === Appended: Modal & Search View / Scrollable Results fixes === */
+body.modal-open { overflow: hidden; height: 100%; }
+
 .youtube-search-view {
-    background-color: var(--bg-color);
+    background-color: var(--item-bg);
     padding: 8px;
     border-radius: 8px;
     border: 1px solid var(--border-color);
@@ -909,51 +912,50 @@ button.rabbit-default:hover {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    max-height: 90vh;
 }
 
-.youtube-search-view .search-section {
-    margin-bottom: 0; /* Override default margin */
+/* Base scrollable list behavior for dialogs (including YouTube results) */
+.scrollable-list-dialog {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--bg-color);
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
-/* Make the cancel button height match the input field */
-#youtubeSearchCancelBtn {
-    padding: 4px 10px;
-}
-
-#youtubeSearchResultsContainer {
-    /* Re-use existing dialog list styles */
-    flex-grow: 1; /* Allow the container to fill available space */
-    min-height: 0; /* Crucial for allowing overflow/scrolling in a flex container */
-    max-height: 75vh;
-    /* Prompt for search */
-    color: var(--icon-color);
-    text-align: center;
-}
-
+/* YouTube result card layout */
 .youtube-result-card {
-    /* YouTube result cards don't have actions, so we can remove the right-side padding */
-    padding-right: 0.625rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
     cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
 }
+.youtube-result-card:last-child { border-bottom: none; }
+.youtube-result-card:hover { background-color: var(--item-bg-hover); }
 
-/* Add a hover effect for better feedback */
-.youtube-result-card:hover {
-    background-color: var(--item-bg-hover);
-    border-color: var(--primary-color);
-}
-
-/* Override favicon styles for the larger YouTube thumbnails */
 .youtube-result-card .link-favicon {
     width: 80px;
-    height: 45px; /* 16:9 aspect ratio */
+    height: 45px;
     object-fit: cover;
-    background-color: #333; /* Placeholder color while image loads */
+    flex-shrink: 0;
+    display: block;
+    background-color: #333;
 }
 
-/* Fix dimmed text and reduce font size for better fit */
 .youtube-result-card .link-description {
+    flex: 1 1 auto;
     color: var(--font-color);
-    font-size: 0.9rem; /* Smaller font for video titles */
-    white-space: normal; /* Allow text to wrap to a second line */
-    font-weight: normal; /* Use normal weight for titles to improve readability */
+    font-size: 0.9rem;
+    font-weight: normal;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

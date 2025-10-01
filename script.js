@@ -43,8 +43,7 @@ const playerAudioOnlyBtn = document.getElementById('playerAudioOnlyBtn');
 const playerContainer = document.querySelector('.player-container');
 const youtubeSearchViewOverlay = document.getElementById('youtubeSearchViewOverlay');
 const youtubeSearchInput = document.getElementById('youtubeSearchInput');
-const youtubeSearchCancelBtn = document.getElementById('youtubeSearchCancelBtn');
-const youtubeSearchGoBtn = document.getElementById('youtubeSearchGoBtn');
+const youtubeSearchCancelBtn = document.getElementById('youtubeSearchCancelBtn'); // This will be unused after revert, but harmless
 const youtubeSearchResultsContainer = document.getElementById('youtubeSearchResultsContainer');
 const SUN_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM11 1h2v3h-2V1zm0 19h2v3h-2v-3zM3.55 4.95l1.414-1.414L7.05 5.636 5.636 7.05 3.55 4.95zm12.728 12.728l1.414-1.414L19.778 18.364l-1.414 1.414-2.086-2.086zM1 11h3v2H1v-2zm19 0h3v2h-3v-2zM4.95 20.45l-1.414-1.414L5.636 17l1.414 1.414-2.086 2.036zM18.364 7.05l1.414-1.414L21.864 7.05l-1.414 1.414-2.086-2.086z"/></svg>`;
 const MOON_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10 7a7 7 0 0 0 12 4.9v.1c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2h.1A6.979 6.979 0 0 0 10 7zm-6 5a8 8 0 0 0 8 8 .5.5 0 0 1 .5.5v.5a10 10 0 1 1 0-20 .5.5 0 0 1 .5.5V4a8 8 0 0 0-8 8z"/></svg>`;
@@ -438,7 +437,7 @@ function getYoutubeVideoId(url) {
     return (match && match[2].length === 11) ? match[2] : null;
 }
 
-function openPlayerView(videoId, title) {
+function openPlayerView(videoId, title) { document.body.classList.add('modal-open');
     playerVideoTitle.textContent = title;
     internalPlayerOverlay.style.display = 'flex';
 
@@ -484,7 +483,7 @@ function openPlayerView(videoId, title) {
     }
 }
 
-function closePlayerView() {
+function closePlayerView() { document.body.classList.remove('modal-open');
     internalPlayerOverlay.style.display = 'none';
     if (player && typeof player.destroy === 'function') {
         player.destroy();
@@ -499,84 +498,22 @@ function closePlayerView() {
     youtubePlayerContainer.innerHTML = '';
 }
 
-function openYouTubeSearchView() {
+function openYouTubeSearchView() { document.body.classList.add('modal-open');
+
     youtubeSearchViewOverlay.style.display = 'flex';
     youtubeSearchInput.value = '';
     // Clear previous results and don't auto-focus.
     youtubeSearchResultsContainer.innerHTML = '';
+
 }
 
-function closeYouTubeSearchView() {
+function closeYouTubeSearchView() { document.body.classList.remove('modal-open');
+
     youtubeSearchViewOverlay.style.display = 'none';
     youtubeSearchInput.value = '';
     youtubeSearchResultsContainer.innerHTML = '';
+
 }
-
-function renderYouTubeResults(results) {
-    youtubeSearchResultsContainer.innerHTML = '';
-    if (!results || results.length === 0) {
-        youtubeSearchResultsContainer.innerHTML = '<p>No results found.</p>';
-        return;
-    }
-
-    const fragment = document.createDocumentFragment();
-    results.forEach(video => {
-        // We can't get a favicon, so we use the video thumbnail.
-        const videoCard = document.createElement('div');
-        videoCard.className = 'card youtube-result-card'; // Use card styles
-        videoCard.dataset.videoId = video.video_id;
-        videoCard.dataset.title = video.title;
-
-        videoCard.innerHTML = `
-            <img src="${video.thumbnail}" class="link-favicon" alt="Video thumbnail">
-            <div class="link-description">${video.title}</div>
-        `;
-        fragment.appendChild(videoCard);
-    });
-    youtubeSearchResultsContainer.appendChild(fragment);
-}
-
-function handleYouTubeSearch(query) {
-    query = query.trim();
-    if (!query) {
-        youtubeSearchResultsContainer.innerHTML = '';
-        return;
-    }
-    youtubeSearchResultsContainer.innerHTML = '<p>Searching...</p>';
-
-    if (typeof PluginMessageHandler !== "undefined") {
-        // This is a simplified message for the YouTube plugin
-        PluginMessageHandler.postMessage(JSON.stringify({
-            message: JSON.stringify({ query_params: { engine: "youtube", search_query: query } }),
-            useSerpAPI: true
-        }));
-        // The results will be handled by the global onPluginMessage handler
-    } else {
-        // Mock data for browser testing
-        console.log(`[Browser Mode] Searching YouTube for: ${query}`);
-        const mockResults = [
-            { video_id: 'dQw4w9WgXcQ', title: `Mock Result 1 for ${query}`, thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg' },
-            { video_id: 'o-YBDTqX_ZU', title: `Mock Result 2 for ${query}`, thumbnail: 'https://i.ytimg.com/vi/o-YBDTqX_ZU/hqdefault.jpg' }
-        ];
-        setTimeout(() => renderYouTubeResults(mockResults), 500);
-    }
-
-    // Set a specific listener for this YouTube search
-    window.onPluginMessage = (e) => {
-        try {
-            const data = e.data ? (typeof e.data == "string" ? JSON.parse(e.data) : e.data) : null;
-            if (data && data.video_results) {
-                renderYouTubeResults(data.video_results);
-            }
-        } catch (err) {
-            console.error("Error parsing YouTube plugin message:", err);
-            youtubeSearchResultsContainer.innerHTML = '<p>Error loading results.</p>';
-        }
-    };
-}
-
-youtubeSearchInput.addEventListener('focus', () => youtubeSearchViewOverlay.classList.add('input-focused'));
-youtubeSearchInput.addEventListener('blur', () => youtubeSearchViewOverlay.classList.remove('input-focused'));
 
 function createFormHTML(linkData = {}, isForEditing = false) {
     const { description = '', url = 'https://', category = 'Other' } = linkData;
@@ -738,7 +675,7 @@ function handleOSMessage(e, requestQuery) {
     if (requestQuery.toLowerCase() !== currentQueryInBox.toLowerCase()) return; // Ignore stale results
 
     try {
-        const data = e.data ? (typeof e.data == "string" ? JSON.parse(e.data) : e.data) : null;
+        const data = e.data ? (typeof e.data == "string" ? JSON.parse(e.data) : e.data) : null; // This line is repeated, but harmless
         if (data && data.organic_results) {
             const localResults = links.filter(link => link.description.toLowerCase().includes(requestQuery.toLowerCase()) || link.url.toLowerCase().includes(requestQuery.toLowerCase()));
             renderCombinedResults(requestQuery, data.organic_results, localResults);
@@ -1390,28 +1327,6 @@ logo.addEventListener('click', goHome);
     genericPromptOverlay.addEventListener('click', e => e.stopPropagation());
     playerBackBtn.addEventListener('click', closePlayerView);
 
-    // Use a more specific listener on the container for result clicks
-    youtubeSearchResultsContainer.addEventListener('click', (e) => {
-        const card = e.target.closest('.youtube-result-card');
-        if (card) {
-            if (card.dataset.videoId && card.dataset.title) {
-                closeYouTubeSearchView();
-                openPlayerView(card.dataset.videoId, card.dataset.title);
-            }
-        }
-    });
-
-    const triggerYoutubeSearch = () => handleYouTubeSearch(youtubeSearchInput.value);
-    youtubeSearchCancelBtn.addEventListener('click', closeYouTubeSearchView);
-    youtubeSearchGoBtn.addEventListener('click', triggerYoutubeSearch);
-    youtubeSearchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            // Prevent form submission if it's in a form
-            e.preventDefault();
-            handleYouTubeSearch(youtubeSearchInput.value);
-        }
-    });
-
     playerSearchBtn.addEventListener('click', async () => {
         await showAlert('Coming Soon!');
     });
@@ -1508,4 +1423,18 @@ function onPlayerStateChange(event) {
     } else if (event.data === YT.PlayerState.UNSTARTED) {
         playerPlayPauseBtn.innerHTML = PLAY_ICON_SVG;
     }
+}
+
+// Delegate clicks to YouTube result cards (internal search)
+if (typeof youtubeSearchResultsContainer !== 'undefined' && youtubeSearchResultsContainer) {
+    youtubeSearchResultsContainer.addEventListener('click', (e) => {
+        const card = e.target.closest('.youtube-result-card');
+        if (card) {
+            const { videoId, title } = card.dataset;
+            if (videoId && title) {
+                closeYouTubeSearchView();
+                openPlayerView(videoId, title);
+            }
+        }
+    });
 }
