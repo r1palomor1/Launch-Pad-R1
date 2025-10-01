@@ -1,0 +1,7 @@
+#!/bin/sh
+if [ -d "docs" ]; then
+  echo "✅ SDK docs found in /docs — Gemini will stay grounded."
+else
+  echo "❌ Missing /docs — add it back before committing!"
+  exit 1
+fi
