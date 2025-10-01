@@ -1390,28 +1390,27 @@ logo.addEventListener('click', goHome);
     genericPromptOverlay.addEventListener('click', e => e.stopPropagation());
     playerBackBtn.addEventListener('click', closePlayerView);
 
-    // Use a more specific listener on the container to avoid conflicts
-    youtubeSearchResultsContainer.addEventListener('click', (e) => {
-        const resultCard = e.target.closest('.youtube-result-card');
-        if (resultCard) {
-            const videoId = resultCard.dataset.videoId;
-            const title = resultCard.dataset.title;
-            if (videoId && title) {
+    youtubeSearchViewOverlay.addEventListener('click', (e) => {
+        // This listener handles clicks on the Cancel/Search buttons and the background.
+        const triggerYoutubeSearch = () => handleYouTubeSearch(youtubeSearchInput.value);
+
+        if (e.target === youtubeSearchCancelBtn) {
+            closeYouTubeSearchView();
+        } else if (e.target === youtubeSearchGoBtn) {
+            triggerYoutubeSearch();
+        } else if (e.target.closest('.youtube-result-card')) {
+            const card = e.target.closest('.youtube-result-card');
+            if (card.dataset.videoId && card.dataset.title) {
                 closeYouTubeSearchView();
-                openPlayerView(videoId, title);
+                openPlayerView(card.dataset.videoId, card.dataset.title);
             }
         }
     });
-
-    const triggerYoutubeSearch = () => handleYouTubeSearch(youtubeSearchInput.value);
-
-    youtubeSearchCancelBtn.addEventListener('click', closeYouTubeSearchView);
-    youtubeSearchGoBtn.addEventListener('click', triggerYoutubeSearch);
     youtubeSearchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             // Prevent form submission if it's in a form
             e.preventDefault();
-            triggerYoutubeSearch();
+            handleYouTubeSearch(youtubeSearchInput.value);
         }
     });
 

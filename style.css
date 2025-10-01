@@ -922,6 +922,8 @@ button.rabbit-default:hover {
 
 #youtubeSearchResultsContainer {
     /* Re-use existing dialog list styles */
+    flex-grow: 1; /* Allow the container to fill available space */
+    min-height: 0; /* Crucial for allowing overflow/scrolling in a flex container */
     max-height: 75vh;
     /* Prompt for search */
     color: var(--icon-color);
@@ -934,11 +936,18 @@ button.rabbit-default:hover {
     cursor: pointer;
 }
 
+/* Add a hover effect for better feedback */
+.youtube-result-card:hover {
+    background-color: var(--item-bg-hover);
+    border-color: var(--primary-color);
+}
+
 /* Override favicon styles for the larger YouTube thumbnails */
 .youtube-result-card .link-favicon {
     width: 80px;
     height: 45px; /* 16:9 aspect ratio */
     object-fit: cover;
+    background-color: #333; /* Placeholder color while image loads */
 }
 
 /* Fix dimmed text and reduce font size for better fit */
@@ -946,4 +955,5 @@ button.rabbit-default:hover {
     color: var(--font-color);
     font-size: 0.9rem; /* Smaller font for video titles */
     white-space: normal; /* Allow text to wrap to a second line */
+    font-weight: normal; /* Use normal weight for titles to improve readability */
 }
